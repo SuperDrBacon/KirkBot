@@ -6,13 +6,15 @@ import typing
 import asyncio
 import discord_components
 import json
+import os
 import pandas as pd
 from treelib import Node, Tree
 from discord.ui import Button, View
 
 from discord.ext import commands
 
-jsonpath = './KirkBot/cogs/log.json'
+jsonpath = os.path.abspath(os.getcwd()) + "/cogs/log.json"
+
 
 init = {
     "servers":[{
@@ -63,7 +65,7 @@ class logger(commands.Cog):
         #     return
         # if ctx.author.id != 931276237157068850:
         #     print(f'{ctx.author}: {ctx.content}')
-        print(f'{ctx.author}: {ctx.content}')
+        
             # return
         # else: return
         
@@ -76,7 +78,12 @@ class logger(commands.Cog):
         channelNAME = ctx.channel.name
         channelID = ctx.channel.id
         
+        
         message = ctx.content
+        if message == "":
+            message = ctx.attachments[0].url
+        
+        print(f'{userNAME}: {message}')
 
 
         newserver = {

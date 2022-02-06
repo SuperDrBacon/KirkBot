@@ -3,15 +3,16 @@ import random
 import time
 import typing
 import asyncio
+import os
 import urllib.parse, urllib.request, re
 import discord_components
 from discord.ui import Button, View
 
 from discord.ext import commands
 # from discord.ext.commands.context import P
+path = os.path.abspath(os.getcwd())
 
-
-with open('./KirkBot/cogs/kirklines.txt', 'r') as f:
+with open(path + '/cogs/kirklines.txt', 'r') as f:
     # lines = f.readline().rstrip()
     lines = [line.rstrip() for line in f]
 
