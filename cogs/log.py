@@ -82,10 +82,16 @@ class logger(commands.Cog):
         message = ctx.content
         if message == "":
             message = ctx.attachments[0].url
-            if message == None:
-                message = ctx.attachments[1].url
-                if message == None:
-                    message = '---prob a sticker reply'
+            # for i in ctx.attachments:
+            #     for j in len(i):
+            #         temp = i
+            #         temp2 = str(temp)
+            #         temp2.join(', ')
+            # message = temp2
+            # if message is None:
+            #     message = ctx.attachments[1].url
+            #     if message is None:
+            #         message = '---prob a sticker reply'
         
         print(f'{userNAME}: {message}')
 
