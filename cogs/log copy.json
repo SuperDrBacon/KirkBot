@@ -1,0 +1,21 @@
+{
+    "servers": [
+        {
+            "servername": "newserver",
+            "serverID": 123,
+            "channels": [
+                {
+                    "channelname": "newchannel",
+                    "channelID": 456,
+                    "messages": [
+                        {
+                            "username": "newuser",
+                            "userID": 789,
+                            "message": "newmessage"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

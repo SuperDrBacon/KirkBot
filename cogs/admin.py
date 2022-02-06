@@ -1,0 +1,134 @@
+import datetime
+import discord
+import asyncio
+from discord.ext import commands
+from discord.ext.commands import CheckFailure
+
+
+
+class adminCommands(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+            print('Admin module online')
+
+    # @commands.command()
+    # @commands.has_permissions(administrator=True)
+    # async def ban(self, ctx, member:discord.Member, *, reason=None):
+    #     '''bans a user'''
+    #     guild = ctx.guild
+    #     author = ctx.message.author
+    #     if author.guild_permissions.administrator == False:
+    #         embed4=discord.Embed(color=discord.Colour.red(), timestamp=discord.utils.utcnow(), title="Missing Permissions!", description="You don't have the required permissions to use this command!")
+    #         message1 = await ctx.send(embed=embed4)    
+    #         sleeper=5
+    #         await asyncio.sleep(sleeper) 
+    #         await message1.delete()
+    #         return  
+    #     if member.guild_permissions.administrator and member != None:
+    #         embed=discord.Embed(color=discord.Colour.red(), title="Administrator", description="This user is an administrator and is not allowed to be banned.")
+    #         message2 = await ctx.send(embed=embed)
+    #         sleeper=5
+    #         await asyncio.sleep(sleeper)
+    #         await message2.delete()
+    #         return
+    #     if reason == None:
+    #         embed1=discord.Embed(color=discord.Colour.red(), title="Reason Required!", description="You must enter a reason to ban this member.")    
+    #         message3 = ctx.send(embed=embed1)
+    #         sleeper=5
+    #         await asyncio.sleep(sleeper)
+    #         await message3.delete()
+    #         return
+    #     else:
+    #         guild = ctx.guild
+    #         await member.ban()
+    #         embed2=discord.Embed(color=discord.Colour.green(), timestamp=discord.utils.utcnow(), title="Member Banned", description=f"Banned: {member.mention}\n Moderator: **{author}** \n Reason: **{reason}**")
+    #         embed3=discord.Embed(color=discord.Colour.green(), timestamp=discord.utils.utcnow(), title=f"You've been banned from **{guild}**!", description=f"Target: {member.mention}\nModerator: **{author.mention}** \n Reason: **{reason}**")
+    #         message4 = await ctx.send(embed=embed2)
+    #         message5 = await ctx.send("✔ User has been notified.")
+    #         sleeper=5
+    #         await asyncio.sleep(sleeper)
+    #         await message4.delete()
+    #         await message5.delete()
+    #         await member.send(embed=embed3)
+
+
+    # @commands.command(name='perm check', aliases=['perms', 'permissions'])
+    # @commands.has_permissions(administrator=True)
+    # @commands.guild_only()
+    # async def check_permissions(self, ctx, *, member: discord.Member=None):
+    #     """A simple command which checks a members Guild Permissions. If member is not provided, the author will be checked."""
+
+    #     if not member:
+    #         member = ctx.message.author
+    #     # Here we check if the value of each permission is True.
+    #     perms = '\n'.join(perm for perm, value in member.guild_permissions if value)
+    #     await ctx.send(perms)
+    #     for perms in member.guild_permissions:
+    #         if getattr(member.guild_permissions, value = True):
+    #             '\n'.join(perms)
+
+                    
+
+    #     # And to make it look nice, we wrap it in an Embed
+    #     embed = discord.Embed(title='Permissions for:', description=ctx.guild.name, colour=member.colour)
+    #     embed.set_author(name=str(member))
+
+    #     await ctx.send(ctx.author)
+    #     # \uFEFF is a Zero-Width Space, which basically allows us to have an empty field name.
+    #     embed.add_field(name='dot', value=perms)
+
+    #     await ctx.send(content=None, embed=embed)
+    #     # Thanks to Gio for the Command.
+
+
+    # @commands.command(name='embed')
+    # @commands.has_permissions(administrator=True)
+    # @commands.guild_only()
+    # async def embed(self, ctx):
+    #     """embed test"""
+        
+    #     field1 = str(f'{ctx.message.author} shit')
+    #     valuefield1 = str(f'{ctx.guild.name} piss')
+
+    #     embedVar = discord.Embed(color=discord.Colour.red())
+    #     embedVar.add_field(name=field1, value=valuefield1, inline=False)
+    #     embedVar.add_field(name="Field2", value="hi2", inline=False)
+    #     # await message.channel.send(embed=embedVar)
+    #     await ctx.send(embed=embedVar)
+
+
+
+
+    # @commands.command()
+    # @commands.command()
+    # @commands.command()
+    # @commands.command()
+    # @commands.command()
+    # @commands.command()
+
+
+
+
+
+
+def setup(bot):
+    bot.add_cog(adminCommands(bot))
+    
+    
+    
+# _permissions_dict = dict(iter(member.guild_permissions))
+# permissions = (
+#   ", ".join(
+#     [
+#       # e.g. (`manage_members` -> `Manage Members`)
+#       (permission.replace("_", " ").title())
+#       for permission in _permissions_dict
+#       if _permissions_dict[permission]
+#     ]
+#   )
+#   if not _permissions_dict["administrator"]
+#   else "Administrator"
+# )
