@@ -176,44 +176,7 @@ class logger(commands.Cog):
     @commands.command()
     async def getlog(self, ctx,):
         pass
-        # with open(jsonpath, 'r') as f:
-        #     jsondata = json.load(f)
 
-        # new = await iterate_multidimensional(jsondata)
-        # await ctx.send(new)
-        
-
-            # try:
-            #     for servers in file_data["servers"]:
-            #         if serverID == servers["serverID"]:
-            #             for channels in servers["channels"]:
-            #                 if channelID == channels["channelID"]:
-            #                     channels[-1].append(newmessage)#if the channel exists poste new message
-            #                     raise StopIteration
-            #                 else:
-            #                     servers[-1].append(newchannel) #if the channel id doesnt excst poste new channel, message
-            #                     raise StopIteration
-            #         else:
-            #             file_data[-1].append(newserver) #if the server id doesnt exist poste new server, channel, message
-            #             raise StopIteration
-            # except StopIteration:
-            #     pass 
-
-            # try:
-            #     for servers in file_data["servers"]:
-            #         if serverID != servers["serverID"]:
-            #             file_data["servers"].append(newserver) #if the server id doesnt exist poste new server, channel, message
-            #             raise StopIteration
-            #         else:
-            #             for channels in servers["channels"]:
-            #                 if channelID != channels["channelID"]:
-            #                     servers["channels"].append(newchannel) #if the channel id doesnt excst poste new channel, message
-            #                     raise StopIteration
-            #                 else:
-            #                     channels["messages"].append(newmessage)#if the channel exists poste new message
-            #                     raise StopIteration
-            # except StopIteration:
-            #     pass 
 
     @commands.command()
     async def reset(self, ctx,):
