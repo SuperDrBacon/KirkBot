@@ -5,7 +5,6 @@ import typing
 import asyncio
 import os
 import urllib.parse, urllib.request, re
-import discord_components
 from discord.ui import Button, View
 
 from discord.ext import commands

@@ -4,7 +4,6 @@ import random
 import time
 import typing
 import asyncio
-import discord_components
 import json
 import os
 import pandas as pd
