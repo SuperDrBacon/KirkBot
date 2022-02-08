@@ -79,8 +79,11 @@ class logger(commands.Cog):
         
         
         message = ctx.content
-        if message == "":
-            message = ctx.attachments[0].url
+        try:
+            if message == "":
+                message = ctx.attachments[0].url
+        except IndexError:
+            message = ctx.attachments[-1:]
             # for i in ctx.attachments:
             #     for j in len(i):
             #         temp = i
