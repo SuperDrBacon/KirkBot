@@ -12,11 +12,11 @@ class Automod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx): 
-        
+        pass
 
-        message = ctx.content
-        if message == "":
-            message = ctx.attachments[0].url
+        # message = ctx.content
+        # if message == "":
+        #     message = ctx.attachments[0].url
         
         
 
