@@ -5,7 +5,7 @@ from discord.ext import commands
 from configparser import ConfigParser
 
 config = ConfigParser()
-configpath = os.path.dirname(os.path.realpath(__file__))
+configpath = os.path.abspath(os.getcwd())
 configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 
@@ -21,9 +21,13 @@ class Ai(commands.Cog):
         print('logger module online')
 
     @commands.Cog.listener()
-    async def on_message(self):
-        pass
-
+    async def on_message(self, ctx):
+        if ctx.author.bot:
+            return
+        # pass
+        if ctx.content.startswith('<@!937050268007268452>' or '<@937050268007268452>'):
+            print('reaction ti newaase')
+            
 
 
 
