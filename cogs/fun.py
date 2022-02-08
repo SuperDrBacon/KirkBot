@@ -27,7 +27,7 @@ class fun(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, ctx): 
-        if (ctx.author.bot):
+        if ctx.author.bot:
             return
         if ctx.content.startswith('Kirk'):
             await ctx.channel.send(random.choice(lines))
