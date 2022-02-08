@@ -82,8 +82,8 @@ class logger(commands.Cog):
         try:
             if message == "":
                 message = ctx.attachments[0].url
-        except IndexError:
-            message = ctx.attachments[-1:]
+        except Exception:
+            message = str(ctx.embeds[0])
             # for i in ctx.attachments:
             #     for j in len(i):
             #         temp = i
