@@ -1,4 +1,4 @@
-[![github](https://img.shields.io/github/stars/SuperDrBacon/KirkBot.svg)]()
+[![github](https://img.shields.io/github/stars/freeCodeCamp/freeCodeCamp.svg)]()
 
 # KirkBot
 to do list
