@@ -1,8 +1,11 @@
 import discord
 import openai
 import os
+from textgenrnn import textgenrnn
 from discord.ext import commands
 from configparser import ConfigParser
+
+textgen = textgenrnn()
 
 config = ConfigParser()
 configpath = os.path.abspath(os.getcwd())
