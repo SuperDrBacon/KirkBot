@@ -1,3 +1,5 @@
+[![github](https://img.shields.io/github/stars/freeCodeCamp/freeCodeCamp.svg)]()
+
 # KirkBot
 to do list
 - make it work
