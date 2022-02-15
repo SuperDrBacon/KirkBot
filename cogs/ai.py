@@ -10,7 +10,7 @@ configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 
 key = config['BOTCONFIG']['openaiAPI']
-
+openai.api_key = key
 
 class Ai(commands.Cog):
     def __init__(self, bot):
@@ -25,9 +25,20 @@ class Ai(commands.Cog):
         if ctx.author.bot:
             return
         # pass
-        if ctx.content.startswith('<@!937050268007268452>' or '<@937050268007268452>'):
-            print('reaction ti newaase')
-            
+        if ctx.content.startswith('<@!937050268007268452>') or ctx.content.startswith('<@937050268007268452>'):
+            message = ctx.content + '.'
+            response = openai.Completion.create(
+                engine="text-davinci-001",
+                prompt=message,
+                temperature=0.9,
+                max_tokens=500,
+                n=1,
+                frequency_penalty=0.2,
+                presence_penalty=0.2,
+                stop=["."]
+            )
+            out = response.choices[0].text
+            await ctx.reply(out)
 
 
 
