@@ -48,7 +48,9 @@ class Ai(commands.Cog):
             at = r'<.*?>'
             prefix = re.sub(at, '', prefix)
             response = textgen.generate(temperature=temperature, prefix=prefix, n=n, max_gen_length=max_gen_length, return_as_list=True)
-            await ctx.reply(response[0])
+            out = response[0]
+            out2 = out[len(prefix):]
+            await ctx.reply(out2)
             # print(response)
             return
         global messagecount
