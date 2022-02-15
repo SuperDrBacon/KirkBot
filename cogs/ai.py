@@ -51,7 +51,6 @@ class Ai(commands.Cog):
             return
         global messagecount
         # messagecount += 1
-        # print(messagecount)
         if messagecount == 15:
             response = textgen.generate(temperature=temperature, n=n, max_gen_length=max_gen_length, return_as_list=True)
             await ctx.channel.send(response[0])
