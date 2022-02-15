@@ -1,7 +1,11 @@
 config.ini
-AI
+messages.txt
+kirkai wordmodel_weights.hdf5
+kirkai wordmodel_vocab.json
+kirkai wordmodel_config.json
 
 cogs/kirklines.txt
 cogs/log.json
 cogs/__pycache__
 cogs/bannedwords.txt
+.gitignore
