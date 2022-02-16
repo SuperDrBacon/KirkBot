@@ -35,7 +35,7 @@ class Ai(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('logger module online')
+        print('AI module online')
 
 
     @commands.Cog.listener()
