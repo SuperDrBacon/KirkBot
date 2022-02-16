@@ -42,7 +42,6 @@ class Ai(commands.Cog):
     async def on_message(self, ctx):
         if ctx.author.bot:
             return
-        # pass
         if ctx.content.startswith('<@!937050268007268452>') or ctx.content.startswith('<@937050268007268452>'):
             prefix = ctx.content
             at = r'<.*?>'
@@ -51,7 +50,6 @@ class Ai(commands.Cog):
             out = response[0]
             out2 = out[len(prefix):]
             await ctx.reply(out2)
-            # print(response)
             return
         global messagecount
         # messagecount += 1
@@ -73,7 +71,7 @@ class Ai(commands.Cog):
                 n=1,
                 frequency_penalty=0.2,
                 presence_penalty=0.2,
-                stop=["."]
+                # stop=["."]
             )
             out = response.choices[0].text
             await ctx.reply(out)
@@ -89,7 +87,6 @@ class Ai(commands.Cog):
             'max_length': 10,   # number of tokens to consider before predicting the next (20-40 for characters, 5-10 for words recommended)
             'max_words': 10000,   # maximum number of words to model; the rest will be ignored (word-level model only)
         }
-
         train_cfg = {
             'line_delimited': True,   # set to True if each text has its own line in the source file
             'num_epochs': 1,   # set higher to train the model for longer
@@ -100,11 +97,10 @@ class Ai(commands.Cog):
             'is_csv': False   # set to True if file is a CSV exported from Excel/BigQuery/pandas
         }
         file_name = os.path.abspath(os.getcwd())+'//messages.txt'
-
         dim_embeddings = 200
         batch_size = 800
         max_gen_length = 50
-        await ctx.send(f"training for 10 epochs")
+        await ctx.send(f"training for {train_cfg['num_epochs']} epochs")
         
         if not path.exists(weights_path):
             print('not file')

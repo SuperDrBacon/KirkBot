@@ -8,11 +8,9 @@ import urllib.parse, urllib.request, re
 from discord.ui import Button, View
 
 from discord.ext import commands
-# from discord.ext.commands.context import P
 path = os.path.abspath(os.getcwd())
 
 with open(path + '/cogs/kirklines.txt', 'r') as f:
-    # lines = f.readline().rstrip()
     lines = [line.rstrip() for line in f]
 
 class fun(commands.Cog):
@@ -29,22 +27,10 @@ class fun(commands.Cog):
     async def on_message(self, ctx): 
         if ctx.author.bot:
             return
-        if ctx.content.startswith('Kirk'):
+        if ctx.content.startswith('Kirk') or ctx.content.startswith('kirk') or ctx.content.startswith('KIRK'):
             await ctx.channel.send(random.choice(lines))
-            # await ctx.channel.send('ssdf')
-        # else:
-        #     await ctx.channel.send('ghjg')
-        #     await ctx.send('dik')
-        #     return
-        
-        
-        # await self.client.process_commands(ctx)        
-        # await discord.process_commands(self, ctx)
-        # await self.process_commands(self, ctx)
-        # ctx.process_commands(self)
-        # await ctx.process_message()
 
-    #commands
+
     @commands.command()
     async def ping(self, ctx):
         '''See delay of the bot'''
@@ -145,12 +131,8 @@ class fun(commands.Cog):
     @commands.command(name='youtube', aliases=['yt'])
     async def youtube(self, ctx, *, search):
         '''[youtube] [yt]. Posts youtube vid from search.'''
-        query_string = urllib.parse.urlencode({
-            'search_query':search
-        })
-        html_content = urllib.request.urlopen(
-            'https://www.youtube.com/results?' + query_string
-        )
+        query_string = urllib.parse.urlencode({'search_query':search})
+        html_content = urllib.request.urlopen('https://www.youtube.com/results?' + query_string)
         search_results = re.findall(r"watch\?v=(\S{11})", html_content.read().decode())
         await ctx.send('https://www.youtube.com/watch?v=' + search_results[0])
     
@@ -182,24 +164,17 @@ class fun(commands.Cog):
         #     discord.SelectOption(
         #         label="Blue", description="Your favourite colour is blue", emoji="🟦"
         #     ),
-            
+        
         # placeholder="Choose your favourite colour...",
         # min_values=1,
         # max_values=1,
         # options=options,
-            
-        
-    
-    
-    
+
     # @commands.command()
     # @commands.command()
     # @commands.command()
     # @commands.command()
 
-
-# def setup(bot):
-#     bot.add_cog(fun(bot))
 
 # class DropdownView(discord.ui.View):
 #     def __init__(self):
@@ -258,13 +233,13 @@ class fun(commands.Cog):
 # except asyncio.TimeoutError:
 #     return await ctx.send("You didn't respond")
 # else:
-    
+
 # try:
 #     reaction, user = await bot.wait_for('reaction_add', check=lambda r, u: u == ctx.author and r.message.channel.id == ctx.channel.id, timeout=15)
 # except asyncio.TimeoutError:
 #     return await ctx.send("You didn't respond")
 # else:
-    
+
 # import discord
 # from discord.ext import commands
 
@@ -273,7 +248,7 @@ class fun(commands.Cog):
 #     def __init__(self, bot):
 #         self.bot = bot
 
-    
+
 
 # def setup(bot):
 #     bot.add_cog(Fun(bot))
@@ -284,7 +259,7 @@ class fun(commands.Cog):
 
 #     async def callback(self, interaction: discord.Interaction):
 #         return await super().callback(interaction)
-    
+
 # class MyButton(discord.ui.Button):
 
 #     def __init__(self, *, style: ButtonStyle = ..., label: Optional[str] = None,

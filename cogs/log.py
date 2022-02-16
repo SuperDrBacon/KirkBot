@@ -95,7 +95,6 @@ class logger(commands.Cog):
 
         with open(jsonpath, 'r') as fin:
             file_data = json.load(fin)
-
             try:
                 for servers in file_data["servers"]:
                     if serverID == servers["serverID"]:
@@ -116,12 +115,12 @@ class logger(commands.Cog):
     async def getlog(self, ctx,):
         pass
 
-
+    @commands.has_permissions(administrator=True)  
     @commands.command()
     async def reset(self, ctx,):
-        
-        with open(jsonpath, 'w') as fout:
-            json.dump(init, fout, indent = 4)
+        pass
+        # with open(jsonpath, 'w') as fout:
+        #     json.dump(init, fout, indent = 4)
             
     @commands.has_permissions(administrator=True)      
     @commands.command(aliases=["up"])
