@@ -68,7 +68,7 @@ class Ai(commands.Cog):
             response = openai.Completion.create(
                 engine="text-davinci-001",
                 prompt=message,
-                temperature=0.9,
+                temperature=1.0,
                 max_tokens=500,
                 n=1,
                 frequency_penalty=0.2,
