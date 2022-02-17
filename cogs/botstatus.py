@@ -18,11 +18,11 @@ class setStatus(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send("command doesn't exist")
+            await ctx.reply("command doesn't exist")
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send('Please pass in all requirements :rolling_eyes:.')
+            await ctx.reply('Please pass in all requirements :rolling_eyes:.')
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You dont have all the requirements :angry:")
+            await ctx.reply("You dont have all the requirements :angry:")
 
     #commands
     @commands.command()
