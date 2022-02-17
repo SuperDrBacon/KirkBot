@@ -1,3 +1,4 @@
+from email.mime import base
 import discord
 import openai
 import os
@@ -13,6 +14,7 @@ configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 
 key = config['BOTCONFIG']['openaiAPI']
+botID = config['BOTCONFIG']['botID']
 openai.api_key = key
 
 model_name = 'kirkai wordmodel'   # change to set file name of resulting trained models/texts
@@ -28,7 +30,7 @@ textgen = textgenrnn(config_path=config_path,
                     vocab_path=vocab_path)
 
 
-messagecount = 0
+# messagecount = 0
 class Ai(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -51,13 +53,47 @@ class Ai(commands.Cog):
             out2 = out[len(prefix):]
             await ctx.reply(out2)
             return
-        global messagecount
+
+        if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(botID):
+            base = ctx.reference.resolved.content
+            reply = ctx.content
+            prompt = str(base + '\n\n' + reply)
+            response = openai.Completion.create(
+                engine="text-davinci-001",
+                prompt=prompt,
+                temperature=1.0,
+                max_tokens=500,
+                n=1,
+                frequency_penalty=0.2,
+                presence_penalty=0.2,
+                # stop=["."]
+            )
+            out = response.choices[0].text
+            if not out:
+                reply = ctx.content
+                response = openai.Completion.create(
+                    engine="text-davinci-001",
+                    prompt=reply,
+                    temperature=1.0,
+                    max_tokens=500,
+                    n=1,
+                    frequency_penalty=0.2,
+                    presence_penalty=0.2,
+                    # stop=["."]
+                )
+            out = response.choices[0].text
+            if not out:
+                await ctx.reply('**ai didnt create a response lol, lmao, it coped too hard**')
+            else:
+                await ctx.reply(out)
+
+        # global messagecount
         # messagecount += 1
-        if messagecount == 15:
-            response = textgen.generate(temperature=temperature, n=n, max_gen_length=max_gen_length, return_as_list=True)
-            await ctx.channel.send(response[0])
-            messagecount = 0
-            return
+        # if messagecount == 15:
+        #     response = textgen.generate(temperature=temperature, n=n, max_gen_length=max_gen_length, return_as_list=True)
+        #     await ctx.channel.send(response[0])
+        #     messagecount = 0
+        #     return
 
 
     @commands.command()
