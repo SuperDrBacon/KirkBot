@@ -125,7 +125,7 @@ class Ai(commands.Cog):
         }
         train_cfg = {
             'line_delimited': True,   # set to True if each text has its own line in the source file
-            'num_epochs': 1,   # set higher to train the model for longer
+            'num_epochs': 10,   # set higher to train the model for longer
             'gen_epochs': 0,   # generates sample text from model after given number of epochs
             'train_size': 10.0,   # proportion of input data to train on: setting < 1.0 limits model from learning perfectly
             'dropout': 0.2,   # ignore a random proportion of source tokens each epoch, allowing model to generalize better
@@ -134,7 +134,7 @@ class Ai(commands.Cog):
         }
         file_name = os.path.abspath(os.getcwd())+'//messages.txt'
         dim_embeddings = 200
-        batch_size = 800
+        batch_size = 500
         max_gen_length = 50
         await ctx.send(f"training for {train_cfg['num_epochs']} epochs")
         
