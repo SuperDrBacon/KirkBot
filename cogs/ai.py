@@ -134,7 +134,7 @@ class Ai(commands.Cog):
         }
         file_name = os.path.abspath(os.getcwd())+'//messages.txt'
         dim_embeddings = 200
-        batch_size = 500
+        batch_size = 256
         max_gen_length = 50
         await ctx.send(f"training for {train_cfg['num_epochs']} epochs")
         
