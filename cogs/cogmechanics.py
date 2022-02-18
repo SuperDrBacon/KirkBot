@@ -3,7 +3,7 @@ import os
 from discord.ext import commands
 
 class Cogs(commands.Cog):
-    '''Cogs are the modules that contain different commands or functions. This Cogs module is used to load or unload different modules to update the bot without having to take it offline'''
+    '''This Cogs module is used to load or unload different modules to update the bot without having to take it offline'''
     def __init__(self, bot):
         self.bot = bot
 
