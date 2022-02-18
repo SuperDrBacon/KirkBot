@@ -16,6 +16,7 @@ config.read(configini)
 key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
 openai.api_key = key
+textmodel = 'text-curie-001'
 
 model_name = 'kirkai wordmodel'   # change to set file name of resulting trained models/texts
 vocab_path = os.path.abspath(os.getcwd())+'//'+model_name+"_vocab.json"
@@ -59,7 +60,7 @@ class Ai(commands.Cog):
             reply = ctx.content
             prompt = str(base + '\n\n' + reply)
             response = openai.Completion.create(
-                engine="text-curie-001",
+                engine=textmodel,
                 prompt=prompt,
                 temperature=1.0,
                 max_tokens=500,
@@ -72,7 +73,7 @@ class Ai(commands.Cog):
             if not out:
                 reply = ctx.content
                 response = openai.Completion.create(
-                    engine="text-curie-001",
+                    engine=textmodel,
                     prompt=reply,
                     temperature=1.0,
                     max_tokens=500,
@@ -100,7 +101,7 @@ class Ai(commands.Cog):
     async def ai(self, ctx, *, message):
             # message = ctx.content + '.'
             response = openai.Completion.create(
-                engine="text-davinci-001",
+                engine=textmodel,
                 prompt=message,
                 temperature=1.0,
                 max_tokens=500,
