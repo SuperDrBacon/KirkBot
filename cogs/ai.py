@@ -59,7 +59,7 @@ class Ai(commands.Cog):
             reply = ctx.content
             prompt = str(base + '\n\n' + reply)
             response = openai.Completion.create(
-                engine="text-davinci-001",
+                engine="text-curie-001",
                 prompt=prompt,
                 temperature=1.0,
                 max_tokens=500,
@@ -72,7 +72,7 @@ class Ai(commands.Cog):
             if not out:
                 reply = ctx.content
                 response = openai.Completion.create(
-                    engine="text-davinci-001",
+                    engine="text-curie-001",
                     prompt=reply,
                     temperature=1.0,
                     max_tokens=500,
