@@ -1,5 +1,7 @@
 config.ini
 messages.txt
+genAI_log.txt
+jsonLogToMessages.txt
 kirkai wordmodel_weights.hdf5
 kirkai wordmodel_vocab.json
 kirkai wordmodel_config.json
