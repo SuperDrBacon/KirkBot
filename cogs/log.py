@@ -2,6 +2,7 @@ from mimetypes import init
 import discord
 import random
 import time
+import aiofiles
 import typing
 import asyncio
 import json
@@ -32,7 +33,7 @@ init = {
 class logger(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+        
     @commands.Cog.listener()
     async def on_ready(self):
         print('logger module online')
@@ -55,7 +56,10 @@ class logger(commands.Cog):
             if message == "":
                 message = ctx.attachments[0].url
         except Exception:
-            message = str(ctx.embeds[0])
+            # try:
+            message = str(f'{ctx.embeds[0]}')
+            # except Exception:
+            #     message = '.-prob a sticker-.'
 
         print(f'{userNAME}: {message}')
 
@@ -95,18 +99,18 @@ class logger(commands.Cog):
 
         with open(jsonpath, 'r') as fin:
             file_data = json.load(fin)
-            try:
-                for servers in file_data["servers"]:
-                    if serverID == servers["serverID"]:
-                        for channels in servers["channels"]:
-                            if channels["channelID"] == channelID:
-                                channels["messages"].append(newmessage)#if the channel exist post new message
-                                raise StopIteration
-                        servers["channels"].append(newchannel) #if the channel id doesnt excist post new channel, message
-                        raise StopIteration
-                file_data["servers"].append(newserver) #if the server id doesnt exist post new server, channel, message
-            except StopIteration:
-                pass 
+        try:
+            for servers in file_data["servers"]:
+                if serverID == servers["serverID"]:
+                    for channels in servers["channels"]:
+                        if channels["channelID"] == channelID:
+                            channels["messages"].append(newmessage)#if the channel exist post new message
+                            raise StopIteration
+                    servers["channels"].append(newchannel) #if the channel id doesnt excist post new channel, message
+                    raise StopIteration
+            file_data["servers"].append(newserver) #if the server id doesnt exist post new server, channel, message
+        except StopIteration:
+            pass 
         with open(jsonpath, 'w') as fout:
             json.dump(file_data, fout, indent = 4)
             
@@ -115,15 +119,15 @@ class logger(commands.Cog):
     async def getlog(self, ctx,):
         pass
 
-    @commands.has_permissions(administrator=True)  
     @commands.command()
+    @commands.has_permissions(administrator=True)  
     async def reset(self, ctx,):
         pass
         # with open(jsonpath, 'w') as fout:
         #     json.dump(init, fout, indent = 4)
             
-    @commands.has_permissions(administrator=True)      
     @commands.command(aliases=["up"])
+    @commands.has_permissions(administrator=True)      
     async def update_mesages(self, ctx):
         iserver = 0
         ichannel = 0
@@ -131,52 +135,52 @@ class logger(commands.Cog):
         before = time.monotonic_ns()
         with open(jsonpath, 'r') as fin:
             file_data = json.load(fin)
-            with open(messagestxt, 'w', encoding='utf-8') as messagein:
-                for servers in file_data["servers"]:
-                    if servers["serverID"] == 123 or servers["serverID"] == 937056927312150599:
-                        continue
-                    iserver += 1
-                    for channels in servers["channels"]:
-                        if channels["channelID"] == 939083691790061601 or channels["channelID"] ==939221538949980210:
-                            ichannel += 1
-                            for message in channels["messages"]:
-                                text = str(message["message"])
-                                
-                                if text == "[]":
-                                    continue
-                                
-                                emojipattern = r'<.*?>'
-                                text2 = re.sub(emojipattern, '', text)
-
-                                commandpluspattern = r'\+([\S]+.)'
-                                text3 = re.sub(commandpluspattern, '', text2)
-                                
-                                links = r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,10}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
-                                text4 = re.sub(links, '', text3)
-                                
-                                commanddotpattern = r'\.([\S]+.)'
-                                text5 = re.sub(commanddotpattern, '', text4)
-                                
-                                commandcommapattern = r'\,([\S]+.)'
-                                text6 = re.sub(commanddotpattern, '', text5)
-                                
-                                leadingspacespattern = r'^ +'
-                                text7 = re.sub(leadingspacespattern, '', text6)
-                                
-                                exclamationpattern = r'\!([\S]+.)'
-                                text8 = re.sub(exclamationpattern, '', text7)
-                                
-                                atpattern = r'\@([\S]+.)'
-                                text9 = re.sub(atpattern, '', text8)
-                                
-                                # newline = '\n'
-                                # text10 = re.sub(newline, ' ', text9)
-                                
-                                if not text9:
-                                    continue
-                                
-                                messagein.write(text9+'\n')
-                                imessage += 1
+        with open(messagestxt, 'w', encoding='utf-8') as messagein:  
+            for servers in file_data["servers"]:
+                if servers["serverID"] == 123 or servers["serverID"] == 937056927312150599:
+                    continue
+                iserver += 1
+                for channels in servers["channels"]:
+                    if channels["channelID"] == 939083691790061601 or channels["channelID"] ==939221538949980210:
+                        ichannel += 1
+                        for message in channels["messages"]:
+                            text = str(message["message"])
+                            
+                            if text == "[]":
+                                continue
+                            
+                            emojipattern = r'<.*?>'
+                            text2 = re.sub(emojipattern, '', text)
+                            
+                            commandpluspattern = r'\+([\S]+.)'
+                            text3 = re.sub(commandpluspattern, '', text2)
+                            
+                            links = r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,10}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
+                            text4 = re.sub(links, '', text3)
+                            
+                            commanddotpattern = r'\.([\S]+.)'
+                            text5 = re.sub(commanddotpattern, '', text4)
+                            
+                            commandcommapattern = r'\,([\S]+.)'
+                            text6 = re.sub(commandcommapattern, '', text5)
+                            
+                            leadingspacespattern = r'^ +'
+                            text7 = re.sub(leadingspacespattern, '', text6)
+                            
+                            exclamationpattern = r'\!([\S]+.)'
+                            text8 = re.sub(exclamationpattern, '', text7)
+                            
+                            atpattern = r'\@([\S]+.)'
+                            text9 = re.sub(atpattern, '', text8)
+                            
+                            # newline = '\n'
+                            # text10 = re.sub(newline, ' ', text9)
+                            
+                            if not text9:
+                                continue
+                            
+                            messagein.write(text9+'\n')
+                            imessage += 1
         after = (time.monotonic_ns() - before) / 1000000000
         await ctx.send(f'{after}s')
         await ctx.send(f'servers: {iserver} channels: {ichannel} messages: {imessage}')
@@ -202,3 +206,14 @@ def setup(bot):
 #             ]}
 #         ]}
 #     ]}
+
+
+# async def save_audit_logs(guild):
+#      with open(f'audit_logs_{guild.name}', 'w+') as f:
+#           async for entry in guild.audit_logs(limit=100):
+#                f.write('{0.user} did {0.action} to {0.target}'.format(entry))
+
+# @client.event
+# async def on_message(message):
+#      if message.content.startswith('audit'):
+#          await save_audit_logs(message.channel.guild)
