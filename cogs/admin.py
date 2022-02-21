@@ -1,10 +1,15 @@
 import datetime
 import discord
+import aiofiles
 import asyncio
 from discord.ext import commands
 from discord.ext.commands import CheckFailure
 
 
+class MemberRoles(commands.MemberConverter):
+    async def convert(self, ctx, argument):
+        member = await super().convert(ctx, argument)
+        return [role.name for role in member.roles[1:]] # Remove everyone role!
 
 class adminCommands(commands.Cog):
     def __init__(self, bot):
@@ -13,6 +18,45 @@ class adminCommands(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
             print('Admin module online')
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def warn(self, ctx, member:discord.Member=None, *, reason=None):
+        '''warns a user'''
+        try:
+            first_warning = False
+            commands.warnings[ctx.guild.id][member.id][0] += 1
+            commands.warnings[ctx.guild.id][member.id][1].append((ctx.author.id, reason))
+
+        except KeyError:
+            first_warning = True
+            commands.warnings[ctx.guild.id][member.id] = [1, [(ctx.author.id, reason)]]
+
+        count = commands.warnings[ctx.guild.id][member.id][0]
+
+        with open(f"{ctx.guild.id}.txt", mode="a") as f:
+            f.write(f"{member.id} {ctx.author.id} {reason}\n")
+
+        await ctx.send(f"{member.mention} has {count} {'warning' if first_warning else 'warnings'}.")
+
+
+
+    # @commands.command()
+    # @commands.has_permissions(administrator=True)
+    # async def member(self, ctx):
+    #     '''member options of server'''    #!dont work innit
+    #     guildID = ctx.guild.id
+
+    #     guild = self.bot.get_guild(guildID)
+    #     memberCount = guild.members.member_count
+    #     await ctx.reply(f'```{memberCount}```')
+        
+
+    @commands.command()
+    async def roles(self, ctx, *, member: MemberRoles):
+        """Tells you a member's roles."""
+        await ctx.send('I see the following roles:``` '+', '.join(member)+'```')
+        
 
     # @commands.command()
     # @commands.has_permissions(administrator=True)
