@@ -1,3 +1,4 @@
+from tkinter import TRUE
 import discord
 import os
 from discord.ext import commands
@@ -11,7 +12,7 @@ config.read(configini)
 path = os.path.abspath(os.getcwd())
 title = config['DEFAULT']['title']
 
-bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'])
+bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True)
 
 @bot.event
 async def on_ready():
