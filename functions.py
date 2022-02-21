@@ -1,4 +1,68 @@
+from functools import partial
 import numpy, re
+import shutil
+import os
+
+def filter(message):
+    emojipattern = r'<.*?>'
+    text2 = re.sub(emojipattern, '', message)
+
+    commandpluspattern = r'\+([\S]+.)'
+    text3 = re.sub(commandpluspattern, '', text2)
+
+    links = r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,10}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
+    text4 = re.sub(links, '', text3)
+
+    commanddotpattern = r'\.([\S]+.)'
+    text5 = re.sub(commanddotpattern, '', text4)
+
+    commandcommapattern = r'\,([\S]+.)'
+    text6 = re.sub(commandcommapattern, '', text5)
+
+    leadingspacespattern = r'^ +'
+    text7 = re.sub(leadingspacespattern, '', text6)
+
+    exclamationpattern = r'\!([\S]+.)'
+    text8 = re.sub(exclamationpattern, '', text7)
+
+    atpattern = r'\@([\S]+.)'
+    text9 = re.sub(atpattern, '', text8)
+    
+    dashdashpattern = r'--([\S]+.)'
+    text10 = re.sub(dashdashpattern, '', text9)
+    
+    gdotpattern = r'(g|G)\.([\S]+.)'
+    cleaned = re.sub(gdotpattern, '', text10)
+    
+    # newline = '\n'
+    # text10 = re.sub(newline, ' ', text9)
+    
+    return cleaned
+
+
+messagestxt = os.path.abspath(os.getcwd()) + "/jsonLogToMessages.txt"
+genAI_log = os.path.abspath(os.getcwd()) + "/genAI_log.txt"
+messages = os.path.abspath(os.getcwd()) + "/messages.txt"
+
+def joinfiles():
+    with open(messages,'wb') as wfd:
+        for f in [genAI_log, messagestxt]:
+            with open(f, 'rb') as fd:
+                shutil.copyfileobj(fd, wfd)
+    with open(messages, 'rb') as linecount:
+        lines = 0
+        buf_size = 1024 * 1024
+        read_f = linecount.raw.read
+
+        buf = read_f(buf_size)
+        while buf:
+            lines += buf.count(b'\n')
+            buf = read_f(buf_size)
+    return lines
+
+
+
+
 def levenshteinDistanceDP(token1, token2):
     distances = numpy.zeros((len(token1) + 1, len(token2) + 1))
 
