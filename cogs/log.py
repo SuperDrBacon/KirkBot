@@ -8,11 +8,13 @@ import asyncio
 import json
 import os
 import re
+import functions
 from discord.ui import Button, View
 from discord.ext import commands
 
 jsonpath = os.path.abspath(os.getcwd()) + "/cogs/log.json"
-messagestxt = os.path.abspath(os.getcwd()) + "/messages.txt"
+messagestxt = os.path.abspath(os.getcwd()) + "/jsonLogToMessages.txt"
+genAI_log = os.path.abspath(os.getcwd()) + "/genAI_log.txt"
 
 init = {
     "servers":[{
@@ -149,43 +151,18 @@ class logger(commands.Cog):
                             if text == "[]":
                                 continue
                             
-                            emojipattern = r'<.*?>'
-                            text2 = re.sub(emojipattern, '', text)
+                            cleaned = functions.filter(text)
                             
-                            commandpluspattern = r'\+([\S]+.)'
-                            text3 = re.sub(commandpluspattern, '', text2)
-                            
-                            links = r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,10}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
-                            text4 = re.sub(links, '', text3)
-                            
-                            commanddotpattern = r'\.([\S]+.)'
-                            text5 = re.sub(commanddotpattern, '', text4)
-                            
-                            commandcommapattern = r'\,([\S]+.)'
-                            text6 = re.sub(commandcommapattern, '', text5)
-                            
-                            leadingspacespattern = r'^ +'
-                            text7 = re.sub(leadingspacespattern, '', text6)
-                            
-                            exclamationpattern = r'\!([\S]+.)'
-                            text8 = re.sub(exclamationpattern, '', text7)
-                            
-                            atpattern = r'\@([\S]+.)'
-                            text9 = re.sub(atpattern, '', text8)
-                            
-                            # newline = '\n'
-                            # text10 = re.sub(newline, ' ', text9)
-                            
-                            if not text9:
+                            if not cleaned:
                                 continue
                             
-                            messagein.write(text9+'\n')
+                            messagein.write(cleaned+'\n')
                             imessage += 1
+        totalLineCount = functions.joinfiles()
         after = (time.monotonic_ns() - before) / 1000000000
         await ctx.send(f'{after}s')
-        await ctx.send(f'servers: {iserver} channels: {ichannel} messages: {imessage}')
-            
-            
+        await ctx.send(f'\n`servers: {iserver}`\n`channels: {ichannel}`\n`messages json: {imessage}`\n`total lines json+genAI: {totalLineCount}`')
+
 def setup(bot):
     bot.add_cog(logger(bot))
 
