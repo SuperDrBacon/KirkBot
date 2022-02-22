@@ -121,14 +121,14 @@ class Ai(commands.Cog):
             'rnn_size': 256,   # number of LSTM cells of each layer (128/256 recommended)
             'rnn_layers': 10,   # number of LSTM layers (>=2 recommended)
             'rnn_bidirectional': True,   # consider text both forwards and backward, can give a training boost
-            'max_length': 10,   # number of tokens to consider before predicting the next (20-40 for characters, 5-10 for words recommended)
-            'max_words': 10000,   # maximum number of words to model; the rest will be ignored (word-level model only)
+            'max_length': 8,   # number of tokens to consider before predicting the next (20-40 for characters, 5-10 for words recommended)
+            'max_words': 100000,   # maximum number of words to model; the rest will be ignored (word-level model only)
         }
         train_cfg = {
             'line_delimited': True,   # set to True if each text has its own line in the source file
-            'num_epochs': 10,   # set higher to train the model for longer
+            'num_epochs': 4,   # set higher to train the model for longer
             'gen_epochs': 0,   # generates sample text from model after given number of epochs
-            'train_size': 10.0,   # proportion of input data to train on: setting < 1.0 limits model from learning perfectly
+            'train_size': 5.0,   # proportion of input data to train on: setting < 1.0 limits model from learning perfectly
             'dropout': 0.2,   # ignore a random proportion of source tokens each epoch, allowing model to generalize better
             'validation': False,   # If train__size < 1.0, test on holdout dataset; will make overall training slower
             'is_csv': False   # set to True if file is a CSV exported from Excel/BigQuery/pandas
@@ -136,7 +136,7 @@ class Ai(commands.Cog):
         file_name = os.path.abspath(os.getcwd())+'//messages.txt'
         dim_embeddings = 200
         batch_size = 256
-        max_gen_length = 50
+        max_gen_length = 500
         await ctx.send(f"training for {train_cfg['num_epochs']} epochs")
         
         if not path.exists(weights_path):
