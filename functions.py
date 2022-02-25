@@ -172,5 +172,3 @@ scamLinks = [set([
     "http://discord-airdrop.com",
     "https://discord-give.com"
 ])][0]
-
-# Credit to https://github.com/Discord-AntiScam/scam-links/blob/main/urls.json
