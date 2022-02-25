@@ -14,44 +14,44 @@ class Cogs(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def load(self, ctx, name: str):
-        '''Loads an extension.'''
+        '''Loads a module.'''
         try:
             self.bot.load_extension(f"cogs.{name}")
         except Exception as e:
             return await ctx.send(f"Error when loading cog: {e}")
-        await ctx.send(f"Loaded extension **{name}.py**")
+        await ctx.send(f"Loaded module **{name}**")
 
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def un(self, ctx, name: str):
-        '''Unloads an extension.'''
+        '''Unloads a module.'''
         try:
             self.bot.unload_extension(f"cogs.{name}")
         except Exception as e:
             return await ctx.send(f"Error when unloading cog: {e}")
-        await ctx.send(f"Unloaded extension **{name}.py**")
+        await ctx.send(f"Unloaded module **{name}**")
 
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def re(self, ctx, name: str):
-        '''Reloads an extension.'''
+        '''Reloads a module.'''
         try:
             self.bot.reload_extension(f"cogs.{name}")
         except Exception as e:
             return await ctx.send(f"Error when reloading cog: {e}")
-        await ctx.send(f"Reloaded extension **{name}.py**")
+        await ctx.send(f"Reloaded module **{name}**")
 
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def reall(self, ctx):
-        '''Reloads all extensions.'''
+        '''Reloads all modules.'''
         error_collection = []
         for filename in os.listdir('./KirkBot/cogs'):
             if filename.endswith(".py"):
                 name = filename[:-3]
                 try:
                     self.bot.reload_extension(f"cogs.{name}")
-                    await ctx.send(f"Reloaded extension **{name}.py**")
+                    await ctx.send(f"Reloaded module **{name}**")
                 except Exception as e:
                     error_collection.append(filename, e)
 
