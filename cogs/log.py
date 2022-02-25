@@ -1,16 +1,12 @@
-from mimetypes import init
 import discord
-import random
 import time
-import aiofiles
-import typing
-import asyncio
 import json
 import os
 import re
 import functions
 from discord.ui import Button, View
 from discord.ext import commands
+from datetime import datetime, timezone
 
 jsonpath = os.path.abspath(os.getcwd()) + "/cogs/log.json"
 messagestxt = os.path.abspath(os.getcwd()) + "/jsonLogToMessages.txt"
@@ -41,19 +37,22 @@ class logger(commands.Cog):
         print('logger module online')
 
     @commands.Cog.listener()
-    async def on_message(self, ctx): 
-
+    async def on_message(self, ctx):
+        now_utc = str(datetime.now(timezone.utc))
+        now_unix =  str(time.time())
         serverNAME = ctx.guild.name
         serverID = ctx.guild.id
-
         userNAME = ctx.author.name
         userID = ctx.author.id
-        
         channelNAME = ctx.channel.name
         channelID = ctx.channel.id
-        
-        
         message = ctx.content
+        
+        reply = False
+        if ctx.reference:
+            reply = True
+            print(f'╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
+        
         try:
             if message == "":
                 message = ctx.attachments[0].url
@@ -65,8 +64,8 @@ class logger(commands.Cog):
 
         print(f'{userNAME}: {message}')
 
-
-        newserver = {
+        if not reply:
+            newserver = {
                 "servername": serverNAME,
                 "serverID": serverID,
                 "channels":[{
@@ -75,29 +74,88 @@ class logger(commands.Cog):
                     "messages":[{
                         "username": userNAME,
                         "userID": userID,
-                        "message": message
-                        }
-                    ]}
-                ]
-            }
-
-        newchannel = {
+                        "message": message,
+                        "reply": reply,
+                        "dateTime": now_utc,
+                        "Unix": now_unix,
+                        }]
+                    }]
+                }
+            newchannel = {
                 "channelname": channelNAME,
                 "channelID": channelID,
                 "messages":[{
                         "username": userNAME,
                         "userID": userID,
-                        "message": message
-                        }
-                    ]
-                }
-
-        newmessage = {
+                        "message": message,
+                        "reply": reply,
+                        "dateTime": now_utc,
+                        "Unix": now_unix,
+                        }]
+                    }
+            newmessage = {
                 "username": userNAME,
                 "userID": userID,
-                "message": message
+                "message": message,
+                "reply": reply,
+                "dateTime": now_utc,
+                "Unix": now_unix,
             }
-
+        else:
+            repliedmessage = ctx.reference.resolved.content
+            replieduser = ctx.reference.resolved.author.name
+            repliedID = ctx.reference.resolved.author.id
+            newserverreplied = {
+                "servername": serverNAME,
+                "serverID": serverID,
+                "channels":[{
+                    "channelname": channelNAME,
+                    "channelID": channelID,                  
+                    "messages":[{
+                        "username": userNAME,
+                        "userID": userID,
+                        "message": message,
+                        "reply": reply,
+                        "dateTime": now_utc,
+                        "Unix": now_unix,
+                        "replied to message":[{
+                            "username": replieduser,
+                            "userID": repliedID,
+                            "message": repliedmessage,
+                            }]
+                        }]
+                    }]
+                }
+            newchannelreplied = {
+                "channelname": channelNAME,
+                "channelID": channelID,
+                "messages":[{
+                    "username": userNAME,
+                    "userID": userID,
+                    "message": message,
+                    "reply": reply,
+                    "dateTime": now_utc,
+                    "Unix": now_unix,
+                    "replied to message":[{
+                        "username": replieduser,
+                        "userID": repliedID,
+                        "message": repliedmessage,
+                        }]
+                    }]
+                }
+            newmessagereplied = {
+                "username": userNAME,
+                "userID": userID,
+                "message": message,
+                "reply": reply,
+                "dateTime": now_utc,
+                "Unix": now_unix,
+                "replied to message":[{
+                    "username": replieduser,
+                    "userID": repliedID,
+                    "message": repliedmessage,
+                    }]
+                }
 
         with open(jsonpath, 'r') as fin:
             file_data = json.load(fin)
@@ -106,11 +164,20 @@ class logger(commands.Cog):
                 if serverID == servers["serverID"]:
                     for channels in servers["channels"]:
                         if channels["channelID"] == channelID:
-                            channels["messages"].append(newmessage)#if the channel exist post new message
+                            if reply:
+                                channels["messages"].append(newmessagereplied)#if the channel exist post new message. with replied to message
+                            else:
+                                channels["messages"].append(newmessage)#if the channel exist post new message
                             raise StopIteration
-                    servers["channels"].append(newchannel) #if the channel id doesnt excist post new channel, message
+                    if reply:
+                        servers["channels"].append(newchannelreplied)#if the channel id doesnt excist post new channel, message. with replied to message
+                    else:
+                        servers["channels"].append(newchannel) #if the channel id doesnt excist post new channel, message
                     raise StopIteration
-            file_data["servers"].append(newserver) #if the server id doesnt exist post new server, channel, message
+            if reply:
+                file_data["servers"].append(newserverreplied) #if the server id doesnt exist post new server, channel, message. with replied to message
+            else:
+                file_data["servers"].append(newserver) #if the server id doesnt exist post new server, channel, message
         except StopIteration:
             pass 
         with open(jsonpath, 'w') as fout:
@@ -165,32 +232,3 @@ class logger(commands.Cog):
 
 def setup(bot):
     bot.add_cog(logger(bot))
-
-
-
-# init = {
-#     "servers":[{
-#         "servername": serverNAME,
-#         "serverID": serverID,
-#         "channels":[{
-#             "channelname": channelNAME,
-#             "channelID": channelID,                  
-#             "messages":[{
-#                 "username": userNAME,
-#                 "userID": userID,
-#                 "message": message
-#                 }
-#             ]}
-#         ]}
-#     ]}
-
-
-# async def save_audit_logs(guild):
-#      with open(f'audit_logs_{guild.name}', 'w+') as f:
-#           async for entry in guild.audit_logs(limit=100):
-#                f.write('{0.user} did {0.action} to {0.target}'.format(entry))
-
-# @client.event
-# async def on_message(message):
-#      if message.content.startswith('audit'):
-#          await save_audit_logs(message.channel.guild)
