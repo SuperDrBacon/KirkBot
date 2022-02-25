@@ -1,4 +1,5 @@
 from email.mime import base
+import random
 import discord
 import openai
 import os
@@ -10,7 +11,7 @@ from configparser import ConfigParser
 
 config = ConfigParser()
 configpath = os.path.abspath(os.getcwd())
-configini = '/'.join([configpath, "config.ini"])
+configini = '\\'.join([configpath, "config.ini"])
 config.read(configini)
 
 key = config['BOTCONFIG']['openaiAPI']
@@ -19,22 +20,23 @@ openai.api_key = key
 textmodel = 'text-curie-001'
 
 model_name = 'kirkai wordmodel'   # change to set file name of resulting trained models/texts
-vocab_path = os.path.abspath(os.getcwd())+'//'+model_name+"_vocab.json"
-config_path = os.path.abspath(os.getcwd())+'//'+model_name+"_config.json"
-weights_path = os.path.abspath(os.getcwd())+'//'+model_name+"_weights.hdf5"
+vocab_path = os.path.abspath(os.getcwd())+'\\'+model_name+"_vocab.json"
+config_path = os.path.abspath(os.getcwd())+'\\'+model_name+"_config.json"
+weights_path = os.path.abspath(os.getcwd())+'\\'+model_name+"_weights.hdf5"
 
 temperature = 2.5
 n = 1
 max_gen_length = 15
-textgen = textgenrnn(config_path=config_path,
-                    weights_path=weights_path,
-                    vocab_path=vocab_path)
+# textgen = textgenrnn(config_path=config_path,
+#                     weights_path=weights_path,
+#                     vocab_path=vocab_path)
 
 
 # messagecount = 0
 class Ai(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -45,15 +47,15 @@ class Ai(commands.Cog):
     async def on_message(self, ctx):
         if ctx.author.bot:
             return
-        if ctx.content.startswith('<@!937050268007268452>') or ctx.content.startswith('<@937050268007268452>'):
-            prefix = ctx.content
-            at = r'<.*?>'
-            prefix = re.sub(at, '', prefix)
-            response = textgen.generate(temperature=temperature, prefix=prefix, n=n, max_gen_length=max_gen_length, return_as_list=True)
-            out = response[0]
-            out2 = out[len(prefix):]
-            await ctx.reply(out2)
-            return
+        # if ctx.content.startswith('<@!937050268007268452>') or ctx.content.startswith('<@937050268007268452>'):
+        #     prefix = ctx.content
+        #     at = r'<.*?>'
+        #     prefix = re.sub(at, '', prefix)
+        #     response = textgen.generate(temperature=temperature, prefix=prefix, n=n, max_gen_length=max_gen_length, return_as_list=True)
+        #     out = response[0]
+        #     out2 = out[len(prefix):]
+        #     await ctx.reply(out2)
+        #     return
 
         if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(botID):
             base = ctx.reference.resolved.content
@@ -82,11 +84,49 @@ class Ai(commands.Cog):
                     presence_penalty=0.2,
                     # stop=["."]
                 )
-            out = response.choices[0].text
+                out = response.choices[0].text
             if not out:
                 await ctx.reply('**ai didnt create a response lol, lmao, it coped too hard**')
             else:
                 await ctx.reply(out)
+
+        if not ctx.author.bot and random.randint(0,100) == 1 and ctx.channel.id == 939221538949980210:
+            user = ctx.author.name
+            prompts = [f'Give {user} an ordered list of suicide options.',
+                       f'Write a love story about {user}.',
+                       f'Give {user} detailed instructions on how to blow up a federal building.'
+                    ]
+            replyprompt = random.choices(prompts)
+            
+            response = openai.Completion.create(
+                engine=textmodel,
+                prompt=replyprompt,
+                temperature=1.0,
+                max_tokens=250,
+                n=1,
+                frequency_penalty=0.2,
+                presence_penalty=0.2,
+                # stop=["."]
+                )
+            out = response.choices[0].text
+            if not out:
+                reply = ctx.content
+                response = openai.Completion.create(
+                    engine=textmodel,
+                    prompt=replyprompt,
+                    temperature=2.0,
+                    max_tokens=250,
+                    n=1,
+                    frequency_penalty=0.2,
+                    presence_penalty=0.2,
+                    # stop=["."]
+                    )
+                out = response.choices[0].text
+            if not out:
+                await ctx.reply('**ai didnt create a response lol, lmao, it coped too hard**')
+            else:
+                await ctx.reply(out)
+
 
         # global messagecount
         # messagecount += 1
