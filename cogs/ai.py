@@ -20,9 +20,9 @@ openai.api_key = key
 textmodel = 'text-curie-001'
 
 model_name = 'kirkai wordmodel'   # change to set file name of resulting trained models/texts
-vocab_path = os.path.abspath(os.getcwd())+'\\'+model_name+"_vocab.json"
-config_path = os.path.abspath(os.getcwd())+'\\'+model_name+"_config.json"
-weights_path = os.path.abspath(os.getcwd())+'\\'+model_name+"_weights.hdf5"
+vocab_path = os.path.dirname(os.path.realpath(__file__)) + model_name+"_vocab.json"
+config_path = os.path.dirname(os.path.realpath(__file__)) + model_name+"_config.json"
+weights_path = os.path.dirname(os.path.realpath(__file__)) + model_name+"_weights.hdf5"
 
 temperature = 2.5
 n = 1
@@ -45,6 +45,21 @@ class Ai(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
+        if ctx.author.id == 656962312565030963 and random.randint(0,25) == 1:
+            prompt = 'Top ten rude words.'
+            response = openai.Completion.create(
+                engine=textmodel,
+                prompt=prompt,
+                temperature=1.0,
+                max_tokens=500,
+                n=1,
+                frequency_penalty=0.2,
+                presence_penalty=0.2,
+                # stop=["."]
+            )
+            out = response.choices[0].text
+            await ctx.reply(out)
+            
         if ctx.author.bot:
             return
         if ctx.content.startswith('<@!937050268007268452>') or ctx.content.startswith('<@937050268007268452>'):
@@ -57,6 +72,8 @@ class Ai(commands.Cog):
         #     await ctx.reply(out2)
         #     return
             await ctx.reply('@ the bot is currently not a command use .,ai for ai.')
+
+
 
         if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(botID):
             base = ctx.reference.resolved.content
