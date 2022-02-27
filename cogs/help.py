@@ -1,8 +1,15 @@
+from configparser import ConfigParser
+import os
 import discord
 import datetime
 from discord.ext import commands
 
-botversion = 'KirkBot v1'
+config = ConfigParser()
+configpath = os.path.abspath(os.getcwd())
+configini = '\\'.join([configpath, "config.ini"])
+config.read(configini)
+
+botversion = config['DEFAULT']['title']
 timestamp = datetime.datetime.now()
 
 class Help(commands.Cog):

@@ -40,9 +40,9 @@ def filter(message):
     return cleaned
 
 
-messagestxt = os.path.abspath(os.getcwd()) + "/jsonLogToMessages.txt"
-genAI_log = os.path.abspath(os.getcwd()) + "/genAI_log.txt"
-messages = os.path.abspath(os.getcwd()) + "/messages.txt"
+messagestxt = os.path.dirname(os.path.realpath(__file__)) + "/jsonLogToMessages.txt"
+genAI_log = os.path.dirname(os.path.realpath(__file__)) + "/genAI_log.txt"
+messages = os.path.dirname(os.path.realpath(__file__)) + "/messages.txt"
 
 def joinfiles():
     with open(messages,'wb') as wfd:

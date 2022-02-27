@@ -8,9 +8,9 @@ import urllib.parse, urllib.request, re
 from discord.ui import Button, View
 
 from discord.ext import commands
-path = os.path.abspath(os.getcwd())
+path = os.path.dirname(os.path.realpath(__file__)) + '/cogs/kirklines.txt'
 
-with open(path + '/cogs/kirklines.txt', 'r') as f:
+with open(path, 'r') as f:
     lines = [line.rstrip() for line in f]
 
 class fun(commands.Cog):
@@ -135,6 +135,8 @@ class fun(commands.Cog):
         html_content = urllib.request.urlopen('https://www.youtube.com/results?' + query_string)
         search_results = re.findall(r"watch\?v=(\S{11})", html_content.read().decode())
         await ctx.send('https://www.youtube.com/watch?v=' + search_results[0])
+    
+    
     
     
     # @commands.command(name='button_delete', aliases=['but'])
