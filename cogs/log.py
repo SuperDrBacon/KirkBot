@@ -8,9 +8,9 @@ from discord.ui import Button, View
 from discord.ext import commands
 from datetime import datetime, timezone
 
-jsonpath = os.path.dirname(os.path.realpath(__file__)) + "/cogs/log.json"
-messagestxt = os.path.dirname(os.path.realpath(__file__)) + "/jsonLogToMessages.txt"
-genAI_log = os.path.dirname(os.path.realpath(__file__)) + "/genAI_log.txt"
+jsonpath = os.path.dirname(os.path.realpath(__file__)) + "\\log.json"
+messagestxt = os.path.dirname(os.path.realpath(__file__)) + "\\jsonLogToMessages.txt"
+genAI_log = os.path.dirname(os.path.realpath(__file__)) + "\\genAI_log.txt"
 
 init = {
     "servers":[{

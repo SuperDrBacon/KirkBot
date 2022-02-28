@@ -8,7 +8,7 @@ import urllib.parse, urllib.request, re
 from discord.ui import Button, View
 
 from discord.ext import commands
-path = os.path.dirname(os.path.realpath(__file__)) + '/cogs/kirklines.txt'
+path = os.path.dirname(os.path.realpath(__file__)) + '\\kirklines.txt'
 
 with open(path, 'r') as f:
     lines = [line.rstrip() for line in f]
