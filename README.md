@@ -3,9 +3,9 @@
 # KirkBot
 to do list
 - [ ] make it work
+    - [ ] see above
+    - [ ] see above
+    - [ ] see above
+    - [ ] see above
+    - [ ] see above
     - [ ] move function into utils into cogs
-    - [ ] see above
-    - [ ] see above
-    - [ ] see above
-    - [ ] see above
-    - [ ] see above
