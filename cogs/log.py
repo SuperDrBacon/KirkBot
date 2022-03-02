@@ -3,7 +3,7 @@ import time
 import json
 import os
 import re
-import functions
+import cogs.utils.functions as functions
 from discord.ui import Button, View
 from discord.ext import commands
 from datetime import datetime, timezone
@@ -229,6 +229,33 @@ class logger(commands.Cog):
         after = (time.monotonic_ns() - before) / 1000000000
         await ctx.send(f'{after}s')
         await ctx.send(f'\n`servers: {iserver}`\n`channels: {ichannel}`\n`messages json: {imessage}`\n`total lines json+genAI: {totalLineCount}`')
+
+    # @commands.command(aliases=["getlink"])
+    # async def getlinks(self, ctx):
+    #     messages = await ctx.channel.history(limit=123).flatten()
+    
+    @commands.has_permissions(administrator=True)
+    @commands.group(name='getlinks', invoke_without_command=True)
+    async def getlinksbase(self, ctx, number:int):
+        counter = 0
+        messages = await ctx.channel.history(limit=number, oldest_first=False).flatten()
+        # loop each message to check for phrase
+        for message in messages:
+            print(message.content)
+            # newmessage = functions.isLink(message.content)
+            if functions.isLink(message.content):
+                print(123)
+                counter += 1
+                total += str(message)
+        await ctx.channel.send(f'{counter} messages')
+        await ctx.channel.send(f'{total} messages')
+    
+    @commands.has_permissions(administrator=True)
+    @getlinksbase.command(name='list', invoke_without_command=True)
+    async def getlinklist(self, ctx):
+        links = functions.getLink()
+
+
 
 def setup(bot):
     bot.add_cog(logger(bot))
