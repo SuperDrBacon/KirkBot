@@ -73,20 +73,17 @@ class Cogs(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         '''Unloads all modules.'''
-        if ctx.author.id == 931276237157068850:
-            message = await ctx.send(f"Unloading modules")
-            for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
-                if filename.endswith(".py"):
-                    name = filename[:-3]
-                    try:
-                        self.bot.unload_extension(f"cogs.{name}")
-                        await message.edit(content=f"unloaded module **{name}**")
-                    except Exception as e:
-                        await ctx.send(f"The following module failed...\n\n{e}")
-            await message.edit("Successfully unloaded all modules")
-            exit()
-        else:
-            pass
+        message = await ctx.send(f"Unloading modules")
+        for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
+            if filename.endswith(".py"):
+                name = filename[:-3]
+                try:
+                    self.bot.unload_extension(f"cogs.{name}")
+                    await message.edit(content=f"unloaded module **{name}**")
+                except Exception as e:
+                    await ctx.send(f"The following module failed...\n\n{e}")
+        await message.edit("Going offline, goodbye : (")
+        exit()
 
 
 def setup(bot):
