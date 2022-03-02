@@ -45,24 +45,49 @@ class Cogs(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def reall(self, ctx):
         '''Reloads all modules.'''
-        error_collection = []
-        for filename in os.listdir('./KirkBot/cogs'):
+        for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
             if filename.endswith(".py"):
                 name = filename[:-3]
                 try:
                     self.bot.reload_extension(f"cogs.{name}")
                     await ctx.send(f"Reloaded module **{name}**")
                 except Exception as e:
-                    error_collection.append(filename, e)
+                    await ctx.send(f"The following module failed...\n\n{e}")
+        await ctx.send("Successfully reloaded all modules")
+        
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def loadall(self, ctx):
+        '''Loads all modules.'''
+        for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
+            if filename.endswith(".py"):
+                name = filename[:-3]
+                try:
+                    self.bot.reload_extension(f"cogs.{name}")
+                    await ctx.send(f"Loaded module **{name}**")
+                except Exception as e:
+                    await ctx.send(f"The following module failed...\n\n{e}")
+        await ctx.send("Successfully loaded all modules")
 
-        if error_collection:
-            output = "\n".join([f"**{g[0]}** ```diff\n- {g[1]}```" for g in error_collection])
-            return await ctx.send(
-                f"Attempted to reload all extensions, was able to reload, "
-                f"however the following failed...\n\n{output}"
-            )
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def stop(self, ctx):
+        '''Unloads all modules.'''
+        if ctx.author.id == 931276237157068850:
+            message = await ctx.send(f"Unloading modules")
+            for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
+                if filename.endswith(".py"):
+                    name = filename[:-3]
+                    try:
+                        self.bot.unload_extension(f"cogs.{name}")
+                        await message.edit(content=f"unloaded module **{name}**")
+                    except Exception as e:
+                        await ctx.send(f"The following module failed...\n\n{e}")
+            await message.edit("Successfully unloaded all modules")
+            exit()
+        else:
+            pass
 
-        await ctx.send("Successfully reloaded all extensions")
 
 def setup(bot):
     bot.add_cog(Cogs(bot))
