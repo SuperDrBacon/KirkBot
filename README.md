@@ -8,4 +8,5 @@ to do list
     - [ ] see above
     - [ ] see above
     - [ ] see above
-    - [ ] move function into utils into cogs
+    - [x] move function into utils into cogs
+    - [] make get all links in channels work
