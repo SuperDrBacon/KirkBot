@@ -193,7 +193,7 @@ class Ai(commands.Cog):
             'validation': False,   # If train__size < 1.0, test on holdout dataset; will make overall training slower
             'is_csv': False   # set to True if file is a CSV exported from Excel/BigQuery/pandas
         }
-        file_name = os.path.abspath(os.getcwd())+'//messages.txt'
+        file_name = os.path.abspath(os.getcwd())+'\\messages.txt'
         dim_embeddings = 200
         batch_size = 256
         max_gen_length = 500
