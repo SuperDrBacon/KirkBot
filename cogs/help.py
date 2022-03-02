@@ -22,8 +22,8 @@ class Help(commands.Cog):
         embed = discord.Embed(title='Help commands per group', color=discord.Colour.gold(), timestamp=timestamp)
         embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n", inline=True)
         embed.add_field(name="AI", value="`.,ai`\n`@David Marcus`", inline=True)
-        embed.add_field(name="Admin", value="\u200b", inline=False)
-        embed.add_field(name="Moderator", value="\u200b", inline=False)
+        embed.add_field(name="Admin", value="`.,botstatus`\n`.,botststus set`", inline=True)
+        embed.add_field(name="Moderator", value="`No commands lmao`", inline=True)
         embed.add_field(name='―――――――――――――――――――', value='Use .,help [group] to see command aliases and descriptions', inline=False)
         embed.set_footer(text=botversion)
         await ctx.channel.send(embed=embed)
@@ -46,7 +46,7 @@ class Help(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def help_admin(self, ctx):
         embed = discord.Embed(title='Help -> Admin', color=discord.Colour.red(), timestamp=timestamp)
-        
+        embed.add_field(name="Commands and descriptions", value="`.,botstatus` See what the current bot status is\n`.,botstatus set [message]` Set the bot status to something else\n")
         embed.set_footer(text=botversion)
         await ctx.channel.send(embed=embed)
 
