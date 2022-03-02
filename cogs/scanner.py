@@ -1,4 +1,5 @@
-import discord, functions, datetime, time
+import discord, datetime, time
+import cogs.utils.functions as functions
 from discord.ext import commands
 
 
