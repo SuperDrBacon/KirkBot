@@ -10,8 +10,9 @@ configini = '\\'.join([configpath, "config.ini"])
 config.read(configini)
 path = os.path.abspath(os.getcwd())
 title = config['DEFAULT']['title']
+intents = discord.Intents().all()
 
-bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True)
+bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True, intents=intents)
 
 @bot.event
 async def on_ready():
