@@ -10,3 +10,5 @@ __pycache__
 cogs/kirklines.txt
 cogs/log.json
 cogs/bannedwords.txt
+seriouslinks.txt
+seriouschannel.txt
