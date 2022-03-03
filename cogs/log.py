@@ -238,17 +238,22 @@ class logger(commands.Cog):
     @commands.group(name='getlinks', invoke_without_command=True)
     async def getlinksbase(self, ctx, number:int):
         counter = 0
-        messages = await ctx.channel.history(limit=number, oldest_first=False).flatten()
+        messages = await ctx.channel.history(limit=number, oldest_first=True).flatten()
         # loop each message to check for phrase
-        for message in messages:
-            print(message.content)
+        with open('otherchannel.txt', 'w', encoding='utf-8') as f:
+            for message in messages:
+                out = message.content
+                # print(out)
+                f.write(out+'\n')
+        await ctx.channel.send('got all messages in channel cause drink nut keeps dm-ing me')
+            # print(message.content)
             # newmessage = functions.isLink(message.content)
-            if functions.isLink(message.content):
-                print(123)
-                counter += 1
-                total += str(message)
-        await ctx.channel.send(f'{counter} messages')
-        await ctx.channel.send(f'{total} messages')
+        #     if functions.isLink(message.content):
+        #         print(123)
+        #         counter += 1
+        #         total += str(message)
+        # await ctx.channel.send(f'{counter} messages')
+        # await ctx.channel.send(f'{total} messages')
     
     @commands.has_permissions(administrator=True)
     @getlinksbase.command(name='list', invoke_without_command=True)
