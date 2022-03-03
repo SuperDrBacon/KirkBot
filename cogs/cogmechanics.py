@@ -83,6 +83,7 @@ class Cogs(commands.Cog):
                 except Exception as e:
                     await ctx.send(f"The following module failed...\n\n{e}")
         await message.edit("Going offline, goodbye : (")
+        await self.bot.close()
         exit()
 
 
