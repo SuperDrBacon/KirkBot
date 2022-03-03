@@ -20,7 +20,7 @@ class Help(commands.Cog):
     @commands.group(name='help', invoke_without_command=True)
     async def help_base(self, ctx):
         embed = discord.Embed(title='Help commands per group', color=discord.Colour.gold(), timestamp=timestamp)
-        embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n", inline=True)
+        embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n`.,tag` `.,tag get`", inline=True)
         embed.add_field(name="AI", value="`.,ai`\n`@David Marcus`", inline=True)
         embed.add_field(name="Admin", value="`.,botstatus`\n`.,botststus set`", inline=True)
         embed.add_field(name="Moderator", value="`No commands lmao`", inline=True)
@@ -31,14 +31,18 @@ class Help(commands.Cog):
     @help_base.command(name='fun', invoke_without_command=True)
     async def help_fun(self, ctx,):
         embed = discord.Embed(title='Help -> Fun', color=discord.Colour.green(), timestamp=timestamp)
-        embed.add_field(name="Commands and descriptions", value="`.,8ball` Ask the 8ball your burning questions\n`.,checkem, .,check, .,c` Generate random number and maybe check those dubs\n`.,bigletter, .,em` Convert your message into emoji letters\n`.,braille, .,br` Convert your message into braille so blind people can read it\n`.,youtube, .,yt` Input a search and get the first Youtube result back")
+        embed.add_field(name="Commands and descriptions", 
+                        value="`.,8ball` Ask the 8ball your burning questions\n`.,checkem, .,check, .,c` Generate random number and maybe check those dubs\n" +
+                        "`.,bigletter, .,em` Convert your message into emoji letters\n`.,braille, .,br` Convert your message into braille so blind people can read it\n" +
+                        "`.,youtube, .,yt` Input a search and get the first Youtube result back\n`.,tag, .,tag get` Tag another person in the server when you're tagged! Or see who is currently tagged")
         embed.set_footer(text=botversion)
         await ctx.channel.send(embed=embed,)
         
     @help_base.command(name='ai', invoke_without_command=True)
     async def help_AI(self, ctx,):
         embed = discord.Embed(title='Help -> AI', color=discord.Colour.blue(), timestamp=timestamp)
-        embed.add_field(name="Commands and descriptions", value="`.,ai` Talk to the GPT-3 bot and get a response\n`@David Marcus` Uses the custom AI model created from chat messages\n`Reply to the bot` Replying to the bot will take previous messages into account when generating a response")
+        embed.add_field(name="Commands and descriptions", value="`.,ai` Talk to the GPT-3 bot and get a response\n`@David Marcus` Uses the custom AI model created from chat messages\n"+
+                        "`Reply to the bot` Replying to the bot will take previous messages into account when generating a response")
         embed.set_footer(text=botversion)
         await ctx.channel.send(embed=embed,)
         
