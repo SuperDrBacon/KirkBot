@@ -136,6 +136,31 @@ class fun(commands.Cog):
         search_results = re.findall(r"watch\?v=(\S{11})", html_content.read().decode())
         await ctx.send('https://www.youtube.com/watch?v=' + search_results[0])
     
+    @commands.has_role('Tag')
+    @commands.group(name='tag', invoke_without_command=True)
+    async def tag_base(self, ctx, member:discord.Member):
+        role = discord.utils.get(ctx.guild.roles, name='Tag')
+        if role is None:
+            await ctx.guild.create_role(name='Tag')
+        await member.add_roles(role)
+        await ctx.author.remove_roles(role)
+        await ctx.channel.send(f'{member.mention} got tagged!')
+
+    @tag_base.command(name='get', invoke_without_command=True)
+    async def tag_get(self, ctx):
+        role = discord.utils.get(ctx.guild.roles, name='Tag')
+        guild = self.bot.get_guild(ctx.guild.id)
+        for members in guild.members:
+            if role in members.roles:
+                await ctx.channel.send(f'{members.mention} is tagged!')
+    
+    @tag_base.error
+    async def tag_base_handeler(self, ctx, error):
+        if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
+            await ctx.guild.create_role(name='Tag')
+            await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Tag'))
+    
+    
     
     
     
