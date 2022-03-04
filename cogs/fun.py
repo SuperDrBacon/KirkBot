@@ -1,3 +1,4 @@
+import json
 import discord
 import random
 import time
@@ -9,6 +10,7 @@ from discord.ui import Button, View
 
 from discord.ext import commands
 path = os.path.dirname(os.path.realpath(__file__)) + '\\kirklines.txt'
+tagpath = os.path.dirname(os.path.realpath(__file__)) + '\\tag.json'
 
 with open(path, 'r') as f:
     lines = [line.rstrip() for line in f]
@@ -139,9 +141,38 @@ class fun(commands.Cog):
     @commands.has_role('Tag')
     @commands.group(name='tag', invoke_without_command=True)
     async def tag_base(self, ctx, member:discord.Member):
+        serverNAME = ctx.guild.name
+        serverID = ctx.guild.id
+        userNAME = member.name
+        userID = member.id
+        newserver = {
+            "Servername": serverNAME,
+            "ServerID": serverID,
+            "Tags":[{
+                "Tagged username": userNAME,
+                "Tagged userid": userID,          
+                }]
+            }
+        newtag = {
+            "Tagged user": userNAME,
+            "Tagged userid": userID,
+        }
+        
+        with open(tagpath, 'r') as tagin:
+            tagdata = json.load(tagin)
+        try:
+            for servers in tagdata['Servers']:
+                if serverID == servers["ServerID"]:
+                    servers["Tags"].append(newtag)
+                    raise StopIteration
+            tagdata["Servers"].append(newserver)                   
+        except StopIteration:
+            pass
+        
+        with open(tagpath, 'w') as tagout:
+            json.dump(tagdata, tagout, indent=4)
+        
         role = discord.utils.get(ctx.guild.roles, name='Tag')
-        if role is None:
-            await ctx.guild.create_role(name='Tag')
         await member.add_roles(role)
         await ctx.author.remove_roles(role)
         await ctx.channel.send(f'{member.mention} got tagged!')
@@ -159,10 +190,10 @@ class fun(commands.Cog):
         if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
             await ctx.guild.create_role(name='Tag')
             await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Tag'))
-    
-    
-    
-    
+            
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.reply('To tag use .,tag @user')
+
     
     # @commands.command(name='button_delete', aliases=['but'])
     # async def button(self, ctx):

@@ -118,7 +118,7 @@ class logger(commands.Cog):
                         "reply": reply,
                         "dateTime": now_utc,
                         "Unix": now_unix,
-                        "replied to message":[{
+                        "replied too message":[{
                             "username": replieduser,
                             "userID": repliedID,
                             "message": repliedmessage,
@@ -136,7 +136,7 @@ class logger(commands.Cog):
                     "reply": reply,
                     "dateTime": now_utc,
                     "Unix": now_unix,
-                    "replied to message":[{
+                    "replied too message":[{
                         "username": replieduser,
                         "userID": repliedID,
                         "message": repliedmessage,
@@ -150,7 +150,7 @@ class logger(commands.Cog):
                 "reply": reply,
                 "dateTime": now_utc,
                 "Unix": now_unix,
-                "replied to message":[{
+                "replied too message":[{
                     "username": replieduser,
                     "userID": repliedID,
                     "message": repliedmessage,
@@ -163,7 +163,7 @@ class logger(commands.Cog):
             for servers in file_data["servers"]:
                 if serverID == servers["serverID"]:
                     for channels in servers["channels"]:
-                        if channels["channelID"] == channelID:
+                        if channelID == channels["channelID"]:
                             if reply:
                                 channels["messages"].append(newmessagereplied)#if the channel exist post new message. with replied to message
                             else:
@@ -237,15 +237,17 @@ class logger(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.group(name='getlinks', invoke_without_command=True)
     async def getlinksbase(self, ctx, number:int):
+        await ctx.message.delete()
+        channelNAME = ctx.channel.name
         counter = 0
         messages = await ctx.channel.history(limit=number, oldest_first=True).flatten()
         # loop each message to check for phrase
-        with open('otherchannel.txt', 'w', encoding='utf-8') as f:
+        with open(f'{channelNAME}.txt', 'w', encoding='utf-8') as f:
             for message in messages:
                 out = message.content
                 # print(out)
-                f.write(out+'\n')
-        await ctx.channel.send('got all messages in channel cause drink nut keeps dm-ing me')
+                f.write(out+'\n\n---------\n\n')
+        # await ctx.channel.send('got all messages in channel cause drink nut keeps dm-ing me')
             # print(message.content)
             # newmessage = functions.isLink(message.content)
         #     if functions.isLink(message.content):
