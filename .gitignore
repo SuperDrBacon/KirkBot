@@ -12,3 +12,5 @@ cogs/log.json
 cogs/bannedwords.txt
 seriouslinks.txt
 seriouschannel.txt
+cogs/tag.json
+copypastachannel.txt
