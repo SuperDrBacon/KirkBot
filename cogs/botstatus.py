@@ -1,6 +1,7 @@
 import discord
 import asyncio
 import os
+import traceback
 from discord.ext import commands
 from configparser import ConfigParser
 
@@ -16,22 +17,12 @@ activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 class setStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        
     
     #events
     @commands.Cog.listener()
     async def on_ready(self):
-            print('status module online')
-            return await self.bot.change_presence(status=discord.Status.online, activity=activity)
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            await ctx.reply("command doesn't exist")
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply('Please pass in all requirements :rolling_eyes:.')
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.reply("You dont have all the requirements :angry:")
+        print('status module online')
+        return await self.bot.change_presence(status=discord.Status.online, activity=activity)
 
     #commands
     @commands.group(name='botstatus', invoke_without_command=True)
@@ -75,7 +66,6 @@ class setStatus(commands.Cog):
             config.write(configfile)
         await message.edit(content=f'Updated Status to: {strstatus} {statusmessage}')
         await message.clear_reactions()
-
 
 def setup(bot):
     bot.add_cog(setStatus(bot))
