@@ -18,7 +18,7 @@ class Cogs(commands.Cog):
         try:
             self.bot.load_extension(f"cogs.{name}")
         except Exception as e:
-            return await ctx.send(f"Error when loading cog: {e}")
+            return print(f"Error when loading module: {e}")
         await ctx.send(f"Loaded module **{name}**")
 
     @commands.command()
@@ -28,7 +28,7 @@ class Cogs(commands.Cog):
         try:
             self.bot.unload_extension(f"cogs.{name}")
         except Exception as e:
-            return await ctx.send(f"Error when unloading cog: {e}")
+            return print(f"Error when unloading module: {e}")
         await ctx.send(f"Unloaded module **{name}**")
 
     @commands.command()
@@ -38,7 +38,7 @@ class Cogs(commands.Cog):
         try:
             self.bot.reload_extension(f"cogs.{name}")
         except Exception as e:
-            return await ctx.send(f"Error when reloading cog: {e}")
+            return print(f"Error when reloading module: {e}")
         await ctx.send(f"Reloaded module **{name}**")
 
     @commands.command()
@@ -52,7 +52,7 @@ class Cogs(commands.Cog):
                     self.bot.reload_extension(f"cogs.{name}")
                     await ctx.send(f"Reloaded module **{name}**")
                 except Exception as e:
-                    await ctx.send(f"The following module failed...\n\n{e}")
+                    return print(f"The following module failed...\n\n{e}")
         await ctx.send("Successfully reloaded all modules")
         
     @commands.command()
@@ -66,7 +66,7 @@ class Cogs(commands.Cog):
                     self.bot.reload_extension(f"cogs.{name}")
                     await ctx.send(f"Loaded module **{name}**")
                 except Exception as e:
-                    await ctx.send(f"The following module failed...\n\n{e}")
+                    return print(f"The following module failed...\n\n{e}")
         await ctx.send("Successfully loaded all modules")
 
     @commands.command()
@@ -81,7 +81,7 @@ class Cogs(commands.Cog):
                     self.bot.unload_extension(f"cogs.{name}")
                     await message.edit(content=f"unloaded module **{name}**")
                 except Exception as e:
-                    await ctx.send(f"The following module failed...\n\n{e}")
+                    return print(f"The following module failed...\n\n{e}")
         await message.edit("Going offline, goodbye : (")
         await self.bot.close()
         exit()
