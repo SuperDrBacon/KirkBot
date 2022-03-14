@@ -262,6 +262,13 @@ class logger(commands.Cog):
     async def getlinklist(self, ctx):
         links = functions.getLink()
 
+    @commands.has_permissions(administrator=True)
+    @getlinksbase.command(name='all', invoke_without_command=True)
+    async def getlinkall(self, ctx):
+        # run through every channel, get all messages
+        channellist = discord.Guild.text_channels
+        threadlist = discord.Guild.threads
+        pass
 
 
 def setup(bot):
