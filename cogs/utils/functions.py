@@ -62,9 +62,9 @@ def getlink(message):
         return None
 
 
-messagestxt = os.path.dirname(os.path.realpath(__file__)) + "\\cogs\\jsonLogToMessages.txt"
-genAI_log = os.path.dirname(os.path.realpath(__file__)) + "\\genAI_log.txt"
-messages = os.path.dirname(os.path.realpath(__file__)) + "\\messages.txt"
+messagestxt = os.path.abspath(os.getcwd())+'\\cogs\\jsonLogToMessages.txt'
+genAI_log = os.path.abspath(os.getcwd())+'\\genAI_log.txt'
+messages = os.path.abspath(os.getcwd())+'\\messages.txt'
 
 def joinfiles():
     with open(messages,'wb') as wfd:
