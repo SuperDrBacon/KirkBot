@@ -10,7 +10,7 @@ class Error(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Error module online')
+        print('Errorlogging module online')
     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
