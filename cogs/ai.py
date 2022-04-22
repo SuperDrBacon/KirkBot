@@ -11,7 +11,7 @@ from configparser import ConfigParser
 
 config = ConfigParser()
 configpath = os.path.abspath(os.getcwd())
-configini = '\\'.join([configpath, "config.ini"])
+configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 
 key = config['BOTCONFIG']['openaiAPI']
@@ -20,9 +20,9 @@ openai.api_key = key
 textmodel = 'text-curie-001'
 
 model_name = 'kirkai wordmodel'   # change to set file name of resulting trained models/texts
-vocab_path = os.path.dirname(os.getcwd()) +'\\KirkBot\\'+ model_name+"_vocab.json"
-config_path = os.path.dirname(os.getcwd()) +'\\KirkBot\\'+ model_name+"_config.json"
-weights_path = os.path.dirname(os.getcwd()) +'\\KirkBot\\'+ model_name+"_weights.hdf5"
+vocab_path = os.path.dirname(os.getcwd()) +'/KirkBot/'+ model_name+"_vocab.json"
+config_path = os.path.dirname(os.getcwd()) +'/KirkBot/'+ model_name+"_config.json"
+weights_path = os.path.dirname(os.getcwd()) +'/KirkBot/'+ model_name+"_weights.hdf5"
 
 temperature = 2.0
 n = 1
@@ -193,7 +193,7 @@ class Ai(commands.Cog):
             'validation': False,   # If train__size < 1.0, test on holdout dataset; will make overall training slower
             'is_csv': False   # set to True if file is a CSV exported from Excel/BigQuery/pandas
         }
-        file_name = os.path.abspath(os.getcwd())+'\\messages.txt'
+        file_name = os.path.abspath(os.getcwd())+'/messages.txt'
         dim_embeddings = 200
         batch_size = 256
         max_gen_length = 500

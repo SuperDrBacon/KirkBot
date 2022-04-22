@@ -8,7 +8,7 @@ from configparser import ConfigParser
 
 config = ConfigParser()
 configpath = os.path.abspath(os.getcwd())
-configini = '\\'.join([configpath, "config.ini"])
+configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 
 status = config['STATUS']['status']

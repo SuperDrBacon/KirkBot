@@ -7,7 +7,7 @@ from configparser import ConfigParser
 
 config = ConfigParser(interpolation=None)
 configpath = os.path.abspath(os.getcwd())
-configini = '\\'.join([configpath, "config.ini"])
+configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 
 APIkey = config['TWITTER']['APIkey']

@@ -6,7 +6,7 @@ from discord.ext import commands
 
 config = ConfigParser()
 configpath = os.path.abspath(os.getcwd())
-configini = '\\'.join([configpath, "config.ini"])
+configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 
 botversion = config['DEFAULT']['title']

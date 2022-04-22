@@ -6,11 +6,11 @@ import typing
 import asyncio
 import os
 import urllib.parse, urllib.request, re
-from discord.ui import Button, View
+from discord_ui import Button
 
 from discord.ext import commands
-path = os.path.dirname(os.path.realpath(__file__)) + '\\kirklines.txt'
-tagpath = os.path.dirname(os.path.realpath(__file__)) + '\\tag.json'
+path = os.path.dirname(os.path.realpath(__file__)) + '/kirklines.txt'
+tagpath = os.path.dirname(os.path.realpath(__file__)) + '/tag.json'
 
 with open(path, 'r') as f:
     lines = [line.rstrip() for line in f]

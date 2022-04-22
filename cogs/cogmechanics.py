@@ -45,7 +45,7 @@ class Cogs(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def reall(self, ctx):
         '''Reloads all modules.'''
-        for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
+        for filename in os.listdir(os.path.abspath(os.getcwd()) + '/cogs'):
             if filename.endswith(".py"):
                 name = filename[:-3]
                 try:
@@ -59,7 +59,7 @@ class Cogs(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def loadall(self, ctx):
         '''Loads all modules.'''
-        for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
+        for filename in os.listdir(os.path.abspath(os.getcwd()) + '/cogs'):
             if filename.endswith(".py"):
                 name = filename[:-3]
                 try:
@@ -74,7 +74,7 @@ class Cogs(commands.Cog):
     async def stop(self, ctx):
         '''Unloads all modules.'''
         message = await ctx.send(f"Unloading modules")
-        for filename in os.listdir(os.path.abspath(os.getcwd()) + '\\cogs'):
+        for filename in os.listdir(os.path.abspath(os.getcwd()) + '/cogs'):
             if filename.endswith(".py"):
                 name = filename[:-3]
                 try:
