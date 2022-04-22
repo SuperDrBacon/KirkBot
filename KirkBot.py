@@ -6,15 +6,16 @@ from configparser import ConfigParser
 print("Logging in...")
 config = ConfigParser()
 configpath = os.path.dirname(os.path.realpath(__file__))
-configini = '\\'.join([configpath, "config.ini"])
+configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 path = os.path.abspath(os.getcwd())
+print(os.name)
 title = config['DEFAULT']['title']
 intents = discord.Intents().all()
 
 bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True, intents=intents)
 
-for filename in os.listdir(path + "\\cogs"):
+for filename in os.listdir(path + "/cogs"):
     if filename.endswith('.py'):
         name = filename[:-3]
         try:
