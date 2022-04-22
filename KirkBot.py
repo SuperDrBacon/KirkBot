@@ -9,7 +9,6 @@ configpath = os.path.dirname(os.path.realpath(__file__))
 configini = '/'.join([configpath, "config.ini"])
 config.read(configini)
 path = os.path.abspath(os.getcwd())
-print(os.name)
 title = config['DEFAULT']['title']
 intents = discord.Intents().all()
 
