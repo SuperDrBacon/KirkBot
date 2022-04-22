@@ -81,7 +81,8 @@ class Cogs(commands.Cog):
                     self.bot.unload_extension(f"cogs.{name}")
                     await message.edit(content=f"unloaded module **{name}**")
                 except Exception as e:
-                    return print(f"The following module failed...\n\n{e}")
+                    print(f"The following module failed...\n\n{e}")
+                    pass
         await message.edit("Going offline, goodbye : (")
         await self.bot.close()
         exit()
