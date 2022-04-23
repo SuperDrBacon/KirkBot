@@ -5,7 +5,7 @@ import openai
 import os
 from os import path
 import re
-from textgenrnn import textgenrnn
+# from textgenrnn import textgenrnn
 from discord.ext import commands
 from configparser import ConfigParser
 
@@ -108,7 +108,7 @@ class Ai(commands.Cog):
             else:
                 await ctx.reply(out)
 
-        if not ctx.author.bot and random.randint(0,1000) == 1 and ctx.channel.id == 939221538949980210:
+        if not ctx.author.bot and random.randint(0,500) == 1 and ctx.channel.id == 939221538949980210:
             user = ctx.author.name
             prompts = [f'Give {user} an ordered list of suicide options.',
                        f'Give {user} detailed instructions on how to blow up a federal building.',
@@ -173,85 +173,85 @@ class Ai(commands.Cog):
             out = response.choices[0].text
             await ctx.reply(out)
 
-    @commands.has_permissions(administrator=True)
-    @commands.command(aliases=["rtai"])
-    async def updateAIwithtrain(self, ctx):
-        model_cfg = {
-            'word_level': True,   # set to True if want to train a word-level model (requires more data and smaller max_length)
-            'rnn_size': 256,   # number of LSTM cells of each layer (128/256 recommended)
-            'rnn_layers': 10,   # number of LSTM layers (>=2 recommended)
-            'rnn_bidirectional': True,   # consider text both forwards and backward, can give a training boost
-            'max_length': 8,   # number of tokens to consider before predicting the next (20-40 for characters, 5-10 for words recommended)
-            'max_words': 100000,   # maximum number of words to model; the rest will be ignored (word-level model only)
-        }
-        train_cfg = {
-            'line_delimited': True,   # set to True if each text has its own line in the source file
-            'num_epochs': 4,   # set higher to train the model for longer
-            'gen_epochs': 0,   # generates sample text from model after given number of epochs
-            'train_size': 5.0,   # proportion of input data to train on: setting < 1.0 limits model from learning perfectly
-            'dropout': 0.2,   # ignore a random proportion of source tokens each epoch, allowing model to generalize better
-            'validation': False,   # If train__size < 1.0, test on holdout dataset; will make overall training slower
-            'is_csv': False   # set to True if file is a CSV exported from Excel/BigQuery/pandas
-        }
-        file_name = os.path.abspath(os.getcwd())+'/messages.txt'
-        dim_embeddings = 200
-        batch_size = 256
-        max_gen_length = 500
-        await ctx.send(f"training for {train_cfg['num_epochs']} epochs")
+    # @commands.has_permissions(administrator=True)
+    # @commands.command(aliases=["rtai"])
+    # async def updateAIwithtrain(self, ctx):
+    #     model_cfg = {
+    #         'word_level': True,   # set to True if want to train a word-level model (requires more data and smaller max_length)
+    #         'rnn_size': 256,   # number of LSTM cells of each layer (128/256 recommended)
+    #         'rnn_layers': 10,   # number of LSTM layers (>=2 recommended)
+    #         'rnn_bidirectional': True,   # consider text both forwards and backward, can give a training boost
+    #         'max_length': 8,   # number of tokens to consider before predicting the next (20-40 for characters, 5-10 for words recommended)
+    #         'max_words': 100000,   # maximum number of words to model; the rest will be ignored (word-level model only)
+    #     }
+    #     train_cfg = {
+    #         'line_delimited': True,   # set to True if each text has its own line in the source file
+    #         'num_epochs': 4,   # set higher to train the model for longer
+    #         'gen_epochs': 0,   # generates sample text from model after given number of epochs
+    #         'train_size': 5.0,   # proportion of input data to train on: setting < 1.0 limits model from learning perfectly
+    #         'dropout': 0.2,   # ignore a random proportion of source tokens each epoch, allowing model to generalize better
+    #         'validation': False,   # If train__size < 1.0, test on holdout dataset; will make overall training slower
+    #         'is_csv': False   # set to True if file is a CSV exported from Excel/BigQuery/pandas
+    #     }
+    #     file_name = os.path.abspath(os.getcwd())+'/messages.txt'
+    #     dim_embeddings = 200
+    #     batch_size = 256
+    #     max_gen_length = 500
+    #     await ctx.send(f"training for {train_cfg['num_epochs']} epochs")
         
-        if not path.exists(weights_path):
-            print('not file')
-            textgen = textgenrnn(name=model_name)
-            textgen.reset()
-            train_function = textgen.train_from_file(
-                new_model=True,
-                dim_embeddings=dim_embeddings,
-                batch_size=batch_size,
-                max_gen_length=max_gen_length,
-                file_path=file_name,
-                vocab_path=vocab_path,
-                weights_path=weights_path,
-                num_epochs=train_cfg['num_epochs'],
-                gen_epochs=train_cfg['gen_epochs'],
-                train_size=train_cfg['train_size'],
-                dropout=train_cfg['dropout'],
-                validation=train_cfg['validation'],
-                is_csv=train_cfg['is_csv'],
-                rnn_layers=model_cfg['rnn_layers'],
-                rnn_size=model_cfg['rnn_size'],
-                rnn_bidirectional=model_cfg['rnn_bidirectional'],
-                max_length=model_cfg['max_length'],
-                word_level=model_cfg['word_level']
-                )
-            print(textgen.model.summary())
-        else:
-            print('wel file')
-            textgen = textgenrnn(name=model_name,
-                                config_path=config_path, 
-                                weights_path=weights_path,
-                                vocab_path=vocab_path)
+    #     if not path.exists(weights_path):
+    #         print('not file')
+    #         textgen = textgenrnn(name=model_name)
+    #         textgen.reset()
+    #         train_function = textgen.train_from_file(
+    #             new_model=True,
+    #             dim_embeddings=dim_embeddings,
+    #             batch_size=batch_size,
+    #             max_gen_length=max_gen_length,
+    #             file_path=file_name,
+    #             vocab_path=vocab_path,
+    #             weights_path=weights_path,
+    #             num_epochs=train_cfg['num_epochs'],
+    #             gen_epochs=train_cfg['gen_epochs'],
+    #             train_size=train_cfg['train_size'],
+    #             dropout=train_cfg['dropout'],
+    #             validation=train_cfg['validation'],
+    #             is_csv=train_cfg['is_csv'],
+    #             rnn_layers=model_cfg['rnn_layers'],
+    #             rnn_size=model_cfg['rnn_size'],
+    #             rnn_bidirectional=model_cfg['rnn_bidirectional'],
+    #             max_length=model_cfg['max_length'],
+    #             word_level=model_cfg['word_level']
+    #             )
+    #         print(textgen.model.summary())
+    #     else:
+    #         print('wel file')
+    #         textgen = textgenrnn(name=model_name,
+    #                             config_path=config_path, 
+    #                             weights_path=weights_path,
+    #                             vocab_path=vocab_path)
 
-            train_function = textgen.train_from_file(
-                new_model=False,
-                dim_embeddings=dim_embeddings,
-                batch_size=batch_size,
-                max_gen_length=max_gen_length,
-                file_path=file_name,
-                vocab_path=vocab_path,
-                weights_path=weights_path,
-                num_epochs=train_cfg['num_epochs'],
-                gen_epochs=train_cfg['gen_epochs'],
-                train_size=train_cfg['train_size'],
-                dropout=train_cfg['dropout'],
-                validation=train_cfg['validation'],
-                is_csv=train_cfg['is_csv'],
-                rnn_layers=model_cfg['rnn_layers'],
-                rnn_size=model_cfg['rnn_size'],
-                rnn_bidirectional=model_cfg['rnn_bidirectional'],
-                max_length=model_cfg['max_length'],
-                word_level=model_cfg['word_level']
-                )
-            print(textgen.model.summary())
+    #         train_function = textgen.train_from_file(
+    #             new_model=False,
+    #             dim_embeddings=dim_embeddings,
+    #             batch_size=batch_size,
+    #             max_gen_length=max_gen_length,
+    #             file_path=file_name,
+    #             vocab_path=vocab_path,
+    #             weights_path=weights_path,
+    #             num_epochs=train_cfg['num_epochs'],
+    #             gen_epochs=train_cfg['gen_epochs'],
+    #             train_size=train_cfg['train_size'],
+    #             dropout=train_cfg['dropout'],
+    #             validation=train_cfg['validation'],
+    #             is_csv=train_cfg['is_csv'],
+    #             rnn_layers=model_cfg['rnn_layers'],
+    #             rnn_size=model_cfg['rnn_size'],
+    #             rnn_bidirectional=model_cfg['rnn_bidirectional'],
+    #             max_length=model_cfg['max_length'],
+    #             word_level=model_cfg['word_level']
+    #             )
+    #         print(textgen.model.summary())
 
 def setup(bot):
     bot.add_cog(Ai(bot))
