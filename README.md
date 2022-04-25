@@ -13,3 +13,4 @@ to do list
     - [x] make tag game
     - [ ] gcp dot status update in bot
     - [ ] get tweets / search tweets
+    - [ ] image manipulation
