@@ -1,3 +1,4 @@
+from calendar import c
 import os
 import discord
 import tweepy
@@ -48,14 +49,15 @@ class Twitter(commands.Cog):
     @commands.has_permissions(administrator=True)
     @tweet_base.command(name="gettweets", aliases=["gt"], invoke_without_command=True)
     async def twittercommand(self, ctx, interval: int = 10, *, input: str = None):
-            self.get_tweet_stream.start(input=input)
+            channelid = ctx.channel.id
+            self.get_tweet_stream.start(input=input, channelid=channelid)
             self.get_tweet_stream.change_interval = interval
             pass
     
     
     @tasks.loop(minutes=10)
-    async def get_tweet_stream(self, input):
-        channel = self.bot.get_channel()
+    async def get_tweet_stream(self, input, channelid):
+        channel = self.bot.get_channel(channelid)
         await channel.send(input)
         
         pass
