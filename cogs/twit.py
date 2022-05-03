@@ -55,7 +55,7 @@ class Twitter(commands.Cog):
     
     @tasks.loop(minutes=10)
     async def get_tweet_stream(self, input):
-        await self.send(input)
+        await self.channel.send(input)
         
         pass
     
