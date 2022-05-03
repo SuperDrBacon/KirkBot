@@ -48,17 +48,17 @@ class Twitter(commands.Cog):
     
     @commands.has_permissions(administrator=True)
     @tweet_base.command(name="gettweets", aliases=["gt"], invoke_without_command=True)
-    async def twittercommand(self, ctx, interval: int = 10, *, input: str = None):
+    async def twittercommand(self, ctx, interval: int, *, input: str = None):
             channelid = ctx.channel.id
-            self.get_tweet_stream.start(input=input, channelid=channelid)
+            self.get_tweet_stream.start(input=input, ctx=ctx)
             self.get_tweet_stream.change_interval = interval
             pass
     
     
     @tasks.loop(minutes=10)
-    async def get_tweet_stream(self, input, channelid):
-        channel = self.bot.get_channel(channelid)
-        await channel.send(input)
+    async def get_tweet_stream(self, input, ctx):
+        #channel = self.bot.get_channel(channelid)
+        await ctx.send(input)
         
         pass
     
