@@ -37,25 +37,26 @@ class Twitter(commands.Cog):
     
     
     #@commands.has_permissions(administrator=True)
-    @commands.group(aliases=["tweet"], invoke_without_command=True)
+    @commands.group(aliases=['tweet'], invoke_without_command=True)
     async def tweet_base(self, ctx):
         await ctx.send('refer to help command for more info')
         #pass
     
-    @tweet_base.command(name="currentstream", invoke_without_command=True)
+    @tweet_base.command(name='currentstream', aliases=['cs'], invoke_without_command=True)
     async def tweet_currentstream(self, ctx):
         current = self.get_tweet_stream.get_task()
         await ctx.send(current)
         #pass
     
     @commands.has_permissions(administrator=True)
-    @tweet_base.command(name="gettweets", aliases=["gt"], invoke_without_command=True)
+    @tweet_base.command(name='gettweets', aliases=['gt'], invoke_without_command=True)
     async def twitter_command(self, ctx, interval: int = 10, *, input: str = None):
             self.get_tweet_stream.start(input=input, ctx=ctx)
             self.get_tweet_stream.change_interval(seconds=interval)
             #pass
+            
     @commands.has_permissions(administrator=True)
-    @tweet_base.command(name="stopstream", aliases=["st"], invoke_without_command=True)
+    @tweet_base.command(name='stopstream', aliases=['st'], invoke_without_command=True)
     async def stop_stream(self, ctx):
         self.get_tweet_stream.cancel()
         await ctx.send('stream stopped')
