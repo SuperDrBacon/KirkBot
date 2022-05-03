@@ -1,5 +1,6 @@
 from calendar import c
 import os
+import random
 import discord
 import tweepy
 from discord.ext import commands, tasks
@@ -55,20 +56,21 @@ class Twitter(commands.Cog):
     @tweet_base.command(name='gettweets', aliases=['gt'], invoke_without_command=True)
     async def twitter_command(self, ctx, interval: int = 10, *, input: str = None):
             self.get_tweet_stream.start(input=input, ctx=ctx)
-            self.get_tweet_stream.change_interval(seconds=interval)
+            self.get_tweet_stream.change_interval(minutes=interval)
             #pass
             
     @commands.has_permissions(administrator=True)
     @tweet_base.command(name='stopstream', aliases=['st'], invoke_without_command=True)
     async def stop_stream(self, ctx):
-        self.get_tweet_stream.cancel()
+        self.get_tweet_stream.stop()
         await ctx.send('stream stopped')
         #pass
     
     @tasks.loop(reconnect=True)
     async def get_tweet_stream(self, input, ctx):
         await ctx.send(input)
-        
+        newinterval = random.randint(30, 120)
+        self.get_tweet_stream.change_interval(minutes=newinterval)
         #pass
     
     @get_tweet_stream.before_loop
