@@ -44,8 +44,9 @@ class Twitter(commands.Cog):
     
     @tweet_base.command(name='currentstream', aliases=['cs'], invoke_without_command=True)
     async def tweet_currentstream(self, ctx):
-        current = self.get_tweet_stream.get_task()
-        await ctx.send(current)
+        if self.get_tweet_stream.is_running():
+            current = self.get_tweet_stream.get_task()
+        await ctx.send(f'current stream is: {current}')
         #pass
     
     @commands.has_permissions(administrator=True)
