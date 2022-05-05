@@ -29,9 +29,9 @@ init = {
     ]}
 
 class logger(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot): 
         self.bot = bot
-        
+    
     @commands.Cog.listener()
     async def on_ready(self):
         print('logger module online')
