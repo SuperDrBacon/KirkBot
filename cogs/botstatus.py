@@ -2,8 +2,10 @@ import discord
 import asyncio
 import os
 import traceback
-from discord.ext import commands
+import time
+from discord.ext import commands, tasks
 from configparser import ConfigParser
+from pypresence import Presence 
 
 
 config = ConfigParser()
@@ -17,12 +19,29 @@ activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 class setStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+        self.presence_updater.start()
     #events
     @commands.Cog.listener()
     async def on_ready(self):
-        print('status module online')
+        print('Status module online')
         return await self.bot.change_presence(status=discord.Status.online, activity=activity)
+
+    def cog_unload(self):
+        self.presence_updater.cancel()
+    
+        
+    @tasks.loop(seconds=20.0, count=None)
+    async def presence_updater(self):
+        #make rich precense for the bot that updates with a different status every 20 seconds
+        
+        pass
+    
+    @presence_updater.before_loop
+    async def before_presence_updater(self):
+        print('Waiting for presence_updater to start')
+        await self.bot.wait_until_ready()
+
+
 
     #commands
     @commands.group(name='botstatus', invoke_without_command=True)
