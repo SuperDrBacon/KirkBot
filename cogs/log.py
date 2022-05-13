@@ -51,7 +51,7 @@ class logger(commands.Cog):
         reply = False
         if ctx.reference:
             reply = True
-            print(f'╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
+            # print(f'╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
         
         try:
             if message == "":
@@ -62,7 +62,7 @@ class logger(commands.Cog):
             # except Exception:
             #     message = '.-prob a sticker-.'
 
-        print(f'{userNAME}: {message}')
+        # print(f'{userNAME}: {message}')
 
         if not reply:
             newserver = {
