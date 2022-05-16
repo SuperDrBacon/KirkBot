@@ -62,7 +62,7 @@ class Ai(commands.Cog):
             
         if ctx.author.bot:
             return
-        if ctx.content.startswith('<@!937050268007268452>') or ctx.content.startswith('<@937050268007268452>'):
+        if ctx.content.startswith('<@!956247299959439460>') or ctx.content.startswith('<@956247299959439460>'):
         #     prefix = ctx.content
         #     at = r'<.*?>'
         #     prefix = re.sub(at, '', prefix)
