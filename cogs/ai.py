@@ -17,7 +17,7 @@ config.read(configini)
 key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
 openai.api_key = key
-textmodel = 'text-curie-001'
+textmodel = 'text-davinci-002'
 
 model_name = 'kirkai wordmodel'   # change to set file name of resulting trained models/texts
 vocab_path = os.path.dirname(os.getcwd()) +'/KirkBot/'+ model_name+"_vocab.json"
