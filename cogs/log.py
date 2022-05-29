@@ -51,18 +51,18 @@ class logger(commands.Cog):
         reply = False
         if ctx.reference:
             reply = True
-            # print(f'╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
+            print(f'╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
         
         try:
             if message == "":
                 message = ctx.attachments[0].url
         except Exception:
             # try:
-            message = str(f'{ctx.embeds[0]}')
+            message = str(f'{ctx.embeds[-1]}')
             # except Exception:
             #     message = '.-prob a sticker-.'
 
-        # print(f'{userNAME}: {message}')
+        print(f'{userNAME}: {message}')
 
         if not reply:
             newserver = {
@@ -210,7 +210,7 @@ class logger(commands.Cog):
                     continue
                 iserver += 1
                 for channels in servers["channels"]:
-                    if channels["channelID"] == 939083691790061601 or channels["channelID"] ==939221538949980210:
+                    if channels["channelID"] == 939083691790061601 or channels["channelID"] == 939221538949980210:
                         ichannel += 1
                         for message in channels["messages"]:
                             text = str(message["message"])
