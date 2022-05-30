@@ -52,11 +52,11 @@ class setStatus(commands.Cog):
     async def botstatus_base(self, ctx):
         await ctx.channel.send(f'current status is: {status}')
     
-    @botstatus_base.command(name='init', invoke_without_command=True)
+    @botstatus_base.command(name='init', invoke_without_command=False)
     async def botstatus_init(self, ctx):
         self.bot.loop.create_task(self.change_presence())
 
-    @botstatus_base.command(name='set', invoke_without_command=True)
+    @botstatus_base.command(name='set', invoke_without_command=False)
     async def setbotstatus(self, ctx, *, statusmessage):
         message = await ctx.send(f"[1️⃣ for watching]. [2️⃣ for listening to.]")
         await message.add_reaction('1️⃣')
