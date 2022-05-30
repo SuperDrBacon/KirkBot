@@ -1,3 +1,4 @@
+import random
 import discord
 import asyncio
 import os
@@ -19,27 +20,29 @@ activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 class setStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.presence_updater.start()
+        # self.presence_updater.start()
     #events
     @commands.Cog.listener()
     async def on_ready(self):
         print('Status module online')
-        return await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        self.bot.loop.create_task(self.change_presence())
+        # return await self.bot.change_presence(status=discord.Status.online, activity=activity)
 
-    def cog_unload(self):
-        self.presence_updater.cancel()
+    # def cog_unload(self):
+    #     self.presence_updater.cancel()
     
-        
-    @tasks.loop(seconds=20.0, count=None)
-    async def presence_updater(self):
-        #make rich precense for the bot that updates with a different status every 20 seconds
-        
-        pass
     
-    @presence_updater.before_loop
-    async def before_presence_updater(self):
-        print('Waiting for presence_updater to start')
-        await self.bot.wait_until_ready()
+    
+    # @tasks.loop(seconds=20.0, count=None)
+    # async def presence_updater(self):
+    #     #make rich precense for the bot that updates with a different status every 20 seconds
+        
+    #     pass
+    
+    # @presence_updater.before_loop
+    # async def before_presence_updater(self):
+    #     print('Waiting for presence_updater to start')
+    #     await self.bot.wait_until_ready()
 
 
 
@@ -88,3 +91,14 @@ class setStatus(commands.Cog):
 
 def setup(bot):
     bot.add_cog(setStatus(bot))
+
+async def change_presence(self):
+    print('Waiting to start change_presence')
+    await self.bot.wait_until_ready()
+    print('change_presence started')
+
+    statuses = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    while not self.bot.is_closed():
+        status = random.choice(statuses)
+        await self.bot.change_presence(activity=discord.Game(name=status))
+        await asyncio.sleep(10)
