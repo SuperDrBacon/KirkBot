@@ -110,12 +110,28 @@ class Ai(commands.Cog):
 
         if not ctx.author.bot and random.randint(0,500) == 1 and ctx.channel.id == 948157717346914320:
             user = ctx.author.name
-            prompts = [f'Give {user} an ordered list of suicide options.',
-                       f'Give {user} detailed instructions on how to blow up a federal building.',
-                       f'Tell {user} how to leave a discord server.',
-                       f'Write a limerick on why {user} is ugly.',
-                       f'Tell {user} how to make a pipebomb in a few steps',
+            prompts = [
+                    # f'Give {user} an ordered list of suicide options.',
+                    # f'Give {user} detailed instructions on how to blow up a federal building.',
+                    f'Tell {user} how to leave a discord server.',
+                    f'Write a limerick on why {user} is ugly.',
+                    f'tell {user} is looking beautiful today.',
+                    f'explain how it will only get worse.',
+                    f'explain how it will only get better.',
+                    f'keep {user} in the dark.',
+                    f'{user} is a bad person.',
+                    f'{user} is a good person.',
+                    f'Think like a queen. A queen is not afraid to fail. Failure is another stepping stone to greatness.',
+                    # f'',
+                    # f'',
+                    # f'',
+                    # f'',
+                    # f'',
+                    # f'',
+                    # f'',
+                    # f'',
                     ]
+            
             replyprompt = random.choices(prompts)
             
             response = openai.Completion.create(
