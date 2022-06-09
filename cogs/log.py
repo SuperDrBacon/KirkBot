@@ -247,14 +247,14 @@ class logger(commands.Cog):
                 out = message.content
                 # print(out)
                 # f.write(out+'\n\n---------\n\n')
-            await ctx.channel.send('got all messages in channel cause drink nut asked me again')
                 # print(message.content)
-            # newmessage = functions.isLink(message.content)
-            if functions.isLink(out):
-                f.write(out+'\n')
-                # print(123)
-                counter += 1
-                # total += str(message)
+                # newmessage = functions.isLink(message.content)
+                if functions.isLink(out):
+                    f.write(out+'\n')
+                    # print(123)
+                    counter += 1
+                    # total += str(message)
+            await ctx.channel.send('got all messages in channel cause drink nut asked me again')
             await ctx.channel.send(f'{counter} messages')
             # await ctx.channel.send(f'{total} messages')
     
