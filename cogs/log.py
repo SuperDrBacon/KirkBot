@@ -246,16 +246,17 @@ class logger(commands.Cog):
             for message in messages:
                 out = message.content
                 # print(out)
-                f.write(out+'\n\n---------\n\n')
-        # await ctx.channel.send('got all messages in channel cause drink nut keeps dm-ing me')
-            # print(message.content)
+                # f.write(out+'\n\n---------\n\n')
+            await ctx.channel.send('got all messages in channel cause drink nut asked me again')
+                # print(message.content)
             # newmessage = functions.isLink(message.content)
-        #     if functions.isLink(message.content):
-        #         print(123)
-        #         counter += 1
-        #         total += str(message)
-        # await ctx.channel.send(f'{counter} messages')
-        # await ctx.channel.send(f'{total} messages')
+            if functions.isLink(out):
+                f.write(out+'\n')
+                # print(123)
+                counter += 1
+                # total += str(message)
+            await ctx.channel.send(f'{counter} messages')
+            # await ctx.channel.send(f'{total} messages')
     
     @commands.has_permissions(administrator=True)
     @getlinksbase.command(name='list', invoke_without_command=True)
