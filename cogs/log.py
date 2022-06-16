@@ -1,3 +1,4 @@
+import shutil
 import discord
 import time
 import json
@@ -11,6 +12,14 @@ from datetime import datetime, timezone
 jsonpath = os.path.dirname(os.path.realpath(__file__)) + "/log.json"
 messagestxt = os.path.dirname(os.path.realpath(__file__)) + "/jsonLogToMessages.txt"
 genAI_log = os.path.dirname(os.path.realpath(__file__)) + "/genAI_log.txt"
+
+jsonmaxsize = 20971520
+
+def _count_generator(reader):
+    b = reader(1024 * 1024)
+    while b:
+        yield b
+        b = reader(1024 * 1024)
 
 init = {
     "servers":[{
@@ -182,88 +191,54 @@ class logger(commands.Cog):
             pass 
         with open(jsonpath, 'w') as fout:
             json.dump(file_data, fout, indent = 4)
-            
-            
-    @commands.command()
-    async def getlog(self, ctx,):
-        pass
 
-    @commands.command()
+        '''
+        Reset the json file to init when it gets too big but make a cold copy first.
+        '''
+        file_size = os.stat(jsonpath).st_size
+        if file_size > jsonmaxsize:
+            with open(jsonpath, 'rb') as fp:
+                c_generator = _count_generator(fp.raw.read)
+                count = sum(buffer.count(b'\n') for buffer in c_generator)
+            
+            shutil.copy(jsonpath, f'log {int(count/1000)}K.json')
+            
+            with open(jsonpath, 'w') as fnewout:
+                json.dump(init, fnewout, indent = 4)
+
+    '''
+    Reset the json log the manual way if bot get slow or some bs. also make a cold copy first.
+    '''
+    @commands.command(aliases=['resetlog'])
     @commands.has_permissions(administrator=True)  
     async def reset(self, ctx,):
-        pass
-        # with open(jsonpath, 'w') as fout:
-        #     json.dump(init, fout, indent = 4)
-            
-    @commands.command(aliases=["up"])
-    @commands.has_permissions(administrator=True)      
-    async def update_mesages(self, ctx):
-        iserver = 0
-        ichannel = 0
-        imessage = 0
-        before = time.monotonic_ns()
-        with open(jsonpath, 'r') as fin:
-            file_data = json.load(fin)
-        with open(messagestxt, 'w', encoding='utf-8') as messagein:  
-            for servers in file_data["servers"]:
-                if servers["serverID"] == 123 or servers["serverID"] == 937056927312150599:
-                    continue
-                iserver += 1
-                for channels in servers["channels"]:
-                    if channels["channelID"] == 939083691790061601 or channels["channelID"] == 939221538949980210:
-                        ichannel += 1
-                        for message in channels["messages"]:
-                            text = str(message["message"])
-                            
-                            if text == "[]":
-                                continue
-                            
-                            cleaned = functions.filter(text)
-                            
-                            if not cleaned:
-                                continue
-                            
-                            messagein.write(cleaned+'\n')
-                            imessage += 1
-        totalLineCount = functions.joinfiles()
-        after = (time.monotonic_ns() - before) / 1000000000
-        await ctx.send(f'{after}s')
-        await ctx.send(f'\n`servers: {iserver}`\n`channels: {ichannel}`\n`messages json: {imessage}`\n`total lines json+genAI: {totalLineCount}`')
+        with open(jsonpath, 'rb') as fp:
+            c_generator = _count_generator(fp.raw.read)
+            count = sum(buffer.count(b'\n') for buffer in c_generator)
 
-    # @commands.command(aliases=["getlink"])
-    # async def getlinks(self, ctx):
-    #     messages = await ctx.channel.history(limit=123).flatten()
-    
+        shutil.copy(jsonpath, f'log {int(count/1000)}K.json')
+
+        with open(jsonpath, 'w') as fnewout:
+            json.dump(init, fnewout, indent = 4)
+        pass
+
+    '''
+    Gets all the links in the channel and puts them in a file named the channel name.
+    '''
     @commands.has_permissions(administrator=True)
     @commands.group(name='getlinks', invoke_without_command=True)
     async def getlinksbase(self, ctx, number:int):
         await ctx.message.delete()
         channelNAME = ctx.channel.name
-        counter = 0
         messages = await ctx.channel.history(limit=number, oldest_first=True).flatten()
-        # loop each message to check for phrase
+
         with open(f'{channelNAME}.txt', 'w', encoding='utf-8') as f:
             for message in messages:
                 out = message.content
-                # print(out)
                 if out.startswith('http'):
                     f.write(out+'\n')
-                # print(message.content)
-                # newmessage = functions.isLink(message.content)
-                # if functions.isLink(out):
-                #     f.write(out+'\n')
-                #     # print(123)
-                #     counter += 1
-                #     # total += str(message)
-            await ctx.channel.send('got all messages in channel cause drink nut asked me again')
-            # await ctx.channel.send(f'{counter} messages')
-            # await ctx.channel.send(f'{total} messages')
+            await ctx.channel.send('Got all messages in channel cause drink nut asked me again')
     
-    @commands.has_permissions(administrator=True)
-    @getlinksbase.command(name='list', invoke_without_command=True)
-    async def getlinklist(self, ctx):
-        links = functions.getLink()
-
     @commands.has_permissions(administrator=True)
     @getlinksbase.command(name='all', invoke_without_command=True)
     async def getlinkall(self, ctx):
@@ -275,3 +250,45 @@ class logger(commands.Cog):
 
 def setup(bot):
     bot.add_cog(logger(bot))
+
+    # '''
+    # get all the logged messages and put them in a file. and combine other files to make one big file.
+    # '''
+    # @commands.command(aliases=["up"])
+    # @commands.has_permissions(administrator=True)      
+    # async def update_mesages(self, ctx):
+    #     iserver = 0
+    #     ichannel = 0
+    #     imessage = 0
+    #     before = time.monotonic_ns()
+    #     with open(jsonpath, 'r') as fin:
+    #         file_data = json.load(fin)
+    #     with open(messagestxt, 'w', encoding='utf-8') as messagein:  
+    #         for servers in file_data["servers"]:
+    #             if servers["serverID"] == 123 or servers["serverID"] == 937056927312150599:
+    #                 continue
+    #             iserver += 1
+    #             for channels in servers["channels"]:
+    #                 if channels["channelID"] == 939083691790061601 or channels["channelID"] == 939221538949980210:
+    #                     ichannel += 1
+    #                     for message in channels["messages"]:
+    #                         text = str(message["message"])
+    
+    #                         if text == "[]":
+    #                             continue
+    
+    #                         cleaned = functions.filter(text)
+
+    #                         if not cleaned:
+    #                             continue
+    
+    #                         messagein.write(cleaned+'\n')
+    #                         imessage += 1
+    #     totalLineCount = functions.joinfiles()
+    #     after = (time.monotonic_ns() - before) / 1000000000
+    #     await ctx.send(f'{after}s')
+    #     await ctx.send(f'\n`servers: {iserver}`\n`channels: {ichannel}`\n`messages json: {imessage}`\n`total lines json+genAI: {totalLineCount}`')
+
+    # @commands.command(aliases=["getlink"])
+    # async def getlinks(self, ctx):
+    #     messages = await ctx.channel.history(limit=123).flatten()
