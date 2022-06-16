@@ -62,29 +62,6 @@ def getlink(message):
         return None
 
 
-messagestxt = os.path.abspath(os.getcwd())+'/cogs/jsonLogToMessages.txt'
-genAI_log = os.path.abspath(os.getcwd())+'/genAI_log.txt'
-messages = os.path.abspath(os.getcwd())+'/messages.txt'
-
-def joinfiles():
-    with open(messages,'wb') as wfd:
-        for f in [genAI_log, messagestxt]:
-            with open(f, 'rb') as fd:
-                shutil.copyfileobj(fd, wfd)
-    with open(messages, 'rb') as linecount:
-        lines = 0
-        buf_size = 1024 * 1024
-        read_f = linecount.raw.read
-
-        buf = read_f(buf_size)
-        while buf:
-            lines += buf.count(b'\n')
-            buf = read_f(buf_size)
-    return lines
-
-
-
-
 def levenshteinDistanceDP(token1, token2):
     distances = numpy.zeros((len(token1) + 1, len(token2) + 1))
 
