@@ -30,6 +30,7 @@ class Error(commands.Cog):
             
         else:
             await ctx.send("The command you've entered could not be completed at this time.")
+            print(error)
 
 def setup(bot):
     bot.add_cog(Error(bot))
