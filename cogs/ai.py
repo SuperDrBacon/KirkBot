@@ -45,21 +45,8 @@ class Ai(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        if ctx.author.id == 656962312565030963 and random.randint(0,50) == 1:
-            prompt = 'Write a sad song.'
-            response = openai.Completion.create(
-                engine=textmodel,
-                prompt=prompt,
-                temperature=1.5,
-                max_tokens=50,
-                n=1,
-                frequency_penalty=0.2,
-                presence_penalty=0.2,
-                # stop=["."]
-            )
-            out = response.choices[0].text
-            await ctx.reply(out)
-            
+        if ctx.content.startswith('.,react'):
+            return
         if ctx.author.bot:
             return
         if ctx.content.startswith('<@!956247299959439460>') or ctx.content.startswith('<@956247299959439460>'):
