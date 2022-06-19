@@ -7,13 +7,14 @@ kirkai wordmodel_vocab.json
 kirkai wordmodel_config.json
 __pycache__
 
+seriouslinks.txt
+seriouschannel.txt
+copypastachannel.txt
+images/final_react.png
+cogs/tag.json
 cogs/kirklines.txt
 cogs/log.json
 cogs/bannedwords.txt
-seriouslinks.txt
-seriouschannel.txt
-cogs/tag.json
-copypastachannel.txt
 cogs/log 600k lines.json
 cogs/log 500k lines.json
 cogs/log 160k lines error.json
