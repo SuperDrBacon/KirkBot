@@ -33,7 +33,7 @@ class Images(commands.Cog):
     
     '''
     @commands.command(name='react')
-    async def add_speech_bubble(self, ctx, user: discord.Member = None, *, message):
+    async def add_speech_bubble(self, ctx):
         if ctx.reference:
             total_images = glob.glob(imagepath+'*.png')
             i = random.randint(0, len(total_images))
@@ -61,7 +61,7 @@ class Images(commands.Cog):
             
             with open(imagepath+'final_react.png', 'rb') as f:
                 img = File(f)
-                await ctx.channel.send(file=img)
+                await ctx.channel.reply(file=img)
         else:
             await ctx.channel.reply(f"You didn't react to anything bozo, I haven't made that part of the command yet")
 
