@@ -34,24 +34,27 @@ class Images(commands.Cog):
     '''
     @commands.command(name='react')
     async def add_speech_bubble(self, ctx):
-        if ctx.reference:
-            total_images = glob.glob(imagepath+'*.png')
+        if ctx.message.reference:
+            
+            total_images = glob.glob(imagepath+'reaction*')
+            
             i = random.randint(0, len(total_images))
+            print(f'{i} of total {len(total_images)}')
             reac_img = Image.open(imagepath+f'reaction{i}.png')
             speech_bubble = Image.open(imagepath+'speech_bubble.png')
-            font = ImageFont.truetype(imagepath+'impact.ttf', 50)
+            font = ImageFont.truetype(imagepath+'impact.ttf', 30)
             
             reac_width, reac_height = reac_img.size
             sb_width, sb_height = speech_bubble.size
             img_text_height = 200
             speech_bubble = speech_bubble.resize((reac_width, sb_height))
-        
-            reacted_to_user = ctx.reference.resolved.author.name 
-            reacted_to_message = ctx.reference.resolved.content
+            
+            reacted_to_user = ctx.message.reference.resolved.author.name 
+            reacted_to_message = ctx.message.reference.resolved.content
             text_for_img = f'{reacted_to_user}: {reacted_to_message}'
             text_img = Image.new('RGB', (reac_width, 200), (255, 255, 255))
             draw = ImageDraw.Draw(text_img)
-            draw.text((reac_width/2, img_text_height/2), text_for_img, font=font)
+            draw.text((reac_width/2, img_text_height/2), text_for_img, (0, 0, 0), font=font)
             
             final_img = Image.new('RGB', (reac_width, img_text_height+sb_height+reac_height))
             final_img.paste(text_img, (0, 0))
@@ -59,11 +62,11 @@ class Images(commands.Cog):
             final_img.paste(reac_img, (0, img_text_height+sb_height))
             final_img.save(imagepath+'final_react.png', 'PNG')
             
-            with open(imagepath+'final_react.png', 'rb') as f:
-                img = File(f)
-                await ctx.channel.reply(file=img)
+            final_img.show
+            await ctx.reply(file=discord.File(imagepath+'final_react.png'))
+            
         else:
-            await ctx.channel.reply(f"You didn't react to anything bozo, I haven't made that part of the command yet")
+            await ctx.reply(f"You didn't react to anything bozo, I haven't made that part of the command yet")
 
 
 def setup(bot):
