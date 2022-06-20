@@ -32,8 +32,9 @@ class Error(commands.Cog):
             await ctx.send(f"This command is on cooldown retard. Try again in {error.retry_after:.2f} seconds.")
             
         else:
-            await ctx.send("The command you've entered could not be completed at this time.")
-            print(error)
+            # await ctx.send("The command you've entered could not be completed at this time.")
+            
+            print(f'CONSOLE ONLY, COMMAND FAILED: {error}')
 
 def setup(bot):
     bot.add_cog(Error(bot))
