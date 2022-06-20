@@ -41,7 +41,7 @@ class Images(commands.Cog):
             
             i = random.randint(0, len(total_images))
             # print(f'{i} of total {len(total_images)}')
-            reac_img = Image.open(imagepath+f'reaction{i}.png')
+            reac_img = Image.open(imagepath+f'reaction{i-1}.png')
             speech_bubble = Image.open(imagepath+'speech_bubble.png')
             font = ImageFont.truetype(imagepath+'impact.ttf', 30)
             
