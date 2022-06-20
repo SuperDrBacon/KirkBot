@@ -13,7 +13,7 @@ jsonpath = os.path.dirname(os.path.realpath(__file__)) + "/log.json"
 messagestxt = os.path.dirname(os.path.realpath(__file__)) + "/jsonLogToMessages.txt"
 genAI_log = os.path.dirname(os.path.realpath(__file__)) + "/genAI_log.txt"
 
-jsonmaxsize = 20971520
+jsonmaxsize = 5242880
 
 def _count_generator(reader):
     b = reader(1024 * 1024)
