@@ -47,7 +47,7 @@ class Images(commands.Cog):
             
             img_width = 500
             reac_width, reac_height = reac_img.size
-            new_scale = img_width/reac_width
+            new_scale = 1 - (abs((img_width-reac_width)/reac_width))
             sb_width, sb_height = speech_bubble.size
             img_text_height = 200
             speech_bubble = speech_bubble.resize((img_width, sb_height))
@@ -57,7 +57,7 @@ class Images(commands.Cog):
             reacted_to_message = ctx.message.reference.resolved.content
             text_for_img = f'{reacted_to_user}: {reacted_to_message}'
             fontw, fonth = font.getsize(text_for_img)
-            lines = textwrap.wrap(text_for_img, width=30)
+            lines = textwrap.wrap(text_for_img, width=20)
             y_offset = (len(lines)*fonth)/2
             y_text = (img_text_height/2)-(fonth/2) - y_offset
             for line in lines:
