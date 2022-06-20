@@ -33,6 +33,7 @@ class Images(commands.Cog):
     
     '''
     @commands.command(name='react')
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def add_speech_bubble(self, ctx):
         if ctx.message.reference:
             
@@ -44,12 +45,13 @@ class Images(commands.Cog):
             speech_bubble = Image.open(imagepath+'speech_bubble.png')
             font = ImageFont.truetype(imagepath+'impact.ttf', 30)
             
-            reac_width, reac_height = reac_img.size
-            sb_width, sb_height = speech_bubble.size
             img_width = 500
+            reac_width, reac_height = reac_img.size
+            new_scale = img_width/reac_width
+            sb_width, sb_height = speech_bubble.size
             img_text_height = 200
             speech_bubble = speech_bubble.resize((img_width, sb_height))
-            reac_img = reac_img.resize((img_width, reac_height))
+            reac_img = reac_img.resize((img_width, reac_height*new_scale))
             
             reacted_to_user = ctx.message.reference.resolved.author.name 
             reacted_to_message = ctx.message.reference.resolved.content
