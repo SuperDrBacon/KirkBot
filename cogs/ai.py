@@ -161,11 +161,9 @@ class Ai(commands.Cog):
 
 
     @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def ai(self, ctx, *, message):
             # message = ctx.content + '.'
-            banned = 'expl'
-            if message.lower().startswith(banned):
-                return
             message = message + '.\n\n'
             response = openai.Completion.create(
                 engine=textmodel,
