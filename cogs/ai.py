@@ -45,7 +45,7 @@ class Ai(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        if ctx.content.startswith('.,react'):
+        if ctx.content.startswith('.,'):
             return
         if ctx.author.bot:
             return
@@ -163,6 +163,9 @@ class Ai(commands.Cog):
     @commands.command()
     async def ai(self, ctx, *, message):
             # message = ctx.content + '.'
+            banned = 'expl'
+            if message.lower().startswith(banned):
+                return
             message = message + '.\n\n'
             response = openai.Completion.create(
                 engine=textmodel,
