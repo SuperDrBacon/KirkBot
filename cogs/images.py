@@ -39,7 +39,7 @@ class Images(commands.Cog):
             total_images = glob.glob(imagepath+'reaction*')
             
             i = random.randint(0, len(total_images))
-            print(f'{i} of total {len(total_images)}')
+            # print(f'{i} of total {len(total_images)}')
             reac_img = Image.open(imagepath+f'reaction{i}.png')
             speech_bubble = Image.open(imagepath+'speech_bubble.png')
             font = ImageFont.truetype(imagepath+'impact.ttf', 30)
@@ -52,9 +52,16 @@ class Images(commands.Cog):
             reacted_to_user = ctx.message.reference.resolved.author.name 
             reacted_to_message = ctx.message.reference.resolved.content
             text_for_img = f'{reacted_to_user}: {reacted_to_message}'
-            text_img = Image.new('RGB', (reac_width, 200), (255, 255, 255))
-            draw = ImageDraw.Draw(text_img)
-            draw.text((reac_width/2, img_text_height/2), text_for_img, (0, 0, 0), font=font)
+            fontw, fonth = font.getsize(text_for_img)
+            lines = textwrap.wrap(text_for_img, width=reac_width/2)
+            y_offset = (len(lines)*fonth)/2
+            y_text = (img_text_height/2)-(fonth/2) - y_offset
+            for line in lines:
+                linew, lineh = font.getsize(line)
+                text_img = Image.new('RGB', (reac_width, img_text_height), (255, 255, 255))
+                draw = ImageDraw.Draw(text_img)
+                draw.text(((reac_width/2)-(fontw/2), y_text), text_for_img, (0, 0, 0), font=font)
+                y_text += lineh
             
             final_img = Image.new('RGB', (reac_width, img_text_height+sb_height+reac_height))
             final_img.paste(text_img, (0, 0))
