@@ -28,6 +28,9 @@ class Error(commands.Cog):
         elif isinstance(error, commands.CommandNotFound):
             await ctx.send(f"No such command found. Try `.,help`")
             
+        elif isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(f"This command is on cooldown retard. Try again in {error.retry_after:.2f} seconds.")
+            
         else:
             await ctx.send("The command you've entered could not be completed at this time.")
             print(error)
