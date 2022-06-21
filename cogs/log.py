@@ -66,10 +66,10 @@ class logger(commands.Cog):
             if message == "":
                 message = ctx.attachments[0].url
         except Exception:
-            # try:
-            message = str(f'{ctx.embeds[-1]}')
-            # except Exception:
-            #     message = '.-prob a sticker-.'
+            try:
+                message = ctx.attachments[0].proxy_url
+            except Exception:
+                return
 
         print(f'{userNAME}: {message}')
 
