@@ -165,20 +165,20 @@ class Ai(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def ai(self, ctx, *, message):
             # message = ctx.content + '.'
-            # message = message + '.\n\n'
-            # response = openai.Completion.create(
-            #     engine=textmodel,
-            #     prompt=message,
-            #     temperature=1.0,
-            #     max_tokens=500,
-            #     n=1,
-            #     frequency_penalty=0.2,
-            #     presence_penalty=0.2,
-            #     # stop=["."]
-            # )
-            # out = response.choices[0].text
-            # await ctx.reply(out)
-            await ctx.reply('Yea uuh another trial ran out and no online phone number works so I can\'t make a new account')
+            message = message + '.\n\n'
+            response = openai.Completion.create(
+                engine=textmodel,
+                prompt=message,
+                temperature=1.0,
+                max_tokens=500,
+                n=1,
+                frequency_penalty=0.2,
+                presence_penalty=0.2,
+                # stop=["."]
+            )
+            out = response.choices[0].text
+            await ctx.reply(out)
+            # await ctx.reply('Yea uuh another trial ran out and no online phone number works so I can\'t make a new account')
 
     # @commands.has_permissions(administrator=True)
     # @commands.command(aliases=["rtai"])
