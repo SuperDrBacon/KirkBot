@@ -16,6 +16,7 @@ config.read(configini)
 
 key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
+prefix = config['BOTCONFIG']['prefix']
 openai.api_key = key
 textmodel = 'text-curie-001'
 
@@ -45,7 +46,7 @@ class Ai(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        if ctx.content.startswith('.,'):
+        if ctx.content.startswith(prefix):
             return
         if ctx.author.bot:
             return
