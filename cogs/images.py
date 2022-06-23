@@ -4,14 +4,17 @@ import os
 import random
 import discord
 import textwrap
+import requests
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
+from PIL import ImageSequence
 from PIL import ImageOps
 from configparser import ConfigParser
 from discord.ext import commands
 from io import BytesIO
 from discord import File
+from string import ascii_letters
 
 path = os.path.abspath(os.getcwd())
 imagepath = rf'{path}/images/'
@@ -54,9 +57,9 @@ class Images(commands.Cog):
             
         if ctx.message.reference:   
             speech_bubble = Image.open(imagepath+'speech_bubble.png')
-            font = ImageFont.truetype(imagepath+'impact.ttf', 30)
+            font = ImageFont.truetype(imagepath+'impact.ttf', 60)
             
-            img_width = 500
+            img_width = 1000
             reac_width, reac_height = reac_img.size
 
             new_scale = 1 + ((img_width-reac_width)/reac_width)
@@ -70,7 +73,9 @@ class Images(commands.Cog):
             reacted_to_message = ctx.message.reference.resolved.content
             text_for_img = f'{reacted_to_user}: {reacted_to_message}'
             fontw, fonth = font.getsize(text_for_img)
-            lines = textwrap.wrap(text_for_img, width=40)
+            avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(ascii_letters)
+            max_char_count = int((img_width * 0.97) / avg_char_width)
+            lines = textwrap.wrap(text_for_img, width=max_char_count)
             
             y_offset = (len(lines)*fonth)/2
             img_text_height = fonth * len(lines) + 50
@@ -101,35 +106,95 @@ class Images(commands.Cog):
             await mgs2.delete()
             await ctx.message.delete()
     
-    # '''
-    # Caption the previous image or gif posted in the chat
-    # '''
-    # @commands.command(name='caption')
-    # @commands.cooldown(1, 5, commands.BucketType.user)
-    # async def caption_image(self, ctx):
-    #     messages = await ctx.channel.history(limit=50, oldest_first=False).flatten()
-    #     print('01')
-    #     for message in messages:
-    #         print('11')
-    #         if message.attachments:
-    #             print('101')
-    #             print(message.attachments)
-    #             for attachment in message.attachments:
-    #                 if attachment.filename.endswith('.png') or attachment.filename.endswith('.jpg') or attachment.filename.endswith('.gif'):
-    #                     try:
-    #                         # img = Image.open(attachment.url)
-    #                         print('1')
-    #                         await attachment.save(imagepath+'dl temp.png', use_cashed=False)
-    #                     except:
-    #                         try:
-    #                             print('2')
-    #                             # img = Image.open(attachment.proxy_url)
-    #                             attachment.save(imagepath+'dl temp.png', use_cashed=True)
-    #                         except:
-    #                             return await ctx.reply('Failed to download image')
-    #                         # font = ImageFont.truetype(imagepath+'impact.ttf', 30)
-    #                         # img_width = 500
-    #                         # img_height = img.size[1]
+    '''
+    Caption the previous image or gif posted in the chat
+    '''
+    @commands.command(name='caption')
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def caption_image(self, ctx, *, caption:str = ''):
+        messages = await ctx.channel.history(limit=50, oldest_first=False).flatten()
+        if os.path.exists(imagepath+'dl temp.png'):
+            os.remove(imagepath+'dl temp.png')
+        if os.path.exists(imagepath+'dl temp.gif'):
+            os.remove(imagepath+'dl temp.gif')
+        try:
+            for message in messages:
+                if message.attachments:
+                    for attachment in message.attachments:
+                        if attachment.filename.endswith('.png') or attachment.filename.endswith('.jpg'):
+                            try:
+                                await attachment.save(imagepath+'dl temp.png', use_cached=False)                     
+                            except Exception as e:
+                                try:
+                                    await attachment.save(imagepath+'dl temp.png', use_cached=True)
+                                except Exception as ee:
+                                    print(f'{e} -EN- {ee}')
+                                    return await ctx.reply('Failed to get image png jpg')
+                            raise StopIteration
+                        elif attachment.filename.endswith('.gif'):
+                            try:
+                                await attachment.save(imagepath+'dl temp.gif', use_cached=False)
+                            except Exception as e:
+                                try:
+                                    await attachment.save(imagepath+'dl temp.gif', use_cached=True)
+                                except Exception as ee:
+                                    print(f'{e} -EN- {ee}')
+                                    return await ctx.reply('Failed to get image gif')
+                            raise StopIteration
+                elif message.content.endswith('.gif') or message.content.startswith('https://tenor.com/'):
+                    try:
+                        with open(imagepath+'dl temp.gif', 'wb') as f:
+                            f.write(requests.get(message.content).content)
+                    except Exception as e:
+                        print(f'{e}')
+                        return await ctx.reply('Failed to get image gif link, @me to add gif site')
+                    raise StopIteration
+            return await ctx.reply('No image found in chat')
+        except StopIteration:
+            pass
+        
+        if os.path.exists(imagepath+'dl temp.png'):
+            reac_img = Image.open(imagepath+'dl temp.png')
+            font = ImageFont.truetype(imagepath+'impact.ttf', 60)
+            reac_width, reac_height = reac_img.size
+            
+            fontw, fonth = font.getsize(caption)
+            
+            avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(ascii_letters)
+            max_char_count = int((reac_width * 0.97) / avg_char_width)
+            lines = textwrap.wrap(text=caption, width=max_char_count)
+            
+            y_offset = (len(lines)*fonth)/2
+            img_text_height = fonth * len(lines) + 100
+            y_text = (img_text_height/2)-(fonth/2) - y_offset
+            text_img = Image.new('RGBA', (reac_width, img_text_height), (255, 255, 255))
+            for line in lines:
+                linew, lineh = font.getsize(line)
+                draw = ImageDraw.Draw(text_img)
+                draw.text(((reac_width/2)-(linew/2), y_text), line, (0, 0, 0), font=font)
+                y_text += lineh
+            
+            final_img = Image.new('RGBA', (reac_width, img_text_height+reac_height))
+            final_img.paste(text_img, (0, 0))
+            final_img.paste(reac_img, (0, img_text_height))
+            final_img.save(imagepath+'final_react.png', 'PNG')
+            return await ctx.reply(file=discord.File(imagepath+'final_react.png')) 
+        
+        elif os.path.exists(imagepath+'dl temp.gif'):
+            reac_gif = Image.open(imagepath+'dl temp.gif')
+            try:
+                while True:
+                    reac_gif.seek(reac_gif.tell()+1)
+                    
+            except EOFError:
+                pass
+            # return await ctx.reply(file=discord.File(imagepath+'final_react.gif')) 
+            return await ctx.reply('gif mode not supported yet') 
+        
+        else:
+            return await ctx.reply('Something brokey')
+        # reac_img = Image.open(imagepath+'dl temp')
+        # font = ImageFont.truetype(imagepath+'impact.ttf', 30)
 
 
 
