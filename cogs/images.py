@@ -2,6 +2,7 @@ import asyncio
 import glob
 import os
 import random
+import shutil
 import discord
 import textwrap
 import requests
@@ -15,6 +16,9 @@ from discord.ext import commands
 from io import BytesIO
 from discord import File
 from string import ascii_letters
+from bs4 import BeautifulSoup
+
+ua = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'}
 
 path = os.path.abspath(os.getcwd())
 imagepath = rf'{path}/images/'
@@ -141,13 +145,30 @@ class Images(commands.Cog):
                                     print(f'{e} -EN- {ee}')
                                     return await ctx.reply('Failed to get image gif')
                             raise StopIteration
-                elif message.content.endswith('.gif') or message.content.startswith('https://tenor.com/'):
+                elif message.content.endswith('.gif'):
                     try:
+                        response = requests.get(message.content, stream=True)
                         with open(imagepath+'dl temp.gif', 'wb') as f:
-                            f.write(requests.get(message.content).content)
+                            response.raw.decode_content = True
+                            shutil.copyfileobj(response.raw, f)
                     except Exception as e:
                         print(f'{e}')
-                        return await ctx.reply('Failed to get image gif link, @me to add gif site')
+                        return await ctx.reply('Failed to get image gif link.')
+                    raise StopIteration
+                #Ofcourse normal tenor links don't work	why would they?
+                elif message.content.startswith('https://tenor.com/'):
+                    try:
+                        page = requests.get(message.content, headers=ua)
+                        soup = BeautifulSoup(page.content, 'html.parser')
+                        channels = soup.find('div', class_="Gif")
+                        ctenor = channels.find('img').attrs['src']
+                        response = requests.get(ctenor, stream=True)
+                        with open(imagepath+'dl temp.gif', 'wb') as f:
+                            response.raw.decode_content = True
+                            shutil.copyfileobj(response.raw, f)
+                    except Exception as e:
+                        print(f'{e}')
+                        return await ctx.reply('Failed to get image gif link.')
                     raise StopIteration
             return await ctx.reply('No image found in chat')
         except StopIteration:
@@ -182,14 +203,45 @@ class Images(commands.Cog):
         
         elif os.path.exists(imagepath+'dl temp.gif'):
             reac_gif = Image.open(imagepath+'dl temp.gif')
+            font = ImageFont.truetype(imagepath+'impact.ttf', 60)
+            reac_width, reac_height = reac_gif.size
+            
+            fontw, fonth = font.getsize(caption)
+            
+            avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(ascii_letters)
+            max_char_count = int((reac_width * 0.97) / avg_char_width)
+            lines = textwrap.wrap(text=caption, width=max_char_count)
+            
+            y_offset = (len(lines)*fonth)/2
+            img_text_height = fonth * len(lines) + 100
+            y_text = (img_text_height/2)-(fonth/2) - y_offset
+            text_img = Image.new('RGBA', (reac_width, img_text_height), (255, 255, 255))
+            for line in lines:
+                linew, lineh = font.getsize(line)
+                draw = ImageDraw.Draw(text_img)
+                draw.text(((reac_width/2)-(linew/2), y_text), line, (0, 0, 0), font=font)
+                y_text += lineh
             try:
+                frames, duration = 0, 0
+                images = []
                 while True:
+                    frames += 1
+                    duration += reac_gif.info['duration']
+                    final_img = Image.new('RGBA', (reac_width, img_text_height+reac_height))
+                    final_img.paste(text_img, (0, 0))
+                    final_img.paste(reac_gif, (0, img_text_height))
+                    images.append(final_img)
                     reac_gif.seek(reac_gif.tell()+1)
-                    
             except EOFError:
-                pass
-            # return await ctx.reply(file=discord.File(imagepath+'final_react.gif')) 
-            return await ctx.reply('gif mode not supported yet') 
+                frametime = duration / frames
+                images[0].save(imagepath+'final_react.gif', save_all=True, append_images=images[1:], duration=frametime, loop=0)
+                # print(f'{frames} frames, {duration/1000}s, {frametime}ms per frame, {frames/duration*1000} fps')
+            try:
+                await ctx.reply(file=discord.File(imagepath+'final_react.gif'))
+            except Exception as e:
+                await ctx.reply(f'Hold on gif too big, resizing now. SIKE i didn\'t do that yet')
+                
+        
         
         else:
             return await ctx.reply('Something brokey')
