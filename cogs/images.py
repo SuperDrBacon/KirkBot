@@ -1,6 +1,7 @@
 import asyncio
 import glob
 import os
+from pickletools import optimize
 import random
 import shutil
 import discord
@@ -234,7 +235,7 @@ class Images(commands.Cog):
                     reac_gif.seek(reac_gif.tell()+1)
             except EOFError:
                 frametime = duration / frames
-                images[0].save(imagepath+'final_react.gif', save_all=True, append_images=images[1:], duration=frametime, loop=0)
+                images[0].save(imagepath+'final_react.gif', save_all=True, append_images=images[1:], duration=frametime, loop=0, disposal=2, optimize=True)
                 # print(f'{frames} frames, {duration/1000}s, {frametime}ms per frame, {frames/duration*1000} fps')
             try:
                 await ctx.reply(file=discord.File(imagepath+'final_react.gif'))
