@@ -7,10 +7,11 @@ import asyncio
 import os
 import urllib.parse, urllib.request, re
 from discord_ui import Button
-
 from discord.ext import commands
-path = os.path.dirname(os.path.realpath(__file__)) + '/kirklines.txt'
-tagpath = os.path.dirname(os.path.realpath(__file__)) + '/tag.json'
+
+ospath = os.path.abspath(os.getcwd())
+path = rf'{ospath}/cogs/kirklines.txt'
+tagpath = rf'{ospath}/cogs/tag.json'
 
 with open(path, 'r') as f:
     lines = [line.rstrip() for line in f]

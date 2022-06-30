@@ -9,9 +9,8 @@ from discord_ui import Button
 from discord.ext import commands
 from datetime import datetime, timezone
 
-jsonpath = os.path.dirname(os.path.realpath(__file__)) + "/log.json"
-messagestxt = os.path.dirname(os.path.realpath(__file__)) + "/jsonLogToMessages.txt"
-genAI_log = os.path.dirname(os.path.realpath(__file__)) + "/genAI_log.txt"
+path = os.path.abspath(os.getcwd())
+jsonpath = rf'{path}/cogs/log.json'
 
 jsonmaxsize = 5242880
 

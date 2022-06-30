@@ -9,10 +9,9 @@ import re
 from discord.ext import commands
 from configparser import ConfigParser
 
+path = os.path.abspath(os.getcwd())
 config = ConfigParser()
-configpath = os.path.abspath(os.getcwd())
-configini = '/'.join([configpath, "config.ini"])
-config.read(configini)
+config.read(rf'{path}/config.ini')
 
 key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']

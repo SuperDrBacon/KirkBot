@@ -9,10 +9,9 @@ from configparser import ConfigParser
 from pypresence import Presence 
 
 
+path = os.path.abspath(os.getcwd())
 config = ConfigParser()
-configpath = os.path.abspath(os.getcwd())
-configini = '/'.join([configpath, "config.ini"])
-config.read(configini)
+config.read(rf'{path}/config.ini')
 
 status = config['STATUS']['status']
 activity = discord.Activity(name=status, type=discord.ActivityType.watching)
@@ -88,7 +87,7 @@ class setStatus(commands.Cog):
         # await ctx.message.delete()
         config.set('STATUS', 'status', statusmessage)
         # config.write(configpath.open('w'))
-        with open(configini, 'w') as configfile:
+        with open(rf'{path}/config.ini', 'w') as configfile:
             config.write(configfile)
         await message.edit(content=f'Updated Status to: {strstatus} {statusmessage}')
         await message.clear_reactions()

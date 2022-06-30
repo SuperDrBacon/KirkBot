@@ -28,7 +28,7 @@ class MessageRepeater(commands.Cog):
         self._tasks.append(new_task)
     
     #@commands.has_permissions(administrator=True)
-    @commands.group(aliases=['repeater'], invoke_without_command=True)
+    @commands.group(name='repeater', aliases=['rp'], invoke_without_command=True)
     async def repeater_base(self, ctx):
         await ctx.send('refer to help command for more info')
 
@@ -43,9 +43,9 @@ class MessageRepeater(commands.Cog):
     @commands.has_permissions(administrator=True)
     @repeater_base.command(name='startstream', aliases=['ss'], invoke_without_command=True)
     async def repeater_command(self, ctx, interval: int = 10, *, input: str = None):
-            self.get_tweet_stream.start(input=input, ctx=ctx)
-            self.get_tweet_stream.change_interval(minutes=interval)
-            #pass
+        self.task_launcher(ctx=ctx, input=input, interval=interval)
+        self.get_tweet_stream.change_interval(minutes=interval)
+        #pass
 
     @commands.has_permissions(administrator=True)
     @repeater_base.command(name='stopstream', aliases=['st'], invoke_without_command=True)

@@ -4,10 +4,9 @@ import discord
 import datetime
 from discord.ext import commands
 
+path = os.path.abspath(os.getcwd())
 config = ConfigParser()
-configpath = os.path.abspath(os.getcwd())
-configini = '/'.join([configpath, "config.ini"])
-config.read(configini)
+config.read(rf'{path}/config.ini')
 
 botversion = config['DEFAULT']['title']
 timestamp = datetime.datetime.now()

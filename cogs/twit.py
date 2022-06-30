@@ -7,10 +7,9 @@ from discord.ext import commands, tasks
 from configparser import ConfigParser
 
 
-config = ConfigParser(interpolation=None)
-configpath = os.path.abspath(os.getcwd())
-configini = '/'.join([configpath, "config.ini"])
-config.read(configini)
+path = os.path.abspath(os.getcwd())
+config = ConfigParser()
+config.read(rf'{path}/config.ini')
 
 APIkey = config['TWITTER']['APIkey']
 APIkeysecret = config['TWITTER']['APIkeysecret']
@@ -55,9 +54,9 @@ class Twitter(commands.Cog):
     @commands.has_permissions(administrator=True)
     @tweet_base.command(name='gettweets', aliases=['gt'], invoke_without_command=True)
     async def twitter_command(self, ctx, interval: int = 10, *, input: str = None):
-            self.get_tweet_stream.start(input=input, ctx=ctx)
-            self.get_tweet_stream.change_interval(minutes=interval)
-            #pass
+        self.get_tweet_stream.start(input=input, ctx=ctx)
+        self.get_tweet_stream.change_interval(minutes=interval)
+        #pass
             
     @commands.has_permissions(administrator=True)
     @tweet_base.command(name='stopstream', aliases=['st'], invoke_without_command=True)
