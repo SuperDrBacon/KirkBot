@@ -6,30 +6,22 @@ from discord.ext import commands
 from configparser import ConfigParser
 
 def main():
-    print("Logging in...")
-    config = ConfigParser()
-    configpath = os.path.dirname(os.path.realpath(__file__))
-    configini = '/'.join([configpath, "config.ini"])
-    config.read(configini)
+    print('Logging in...')
     path = os.path.abspath(os.getcwd())
+    config = ConfigParser()
+    config.read(rf'{path}/config.ini')
     title = config['DEFAULT']['title']
     intents = discord.Intents().all()
 
     bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True, intents=intents)
 
-    for filename in os.listdir(path + "/cogs"):
+    for filename in os.listdir(rf'{path}/cogs'):
         if filename.endswith('.py'):
             name = filename[:-3]
             try:
-                bot.load_extension(f"cogs.{name}")
+                bot.load_extension(f'cogs.{name}')
             except Exception as e:
-                print(f"Error when loading module because: {e}")
-
-    try:
-        bot.run(config['BOTCONFIG']['token'])
-    except Exception as e:
-        print(f"Error when logging in: {e}")
-
+                print(f'Error when loading module because: {e}')
 
     @bot.event
     async def on_ready():
@@ -43,6 +35,10 @@ def main():
     async def on_disconnect():
         print(f'{title} disconnected.')
 
-#make if name is main fuction
+    try:
+        bot.run(config['BOTCONFIG']['token'])
+    except Exception as e:
+        print(f'Error when logging in: {e}')
+
 if __name__ == '__main__':
     main()
