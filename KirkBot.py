@@ -35,6 +35,16 @@ def main():
     async def on_disconnect():
         print(f'{title} disconnected.')
 
+    @bot.event
+    async def on_resumed():
+        print(f'{title} resumed.')
+
+    @bot.event
+    async def on_error(event, *args, **kwargs):
+        print(f'{title}, {event} error: {args}, {kwargs}')
+        with open(rf'{path}/error.txt', 'a') as f:
+            f.write(f'ERROR EVENT-> {event}. ARGS -> {args}. KWARGS -> {kwargs}\n')
+
     try:
         bot.run(config['BOTCONFIG']['token'])
     except Exception as e:
