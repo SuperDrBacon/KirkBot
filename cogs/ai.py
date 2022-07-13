@@ -161,7 +161,7 @@ class Ai(commands.Cog):
 
 
     @commands.command()
-    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def ai(self, ctx, *, message):
             # message = ctx.content + '.'
             message = message + '.\n\n'
