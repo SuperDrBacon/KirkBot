@@ -52,7 +52,8 @@ class Cogs(commands.Cog):
                     self.bot.reload_extension(f"cogs.{name}")
                     await ctx.send(f"Reloaded module **{name}**")
                 except Exception as e:
-                    return print(f"The following module failed...\n\n{e}")
+                    print(f"The following module failed...\n\n{e}")
+                    pass
         await ctx.send("Successfully reloaded all modules")
         
     @commands.command()
