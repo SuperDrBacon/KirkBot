@@ -25,7 +25,7 @@ class setStatus(commands.Cog):
     async def on_ready(self):
         print('Status module online')
         # self.bot.loop.create_task(self.change_presence())
-        # return await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        await self.bot.change_presence(status=status, activity=activity)
 
     # def cog_unload(self):
     #     self.presence_updater.cancel()
