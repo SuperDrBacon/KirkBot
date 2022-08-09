@@ -24,7 +24,6 @@ ospath = os.path.abspath(os.getcwd())
 path = rf'{ospath}/cogs/kirklines.txt'
 tagpath = rf'{ospath}/cogs/tag.json'
 imagepath = rf'{ospath}/images/'
-stats = []
 high = 0
 delay = 1
 byteiogcpdot = BytesIO()
@@ -156,30 +155,15 @@ class fun(commands.Cog):
         search_results = re.findall(r"watch\?v=(\S{11})", html_content.read().decode())
         await ctx.send('https://www.youtube.com/watch?v=' + search_results[0])
     
-    @commands.command(name='gcpdot', aliases=['gcp'])
-    async def gcp_dot(self, ctx):
+    @commands.group(name='gcp', invoke_without_command=True)
+    async def gcp_dot_base(self, ctx):
         options = webdriver.ChromeOptions()
         options.headless = True
         driver = webdriver.Chrome(executable_path='/usr/lib/chromium-browser/chromedriver', options=options)
         driver.set_window_size(1000,500)
         driver.get("https://gcpdot.com/gcpchart.php")
         time.sleep(delay)
-        
         driver.find_element(By.TAG_NAME, 'body').screenshot(f'{imagepath}wholechart.png')
-        # png = driver.get_screenshot_as_png()
-        # png.save(byteiogchart, format='PNG')
-        # byteiogchart.seek(0)
-        
-        # circleSize = 350
-        # newImage = Image.new('RGBA', (circleSize, circleSize), (0, 0, 0, 0))
-        # draw = ImageDraw.Draw(newImage)
-        # draw.ellipse((700, 0, circleSize, circleSize), fill = color, outline ='white')
-        # newImage.save(byteiogcpdot, format='PNG')
-        # byteiogcpdot.seek(0)
-        
-        
-        
-        
         
         try:
             chart_height = float(driver.find_element(By.ID, 'gcpChartShadow').get_attribute("height")) + 20
@@ -187,10 +171,10 @@ class fun(commands.Cog):
             dot_id = dot.get_attribute('id')
             dot_height = driver.find_element(By.ID, dot_id).value_of_css_property('top')
             dot_height = float(dot_height.replace('px', ''))
-
-            ''' Map dot height into domain [0.0...1.0] rather than raw css property value'''
+            
+            # Map dot height into domain [0.0...1.0] rather than raw css property value
             high = interp(float(dot_height), [0, chart_height], [0.0, 1.0])
-
+            
             if (high == 0):
                 color = '#505050'
             elif (high < 0.01):
@@ -224,7 +208,7 @@ class fun(commands.Cog):
             
             if (high == 0):
                 gcpStatus = 'It is hivemind time!'
-                colorname = 'gray'
+                colorname = 'grey'
             elif (high < 0.05):
                 gcpStatus = 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%'
                 colorname = 'red'
@@ -244,32 +228,128 @@ class fun(commands.Cog):
                 gcpStatus = 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 95%'
                 colorname = 'blue'
             else:
-                color = 'The Dot is broken!'
-            
-            stat_dict = {"dot_height_raw": float(dot_height), "gcp_index": high, "color":color}
-            # stats.append(stat_dict)
-            # print(stats)
-
+                color = 'grey'
+                gcpStatus = 'The Dot is broken!'
+        
         except(TimeoutException, InvalidSessionIdException, Exception) as e:
             print("Sick exception: " + str(e))
             driver.close()
             raise e
-
         driver.close()
+        
         circleSize = 200
         newImage = Image.new('RGBA', (circleSize, circleSize), (0, 0, 0, 0))
         draw = ImageDraw.Draw(newImage)
         draw.ellipse((0, 0, circleSize, circleSize), fill = color, outline ='white')
         newImage.save(byteiogcpdot, format='PNG')
-        # newImage.save(f'{imagepath}gcpdot.png', format='PNG')
         byteiogcpdot.seek(0)
         
-        colorint = int(color[1:], 16)
-        # print (colorint)
         # wholechartfile = discord.File(f'{imagepath}wholechart.png', filename='wholechart.png')
         # dotfile = discord.File(byteiogcpdot, filename='gcpdot.png')
-        pics = [discord.File(byteiogcpdot, filename='gcpdot.png'), discord.File(f'{imagepath}wholechart.png', filename='wholechart.png')]
         
+        pics = [discord.File(byteiogcpdot, filename='gcpdot.png'), discord.File(f'{imagepath}wholechart.png', filename='wholechart.png')]
+        colorint = int(color[1:], 16)
+        gcppercent = round(high * 100, 2)
+        embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint, inline=True)
+        embed.set_image(url='attachment://wholechart.png')
+        embed.set_thumbnail(url='attachment://gcpdot.png')
+        embed.set_footer(text='Use .,gcp full for an explanation of all the colours.')
+        await ctx.reply(embed=embed, files=pics)
+    
+    @gcp_dot_base.command(name='full', invoke_without_command=True)
+    async def gcp_dot_full(self, ctx):
+        options = webdriver.ChromeOptions()
+        options.headless = True
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        driver.set_window_size(1000,500)
+        driver.get("https://gcpdot.com/gcpchart.php")
+        time.sleep(delay)
+        driver.find_element(By.TAG_NAME, 'body').screenshot(f'{imagepath}wholechart.png')
+        
+        try:
+            chart_height = float(driver.find_element(By.ID, 'gcpChartShadow').get_attribute("height")) + 20
+            dot = driver.find_elements(By.XPATH, '/html/body/div/div')[-1]
+            dot_id = dot.get_attribute('id')
+            dot_height = driver.find_element(By.ID, dot_id).value_of_css_property('top')
+            dot_height = float(dot_height.replace('px', ''))
+            
+            # Map dot height into domain [0.0...1.0] rather than raw css property value
+            high = interp(float(dot_height), [0, chart_height], [0.0, 1.0])
+            
+            if (high == 0):
+                color = '#505050'
+            elif (high < 0.01):
+                color = '#FFA8C0'
+            elif (high >= 0.0 and high < 0.05):
+                color = '#FF1E1E'
+            elif (high >= 0.05 and high < 0.08):
+                color = '#FFB82E'
+            elif (high >= 0.08 and high < 0.15):
+                color = '#FFD517'
+            elif (high >= 0.15 and high < 0.23):
+                color = '#FFFA40'
+            elif (high >= 0.23 and high < 0.30):
+                color = '#F9FA00'
+            elif (high >= 0.30 and high < 0.40):
+                color = '#AEFA00'
+            elif (high >= 0.40 and high < 0.90):
+                color = '#64FA64'
+            elif (high >= 0.90 and high < 0.9125):
+                color = '#64FAAB'
+            elif (high >= 0.9125 and high < 0.93):
+                color = '#ACF2FF'
+            elif (high >= 0.93 and high < 0.96):
+                color = '#0EEEFF'
+            elif (high >= 0.96 and high < 0.98):
+                color = '#24CBFD'
+            elif (high >= 0.98 and high < 1.00):
+                color = '#5655CA'
+            else:
+                color = '#505050'
+            
+            if (high == 0):
+                gcpStatus = 'It is hivemind time!'
+                colorname = 'grey'
+            elif (high < 0.05):
+                gcpStatus = 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%'
+                colorname = 'red'
+            elif (high >= 0.05 and high < 0.10):
+                gcpStatus = 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 10%'
+                colorname = 'orange'
+            elif (high >= 0.10 and high < 0.40):
+                gcpStatus = 'Slightly increased network variance. Probably chance fluctuation. The index is between 10% and 40%'
+                colorname = 'yellow'
+            elif (high >= 0.40 and high < 0.90):
+                gcpStatus = 'Normally random network variance. This is average or expected behavior. The index is between 40% and 90%'
+                colorname = 'green'
+            elif (high >= 0.90 and high < 0.95):
+                gcpStatus = 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%'
+                colorname = 'teal'
+            elif (high >= 0.95 and high < 1.0):
+                gcpStatus = 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 95%'
+                colorname = 'blue'
+            else:
+                color = 'grey'
+                gcpStatus = 'The Dot is broken!'
+        
+        except(TimeoutException, InvalidSessionIdException, Exception) as e:
+            print("Sick exception: " + str(e))
+            driver.close()
+            raise e
+        driver.close()
+        
+        circleSize = 200
+        newImage = Image.new('RGBA', (circleSize, circleSize), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(newImage)
+        draw.ellipse((0, 0, circleSize, circleSize), fill = color, outline ='white')
+        newImage.save(byteiogcpdot, format='PNG')
+        byteiogcpdot.seek(0)
+        
+        # wholechartfile = discord.File(f'{imagepath}wholechart.png', filename='wholechart.png')
+        # dotfile = discord.File(byteiogcpdot, filename='gcpdot.png')
+        
+        pics = [discord.File(byteiogcpdot, filename='gcpdot.png'), discord.File(f'{imagepath}wholechart.png', filename='wholechart.png')]
+        colorint = int(color[1:], 16)
         gcppercent = round(high * 100, 2)
         embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint, inline=True)
         embed.set_image(url='attachment://wholechart.png')
@@ -280,9 +360,7 @@ class fun(commands.Cog):
         embed.add_field(name="Yellow ", value='Slightly increased network variance. Probably chance fluctuation. The index is between 10% and 40%', inline=True)
         embed.add_field(name="Orange ", value='Strongly increased network variance. May be chance fluctuation, with the index between 5% and 10%', inline=True)
         embed.add_field(name="Red ", value='Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%', inline=True)
-        await ctx.reply(embed=embed, files=pics)
-    
-    
+        await ctx.reply(embed=embed, files=pics)        
     
     @commands.has_role('Tag')
     @commands.group(name='tag', invoke_without_command=True)
