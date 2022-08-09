@@ -260,7 +260,7 @@ class fun(commands.Cog):
     async def gcp_dot_full(self, ctx):
         options = webdriver.ChromeOptions()
         options.headless = True
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        driver = webdriver.Chrome(executable_path='/usr/lib/chromium-browser/chromedriver', options=options)
         driver.set_window_size(1000,500)
         driver.get("https://gcpdot.com/gcpchart.php")
         time.sleep(delay)
