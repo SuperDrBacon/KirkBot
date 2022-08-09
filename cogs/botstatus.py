@@ -10,40 +10,21 @@ from pypresence import Presence
 
 
 path = os.path.abspath(os.getcwd())
-config = ConfigParser()
-config.read(rf'{path}/config.ini')
+info = ConfigParser()
+info.read(rf'{path}/info.ini')
 
-status = config['STATUS']['status']
+status = info['STATUS']['status']
 activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 
 class setStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # self.presence_updater.start()
+
     #events
     @commands.Cog.listener()
     async def on_ready(self):
         print('Status module online')
-        # self.bot.loop.create_task(self.change_presence())
         await self.bot.change_presence(status=status, activity=activity)
-
-    # def cog_unload(self):
-    #     self.presence_updater.cancel()
-    
-    
-    
-    # @tasks.loop(seconds=20.0, count=None)
-    # async def presence_updater(self):
-    #     #make rich precense for the bot that updates with a different status every 20 seconds
-        
-    #     pass
-    
-    # @presence_updater.before_loop
-    # async def before_presence_updater(self):
-    #     print('Waiting for presence_updater to start')
-    #     await self.bot.wait_until_ready()
-
-
 
     #commands
     @commands.group(name='botstatus', invoke_without_command=True)
@@ -51,10 +32,6 @@ class setStatus(commands.Cog):
     async def botstatus_base(self, ctx):
         await ctx.channel.send(f'current status is: {status}')
     
-    @botstatus_base.command(name='init', invoke_without_command=False)
-    async def botstatus_init(self, ctx):
-        self.bot.loop.create_task(self.change_presence())
-
     @botstatus_base.command(name='set', invoke_without_command=False)
     async def setbotstatus(self, ctx, *, statusmessage):
         message = await ctx.send(f"[1️⃣ for watching]. [2️⃣ for listening to.]")
@@ -83,12 +60,11 @@ class setStatus(commands.Cog):
         else:
             await message.edit(content="Update cancelled.")
             return
+        
+        info.set('STATUS', 'status', statusmessage)
 
-        # await ctx.message.delete()
-        config.set('STATUS', 'status', statusmessage)
-        # config.write(configpath.open('w'))
-        with open(rf'{path}/config.ini', 'w') as configfile:
-            config.write(configfile)
+        with open(rf'{path}/info.ini', 'w') as infofile:
+            info.write(infofile)
         await message.edit(content=f'Updated Status to: {strstatus} {statusmessage}')
         await message.clear_reactions()
 

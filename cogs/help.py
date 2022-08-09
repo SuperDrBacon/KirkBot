@@ -6,10 +6,10 @@ from discord import Embed
 from discord.ext import commands
 
 path = os.path.abspath(os.getcwd())
-config = ConfigParser()
-config.read(rf'{path}/config.ini')
+info = ConfigParser()
+info.read(rf'{path}/info.ini')
 
-botversion = config['DEFAULT']['title']
+botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
 timestamp = datetime.datetime.now()
 
 class Help(commands.Cog):
@@ -20,8 +20,8 @@ class Help(commands.Cog):
     @commands.group(name='help', invoke_without_command=True)
     async def help_base(self, ctx):
         embed = Embed(title='Help commands per group', color=discord.Colour.gold(), timestamp=timestamp)
-        embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n`.,tag` `.,tag get`", inline=True)
-        embed.add_field(name="AI", value="`.,ai`\n`@David Marcus`", inline=True)
+        embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n`.,tag` `.,tag get`\n`.,gcp` `.,gcp full`", inline=True)
+        embed.add_field(name="AI", value="`.,ai`", inline=True) #\n`@David Marcus`
         embed.add_field(name="Admin", value="`.,botstatus`\n`.,botststus set`", inline=True)
         embed.add_field(name="Moderator", value="`No commands lmao`", inline=True)
         embed.add_field(name='―――――――――――――――――――', value='Use .,help [group] to see command aliases and descriptions', inline=False)

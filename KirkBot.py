@@ -8,9 +8,11 @@ from configparser import ConfigParser
 def main():
     print('Logging in...')
     path = os.path.abspath(os.getcwd())
+    info = ConfigParser()
     config = ConfigParser()
+    info.read(rf'{path}/info.ini')
     config.read(rf'{path}/config.ini')
-    title = config['DEFAULT']['title']
+    title = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
     intents = discord.Intents().all()
 
     bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True, intents=intents)
