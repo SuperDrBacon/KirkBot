@@ -409,6 +409,23 @@ class fun(commands.Cog):
             if role in members.roles:
                 await ctx.channel.send(f'{members.mention} is tagged!')
     
+    @commands.command(name='whocare', aliases=["wc"])
+    async def who_care(self, ctx):
+        if ctx.message.reference:
+            await ctx.message.delete()
+            message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            #This spells who care(s). Can't do it the bigletter command way because multiple of the same react emoji is not possible.
+            await message.add_reaction('\U0001f1fc')
+            await message.add_reaction('\U0001f1ed')
+            await message.add_reaction('\U0001f1f4')
+            await message.add_reaction('\U0001f1e8')
+            await message.add_reaction('\U0001f1e6')
+            await message.add_reaction('\U0001f1f7')
+            await message.add_reaction('\U0001f1ea')
+            # await message.add_reaction('\U0001f1f8')
+        else:
+            await ctx.message.delete()
+    
     @tag_base.error
     async def tag_base_handeler(self, ctx, error):
         if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
