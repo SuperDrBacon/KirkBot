@@ -28,7 +28,7 @@ imagepath = rf'{ospath}/images/'
 flagpath = rf'{ospath}/cogs/flags.json'
 high = 0
 delay = 1
-msgdeldelay = 100
+msgdeldelay = 3
 byteiogcpdot = BytesIO()
 byteiogchart = BytesIO()
 
