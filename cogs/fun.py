@@ -443,7 +443,7 @@ class fun(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.group(name='flag', invoke_without_command=True)
     async def flag_base(self, ctx, member:discord.Member, emoji:str):
-        re_emoji_custom = r'<a?:.+?:\d{19}>'
+        re_emoji_custom = r'<a?:.+?:\d{18,19}>'
         re_emoji_generic = re.compile("[""\U0001F1E0-\U0001F1FF"  # flags (iOS)
                                         "\U0001F300-\U0001F5FF"  # symbols & pictographs
                                         "\U0001F600-\U0001F64F"  # emoticons
