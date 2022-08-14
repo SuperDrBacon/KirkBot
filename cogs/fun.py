@@ -5,6 +5,7 @@ import time
 import typing
 import asyncio
 import os
+import re
 import urllib.parse, urllib.request, re
 from io import BytesIO
 from discord_ui import Button
@@ -24,8 +25,10 @@ ospath = os.path.abspath(os.getcwd())
 path = rf'{ospath}/cogs/kirklines.txt'
 tagpath = rf'{ospath}/cogs/tag.json'
 imagepath = rf'{ospath}/images/'
+flagpath = rf'{ospath}/cogs/flags.json'
 high = 0
 delay = 1
+msgdeldelay = 100
 byteiogcpdot = BytesIO()
 byteiogchart = BytesIO()
 
@@ -48,6 +51,17 @@ class fun(commands.Cog):
             return
         if ctx.content.startswith('Kirk') or ctx.content.startswith('kirk') or ctx.content.startswith('KIRK'):
             await ctx.channel.send(random.choice(lines))
+        
+        userID = ctx.author.id
+        with open(flagpath, 'r') as flagins:
+            flagdata = json.load(flagins)
+        try:
+            for flags in flagdata['flags']:
+                if userID == flags["memberId"]:
+                    await ctx.add_reaction(flags["emoji"])
+                    raise StopIteration
+        except StopIteration:
+            pass
 
 
     @commands.command()
@@ -61,7 +75,7 @@ class fun(commands.Cog):
         await message.edit(content=f"🏓 WS: {before_ws}ms  |  REST: {int(ping)}ms")
     
     @commands.command(aliases=['8ball'])
-    async def _8ball(self, ctx, *, question):
+    async def _8ball(self, ctx, *, question: str):
         '''[_8ball] [8ball]. Ask a question and get a response'''
         responses = ["It is certain.",
                     "It is decidedly so.",
@@ -125,7 +139,7 @@ class fun(commands.Cog):
         await ctx.send(embed=embedVar)
 
     @commands.command(name='bigletter', aliases=['em'])
-    async def bigletter(self, ctx, *, input):
+    async def bigletter(self, ctx, *, input:str):
         '''[bigletter] [em]. Types you messages in letter emojis. '''
         await ctx.message.delete()
         emojis = []
@@ -142,13 +156,13 @@ class fun(commands.Cog):
         await ctx.send(''.join(emojis))
     
     @commands.command(name='braille', aliases=['br'])
-    async def braille(self, ctx, *, input):
+    async def braille(self, ctx, *, input:str):
         '''[braille] [br]. Converts you message to braille so blind people can read it.'''
         braille = input.lower().replace("a", "⠁").replace("b", "⠃").replace("c", "⠉").replace("d", "⠙").replace("e", "⠑").replace("f", "⠋").replace("g", "⠛").replace("h", "⠓").replace("i", "⠊").replace("j", "⠚").replace("k", "⠅").replace("l", "⠅").replace("m", "⠍").replace("n", "⠝").replace("o", "⠕").replace("p", "⠏").replace("q", "⠟").replace("r", "⠗").replace("s", "⠎").replace("t", "⠞").replace("u", "⠥").replace("v", "⠧").replace("w", "⠺").replace("x", "⠭").replace("y", "⠽").replace("z", "⠵")
         await ctx.send(f'For the blind: {braille}')
     
     @commands.command(name='youtube', aliases=['yt'])
-    async def youtube(self, ctx, *, search):
+    async def youtube(self, ctx, *, search:str):
         '''[youtube] [yt]. Posts youtube vid from search.'''
         query_string = urllib.parse.urlencode({'search_query':search})
         html_content = urllib.request.urlopen('https://www.youtube.com/results?' + query_string)
@@ -426,6 +440,66 @@ class fun(commands.Cog):
         else:
             await ctx.message.delete()
     
+    @commands.has_permissions(administrator=True)
+    @commands.group(name='flag', invoke_without_command=True)
+    async def flag_base(self, ctx, member:discord.Member, emoji:str):
+        re_emoji_custom = r'<a?:.+?:\d{19}>'
+        re_emoji_generic = re.compile("[""\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                                        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+                                        "\U0001F600-\U0001F64F"  # emoticons
+                                        "\U0001F680-\U0001F6FF"  # transport & map symbols
+                                        "\U0001F700-\U0001F77F"  # alchemical symbols
+                                        "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+                                        "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+                                        "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+                                        "\U0001FA00-\U0001FA6F"  # Chess Symbols
+                                        "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+                                        "\U00002702-\U000027B0"  # Dingbats
+                                        "\U000024C2-\U0001F251" 
+                                        "]+")
+        
+        if (re.match(re_emoji_custom, emoji)) or (re.match(re_emoji_generic, emoji)):
+            with open(flagpath, 'r') as flagin:
+                flagdata = json.load(flagin)
+            
+            member_flag = {"memberId":member.id, "emoji":emoji}
+            try:
+                for flags in flagdata['flags']:
+                    if member.id == flags["memberId"]:
+                        flags["emoji"] = emoji
+                        raise StopIteration
+                flagdata["flags"].append(member_flag)
+            except StopIteration:
+                pass
+            
+            with open(flagpath, 'w') as flagout:
+                json.dump(flagdata, flagout, indent=4)
+            
+            response = await ctx.reply(f'Flag added! {emoji} will now appear under every messsage send by {member.display_name}')
+        else:
+            response = await ctx.reply(f'{emoji} not recognized as an emoji!')
+        await response.delete(delay=msgdeldelay)
+        await ctx.message.delete(delay=msgdeldelay)
+    
+    @flag_base.command(name='remove', invoke_without_command=True)
+    async def flag_remove(self, ctx, member:discord.Member):
+        with open(flagpath, 'r') as flagin:
+            flagdata = json.load(flagin)  
+        
+        try:
+            for idx, flags in enumerate(flagdata['flags']):
+                if flags["memberId"] == member.id:
+                    del flagdata['flags'][idx]
+                    response = await ctx.reply(f'Removed flag from {member.display_name}')
+        except Exception:
+            response = await ctx.reply(f'{member.display_name} has no flag!')
+        
+        with open(flagpath, 'w') as flagout:
+            json.dump(flagdata, flagout, indent=4)        
+        await response.delete(delay=msgdeldelay)
+        await ctx.message.delete(delay=msgdeldelay)
+
+
     @tag_base.error
     async def tag_base_handeler(self, ctx, error):
         if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
@@ -434,153 +508,6 @@ class fun(commands.Cog):
             
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply('To tag use .,tag @user')
-
-    
-    # @commands.command(name='button_delete', aliases=['but'])
-    # async def button(self, ctx):
-    #     button = Button(label='dick', style=discord.ButtonStyle.red, emoji='<:pog_KamiChamp:852026330761789440>')
-    #     view = View()
-    #     view.add_item(button)
-    #     await ctx.send('sdf')
-    #     await ctx.send(view=view)
-    
-    
-    # @commands.command(name='dropdown', aliases=['menu'])
-    # async def dropdown(self, ctx):
-    #     await ctx.send('5')
-    #     view = DropdownView()
-    #     await ctx.send('0')
-    #     await ctx.send(f'Pick your favourite colour:', view=view)
-        
-
-        # options = [
-        #     discord.SelectOption(
-        #         label="Red", description="Your favourite colour is red", emoji="🟥"
-        #     ),
-        #     discord.SelectOption(
-        #         label="Green", description="Your favourite colour is green", emoji="🟩"
-        #     ),
-        #     discord.SelectOption(
-        #         label="Blue", description="Your favourite colour is blue", emoji="🟦"
-        #     ),
-        
-        # placeholder="Choose your favourite colour...",
-        # min_values=1,
-        # max_values=1,
-        # options=options,
-
-    # @commands.command()
-    # @commands.command()
-    # @commands.command()
-    # @commands.command()
-
-
-# class DropdownView(discord.ui.View):
-#     def __init__(self):
-#         super().__init__()
-
-#         # Adds the dropdown to our view object.
-#         self.add_item(Dropdown())
-
-# class Dropdown(discord.ui.Select):
-#     def __init__(self):
-
-#         # Set the options that will be presented inside the dropdown
-#         options = [
-#             discord.SelectOption(
-#                 label="Red", description="Your favourite colour is red", emoji="🟥"
-#             ),
-#             discord.SelectOption(
-#                 label="Green", description="Your favourite colour is green", emoji="🟩"
-#             ),
-#             discord.SelectOption(
-#                 label="Blue", description="Your favourite colour is blue", emoji="🟦"
-#             ),
-#         ]
-
-#         # The placeholder is what will be shown when no option is chosen
-#         # The min and max values indicate we can only pick one of the three options
-#         # The options parameter defines the dropdown options. We defined this above
-#         super().__init__(
-#             placeholder="Choose your favourite colour...",
-#             min_values=1,
-#             max_values=1,
-#             options=options,
-#         )
-
-#     async def callback(self, interaction: discord.Interaction):
-#         # Use the interaction object to send a response message containing
-#         # the user's favourite colour or choice. The self object refers to the
-#         # Select object, and the values attribute gets a list of the user's
-#         # selected options. We only want the first one.
-#         await interaction.response.send_message(
-#             f"Your favourite colour is {self.values[0]}"
-#         )
-
-
-
-
-# class MyNewHelp(commands.MinimalHelpCommand):
-#    async def send_pages(self):
-#        destination = self.get_destination()
-#        for page in self.paginator.pages:
-#            embed = discord.Embed(description=page)
-#            await destination.send(embed=embed)
-
-# try:
-#     message = await bot.wait_for('message', check=lambda m: m.author == ctx.author and m.channel.id == ctx.channel.id, timeout=15)
-# except asyncio.TimeoutError:
-#     return await ctx.send("You didn't respond")
-# else:
-
-# try:
-#     reaction, user = await bot.wait_for('reaction_add', check=lambda r, u: u == ctx.author and r.message.channel.id == ctx.channel.id, timeout=15)
-# except asyncio.TimeoutError:
-#     return await ctx.send("You didn't respond")
-# else:
-
-# import discord
-# from discord.ext import commands
-
-
-# class Fun(commands.Cog):
-#     def __init__(self, bot):
-#         self.bot = bot
-
-
-
-# def setup(bot):
-#     bot.add_cog(Fun(bot))
-
-# @commands.has_permissions(el sex=True)
-
-# class MyButton(discord.ui.Button):
-
-#     async def callback(self, interaction: discord.Interaction):
-#         return await super().callback(interaction)
-
-# class MyButton(discord.ui.Button):
-
-#     def __init__(self, *, style: ButtonStyle = ..., label: Optional[str] = None,
-#                 disabled: bool = False, custom_id: Optional[str] = None,
-#                 url: Optional[str] = None, emoji: Optional[Union[str, Emoji, PartialEmoji]] = None,
-#                 row: Optional[int] = None, argname: _type):
-#         super().__init__(style=style, label=label, disabled=disabled,
-#                         custom_id=custom_id, url=url, emoji=emoji, row=row, argname=argname)
-
-#     async def callback(self, interaction: discord.Interaction):
-#         return await super().callback(interaction)
-
-# class MySelect(discord.ui.Select):
-
-#    async def callback(self, interaction: discord.Interaction):
-# return await super().callback(interaction)
-
-# @bot.check
-# async def bot_check(ctx):
-#     sadad
-
-
 
 def setup(bot):
     bot.add_cog(fun(bot))
