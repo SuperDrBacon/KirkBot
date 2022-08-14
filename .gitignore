@@ -7,6 +7,8 @@ kirkai wordmodel_vocab.json
 kirkai wordmodel_config.json
 __pycache__
 
+log*
+error.txt
 seriouslinks.txt
 seriouschannel.txt
 copypastachannel.txt
@@ -19,5 +21,4 @@ cogs/tag.json
 cogs/kirklines.txt
 cogs/log.json
 cogs/bannedwords.txt
-log*
-error.txt
+cogs/flags.json
