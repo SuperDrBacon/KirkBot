@@ -56,16 +56,18 @@ class fun(commands.Cog):
         
         with open(flagpath, 'r') as flagins:
             flagdata = json.load(flagins)
-        try:
-            for allowedChannels in flagdata['allowedChannels']:
-                if channelID == allowedChannels["channelID"]:
-                        for flags in flagdata['flags']:
-                            if userID == flags["memberID"]:
-                                await ctx.add_reaction(flags["emoji"])
-                                raise StopIteration
-        except StopIteration:
+        
+        for allowedChannels in flagdata['allowedChannels']:
+            if channelID == allowedChannels["channelID"]:
+                    for flags in flagdata['flags']:
+                        if userID == flags["memberID"]:
+                            await ctx.add_reaction(flags["emoji"])
+                            break
+                    else:
+                        break
+        else:
             pass
-
+    
     @commands.command()
     async def ping(self, ctx):
         '''See delay of the bot'''
