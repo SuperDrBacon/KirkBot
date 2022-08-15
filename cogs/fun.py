@@ -28,7 +28,7 @@ imagepath = rf'{ospath}/images/'
 flagpath = rf'{ospath}/cogs/flags.json'
 high = 0
 delay = 1
-msgdeldelay = 3
+msgdeldelay = 2
 byteiogcpdot = BytesIO()
 byteiogchart = BytesIO()
 
@@ -44,7 +44,6 @@ class fun(commands.Cog):
     async def on_ready(self):
         print('fun module online')
     
-    
     @commands.Cog.listener()
     async def on_message(self, ctx): 
         if ctx.author.bot:
@@ -53,16 +52,19 @@ class fun(commands.Cog):
             await ctx.channel.send(random.choice(lines))
         
         userID = ctx.author.id
+        channelID = ctx.channel.id
+        
         with open(flagpath, 'r') as flagins:
             flagdata = json.load(flagins)
         try:
-            for flags in flagdata['flags']:
-                if userID == flags["memberId"]:
-                    await ctx.add_reaction(flags["emoji"])
-                    raise StopIteration
+            for allowedChannels in flagdata['allowedChannels']:
+                if channelID == allowedChannels["channelID"]:
+                        for flags in flagdata['flags']:
+                            if userID == flags["memberID"]:
+                                await ctx.add_reaction(flags["emoji"])
+                                raise StopIteration
         except StopIteration:
             pass
-
 
     @commands.command()
     async def ping(self, ctx):
@@ -462,15 +464,13 @@ class fun(commands.Cog):
             with open(flagpath, 'r') as flagin:
                 flagdata = json.load(flagin)
             
-            member_flag = {"memberId":member.id, "emoji":emoji}
-            try:
-                for flags in flagdata['flags']:
-                    if member.id == flags["memberId"]:
-                        flags["emoji"] = emoji
-                        raise StopIteration
+            member_flag = {"memberID":member.id, "emoji":emoji}
+            for flags in flagdata['flags']:
+                if flags["memberID"] == member.id:
+                    flags["emoji"] = emoji
+                    break
+            else:
                 flagdata["flags"].append(member_flag)
-            except StopIteration:
-                pass
             
             with open(flagpath, 'w') as flagout:
                 json.dump(flagdata, flagout, indent=4)
@@ -486,13 +486,33 @@ class fun(commands.Cog):
         with open(flagpath, 'r') as flagin:
             flagdata = json.load(flagin)  
         
-        try:
-            for idx, flags in enumerate(flagdata['flags']):
-                if flags["memberId"] == member.id:
-                    del flagdata['flags'][idx]
-                    response = await ctx.reply(f'Removed flag from {member.display_name}')
-        except Exception:
+        for idx, flags in enumerate(flagdata['flags']):
+            if flags["memberID"] == member.id:
+                del flagdata['flags'][idx]
+                response = await ctx.reply(f'Removed flag from {member.display_name}')
+                break
+        else:
             response = await ctx.reply(f'{member.display_name} has no flag!')
+        
+        with open(flagpath, 'w') as flagout:
+            json.dump(flagdata, flagout, indent=4)        
+        await response.delete(delay=msgdeldelay)
+        await ctx.message.delete(delay=msgdeldelay)
+    
+    @flag_base.command(name='toggle', invoke_without_command=True)
+    async def flag_toggle(self, ctx):
+        with open(flagpath, 'r') as flagin:
+            flagdata = json.load(flagin)  
+        
+        allowed_channel = {"channelID":ctx.channel.id}
+        for idx, allowedChannels in enumerate(flagdata['allowedChannels']):
+            if allowedChannels['channelID'] == ctx.channel.id:
+                del flagdata['allowedChannels'][idx]
+                response = await ctx.reply(f'Removed {ctx.channel.name} from the allowed channels list')
+                break
+        else:
+            flagdata["allowedChannels"].append(allowed_channel)
+            response = await ctx.reply(f'Added {ctx.channel.name} to the allowed channels list')
         
         with open(flagpath, 'w') as flagout:
             json.dump(flagdata, flagout, indent=4)        
