@@ -22,7 +22,7 @@ class Help(commands.Cog):
         embed = Embed(title='Help commands per group', color=discord.Colour.gold(), timestamp=timestamp)
         embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n`.,tag` `.,tag get`\n`.,gcp` `.,gcp full`", inline=True)
         embed.add_field(name="AI", value="`.,ai`", inline=True) #\n`@David Marcus`
-        embed.add_field(name="Admin", value="`.,botstatus`\n`.,botstatus set`\n`.,flag @user emoji`\n`.,flag remove @user`", inline=True)
+        embed.add_field(name="Admin", value="`.,botstatus`\n`.,botstatus set`\n`.,flag @user emoji`\n`.,flag remove @user`\n`.,flag toggle`", inline=True)
         embed.add_field(name="Moderator", value="`No commands lmao`", inline=True)
         embed.add_field(name='―――――――――――――――――――', value='Use .,help [group] to see command aliases and descriptions', inline=False)
         embed.set_footer(text=botversion)
@@ -60,7 +60,8 @@ class Help(commands.Cog):
                         value="`.,botstatus` See what the current bot status is\n"+
                             "`.,botstatus set [message]` Set the bot status to something else\n"+
                             "`.,flag @user [emoji]` Flag a user in the server and the bot will keep reacting the emoji\n"+
-                            "`.,flag remove @user` Remove the flag from the user")
+                            "`.,flag remove @user` Remove the flag from the user\n"+
+                            "`.,flag toggle` Toggle the channel to be include to post flags on users. Channel not included by default")
         embed.set_footer(text=botversion)
         await ctx.channel.send(embed=embed)
 
