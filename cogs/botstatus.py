@@ -33,6 +33,7 @@ class setStatus(commands.Cog):
         await ctx.channel.send(f'current status is: {status}')
     
     @botstatus_base.command(name='set', invoke_without_command=False)
+    @commands.has_permissions(administrator=True)
     async def setbotstatus(self, ctx, *, statusmessage):
         message = await ctx.send(f"[1️⃣ for watching]. [2️⃣ for listening to.]")
         await message.add_reaction('1️⃣')
