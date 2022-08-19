@@ -208,8 +208,8 @@ class logger(commands.Cog):
     '''
     Reset the json log the manual way if bot get slow or some bs. also make a cold copy first.
     '''
-    @commands.command(aliases=['resetlog'])
     @commands.has_permissions(administrator=True)  
+    @commands.command(aliases=['resetlog'])
     async def reset(self, ctx,):
         with open(jsonpath, 'rb') as fp:
             c_generator = _count_generator(fp.raw.read)

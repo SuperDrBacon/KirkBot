@@ -52,8 +52,8 @@ class Help(commands.Cog):
         embed.set_footer(text=botversion)
         await ctx.channel.send(embed=embed,)
         
+    # @commands.has_permissions(administrator=True)
     @help_base.command(name='admin', invoke_without_command=True)
-    @commands.has_permissions(administrator=True)
     async def help_admin(self, ctx):
         embed = Embed(title='Help -> Admin', color=discord.Colour.red(), timestamp=timestamp)
         embed.add_field(name="Commands and descriptions", 

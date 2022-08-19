@@ -27,13 +27,13 @@ class setStatus(commands.Cog):
         await self.bot.change_presence(status=status, activity=activity)
 
     #commands
-    @commands.group(name='botstatus', invoke_without_command=True)
     @commands.has_permissions(administrator=True)
+    @commands.group(name='botstatus', invoke_without_command=True)
     async def botstatus_base(self, ctx):
         await ctx.channel.send(f'current status is: {status}')
     
-    @botstatus_base.command(name='set', invoke_without_command=False)
     @commands.has_permissions(administrator=True)
+    @botstatus_base.command(name='set', invoke_without_command=False)
     async def setbotstatus(self, ctx, *, statusmessage):
         message = await ctx.send(f"[1️⃣ for watching]. [2️⃣ for listening to.]")
         await message.add_reaction('1️⃣')
