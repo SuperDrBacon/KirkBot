@@ -483,6 +483,7 @@ class fun(commands.Cog):
         await response.delete(delay=msgdeldelay)
         await ctx.message.delete(delay=msgdeldelay)
     
+    @commands.has_permissions(administrator=True)
     @flag_base.command(name='remove', invoke_without_command=True)
     async def flag_remove(self, ctx, member:discord.Member):
         with open(flagpath, 'r') as flagin:
@@ -501,6 +502,7 @@ class fun(commands.Cog):
         await response.delete(delay=msgdeldelay)
         await ctx.message.delete(delay=msgdeldelay)
     
+    @commands.has_permissions(administrator=True)
     @flag_base.command(name='toggle', invoke_without_command=True)
     async def flag_toggle(self, ctx):
         with open(flagpath, 'r') as flagin:
