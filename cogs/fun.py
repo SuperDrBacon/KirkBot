@@ -28,7 +28,7 @@ imagepath = rf'{ospath}/images/'
 flagpath = rf'{ospath}/cogs/flags.json'
 high = 0
 delay = 1
-msgdeldelay = 2
+MSG_DEL_DELAY = 2
 byteiogcpdot = BytesIO()
 byteiogchart = BytesIO()
 
@@ -54,6 +54,7 @@ class fun(commands.Cog):
         userID = ctx.author.id
         channelID = ctx.channel.id
         
+        
         with open(flagpath, 'r') as flagins:
             flagdata = json.load(flagins)
         
@@ -61,7 +62,24 @@ class fun(commands.Cog):
             if channelID == allowedChannels["channelID"]:
                     for flags in flagdata['flags']:
                         if userID == flags["memberID"]:
-                            await ctx.add_reaction(flags["emoji"])
+                            try:
+                                await ctx.add_reaction(flags["emoji"])
+                            except:
+                                # await ctx.reply('Error: Flag not found')
+                                userNICK = ctx.author.display_name
+                                newNICK = userNICK[:30] + '🌈'
+                                await ctx.author.edit(nick=newNICK)
+                                
+                                with open(flagpath, 'r') as flagin:
+                                    flagdata = json.load(flagin)  
+                                
+                                for idx, flags in enumerate(flagdata['flags']):
+                                    if flags["memberID"] == userID:
+                                        del flagdata['flags'][idx]
+                                        break
+                                
+                                with open(flagpath, 'w') as flagout:
+                                    json.dump(flagdata, flagout, indent=4)  
                             break
                     else:
                         break
@@ -480,8 +498,8 @@ class fun(commands.Cog):
             response = await ctx.reply(f'Flag added! {emoji} will now appear under every messsage send by {member.display_name}')
         else:
             response = await ctx.reply(f'{emoji} not recognized as an emoji!')
-        await response.delete(delay=msgdeldelay)
-        await ctx.message.delete(delay=msgdeldelay)
+        await response.delete(delay=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @commands.has_permissions(administrator=True)
     @flag_base.command(name='remove', invoke_without_command=True)
@@ -499,8 +517,8 @@ class fun(commands.Cog):
         
         with open(flagpath, 'w') as flagout:
             json.dump(flagdata, flagout, indent=4)        
-        await response.delete(delay=msgdeldelay)
-        await ctx.message.delete(delay=msgdeldelay)
+        await response.delete(delay=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @commands.has_permissions(administrator=True)
     @flag_base.command(name='toggle', invoke_without_command=True)
@@ -520,8 +538,8 @@ class fun(commands.Cog):
         
         with open(flagpath, 'w') as flagout:
             json.dump(flagdata, flagout, indent=4)        
-        await response.delete(delay=msgdeldelay)
-        await ctx.message.delete(delay=msgdeldelay)
+        await response.delete(delay=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
 
 
     @tag_base.error
@@ -532,6 +550,6 @@ class fun(commands.Cog):
             
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply('To tag use .,tag @user')
-
+    
 def setup(bot):
     bot.add_cog(fun(bot))
