@@ -65,7 +65,6 @@ class fun(commands.Cog):
                             try:
                                 await ctx.add_reaction(flags["emoji"])
                             except:
-                                # await ctx.reply('Error: Flag not found')
                                 userNICK = ctx.author.display_name
                                 newNICK = userNICK[:30] + '🌈'
                                 await ctx.author.edit(nick=newNICK)
