@@ -219,7 +219,6 @@ class logger(commands.Cog):
 
         with open(jsonpath, 'w') as fnewout:
             json.dump(init, fnewout, indent = 4)
-        pass
 
     '''
     Gets all the links in the channel and puts them in a file named the channel name.
