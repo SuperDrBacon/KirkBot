@@ -66,7 +66,7 @@ class fun(commands.Cog):
                                 await ctx.add_reaction(flags["emoji"])
                             except:
                                 userNICK = ctx.author.display_name
-                                newNICK = userNICK[:30] + '🌈'
+                                newNICK = userNICK[:30] + '🌈⚧️'
                                 await ctx.author.edit(nick=newNICK)
                                 
                                 with open(flagpath, 'r') as flagin:
