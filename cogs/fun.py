@@ -60,28 +60,28 @@ class fun(commands.Cog):
         
         for allowedChannels in flagdata['allowedChannels']:
             if channelID == allowedChannels["channelID"]:
-                    for flags in flagdata['flags']:
-                        if userID == flags["memberID"]:
-                            try:
-                                await ctx.add_reaction(flags["emoji"])
-                            except:
-                                userNICK = ctx.author.display_name
-                                newNICK = userNICK[:28] + '🌈⚧️'
-                                await ctx.author.edit(nick=newNICK)
-                                
-                                with open(flagpath, 'r') as flagin:
-                                    flagdata = json.load(flagin)  
-                                
-                                for idx, flags in enumerate(flagdata['flags']):
-                                    if flags["memberID"] == userID:
-                                        del flagdata['flags'][idx]
-                                        break
-                                
-                                with open(flagpath, 'w') as flagout:
-                                    json.dump(flagdata, flagout, indent=4)  
-                            break
-                    else:
+                for flags in flagdata['flags']:
+                    if userID == flags["memberID"]:
+                        try:
+                            await ctx.add_reaction(flags["emoji"])
+                        except:
+                            userNICK = ctx.author.display_name
+                            newNICK = userNICK[:28] + '🌈⚧️'
+                            await ctx.author.edit(nick=newNICK)
+                            
+                            with open(flagpath, 'r') as flagin:
+                                flagdata = json.load(flagin)  
+                            
+                            for idx, flags in enumerate(flagdata['flags']):
+                                if flags["memberID"] == userID:
+                                    del flagdata['flags'][idx]
+                                    break
+                            
+                            with open(flagpath, 'w') as flagout:
+                                json.dump(flagdata, flagout, indent=4)  
                         break
+                else:
+                    break
         else:
             pass
     
