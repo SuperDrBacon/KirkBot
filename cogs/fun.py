@@ -444,6 +444,7 @@ class fun(commands.Cog):
             if role in members.roles:
                 await ctx.channel.send(f'{members.mention} is tagged!')
     
+    # @commands.has_permissions(administrator=True)
     @commands.command(name='whocare', aliases=["wc"])
     async def who_care(self, ctx):
         if ctx.message.reference:
@@ -460,6 +461,15 @@ class fun(commands.Cog):
             # await message.add_reaction('\U0001f1f8')
         else:
             await ctx.message.delete()
+    
+    @commands.has_permissions(administrator=True)
+    @commands.command(aliases=["p"])
+    async def probe(self, ctx):
+        await ctx.message.delete()
+        if ctx.message.reference:
+            message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            await message.add_reaction('✝')
+            await message.remove_reaction('✝', self.bot.user)
     
     @commands.has_permissions(administrator=True)
     @commands.group(name='flag', invoke_without_command=True)

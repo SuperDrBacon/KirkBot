@@ -18,13 +18,18 @@ class Error(commands.Cog):
     async def on_command_error(self, ctx, error):
         error = getattr(error, "original", error)
 
-        if isinstance(error, (discord.Forbidden, commands.NoPrivateMessage)):
+        if isinstance(error, commands.NoPrivateMessage):
             await ctx.send("I couldn't send this information to you via direct message. Are your DMs enabled?")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             
         elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(f"You missed the argument `{error.param.name}` for this command!")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
+            
+        elif isinstance(error, discord.Forbidden):
+            msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            await msg.reply(f"This person is a bot blocker.")
+            # await ctx.message.delete(delay=MSG_DEL_DELAY)
             
         elif isinstance(error, commands.UserInputError):
             await ctx.send(f"I can't understand this command message! Please check `.,help {ctx.command}`")
