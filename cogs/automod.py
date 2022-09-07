@@ -23,5 +23,5 @@ class Automod(commands.Cog):
 
 
 
-def setup(bot):
-    bot.add_cog(Automod(bot))
+async def setup(bot):
+    await bot.add_cog(Automod(bot))

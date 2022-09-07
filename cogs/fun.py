@@ -8,7 +8,6 @@ import os
 import re
 import urllib.parse, urllib.request, re
 from io import BytesIO
-from discord_ui import Button
 from discord.ext import commands
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -560,5 +559,5 @@ class fun(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply('To tag use .,tag @user')
     
-def setup(bot):
-    bot.add_cog(fun(bot))
+async def setup(bot):
+    await bot.add_cog(fun(bot))

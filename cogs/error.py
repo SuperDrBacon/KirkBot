@@ -50,5 +50,5 @@ class Error(commands.Cog):
         else:            
             print(f'CONSOLE ONLY, ALL FAILED: {error}')
 
-def setup(bot):
-    bot.add_cog(Error(bot))
+async def setup(bot):
+    await bot.add_cog(Error(bot))

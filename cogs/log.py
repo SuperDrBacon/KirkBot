@@ -5,7 +5,6 @@ import json
 import os
 import re
 import cogs.utils.functions as functions
-from discord_ui import Button
 from discord.ext import commands
 from datetime import datetime, timezone
 
@@ -246,8 +245,8 @@ class logger(commands.Cog):
         pass
 
 
-def setup(bot):
-    bot.add_cog(logger(bot))
+async def setup(bot):
+    await bot.add_cog(logger(bot))
 
     # '''
     # get all the logged messages and put them in a file. and combine other files to make one big file.

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+import asyncio
 import discord
 import os
 from discord.ext import commands
 from configparser import ConfigParser
 
-def main():
+def mainProgram():
     print('Logging in...')
     path = os.path.abspath(os.getcwd())
     info = ConfigParser()
@@ -17,13 +18,18 @@ def main():
 
     bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True, intents=intents)
 
-    for filename in os.listdir(rf'{path}/cogs'):
-        if filename.endswith('.py'):
-            name = filename[:-3]
-            try:
-                bot.load_extension(f'cogs.{name}')
-            except Exception as e:
-                print(f'Error when loading module because: {e}')
+    async def loadCogs():
+        for filename in os.listdir(rf'{path}/cogs'):
+            if filename.endswith('.py'):
+                name = filename[:-3]
+                try:
+                    await bot.load_extension(f'cogs.{name}')
+                except Exception as e:
+                    print(f'Error when loading module because: {e}')
+    
+    async def mainStart():
+        await loadCogs()
+        await bot.start(config['BOTCONFIG']['token'])
 
     @bot.event
     async def on_ready():
@@ -48,9 +54,9 @@ def main():
     #         f.write(f'ERROR EVENT-> {event}. ARGS -> {args}. KWARGS -> {kwargs}\n')
 
     try:
-        bot.run(config['BOTCONFIG']['token'])
+        asyncio.run(mainStart())
     except Exception as e:
         print(f'Error when logging in: {e}')
 
 if __name__ == '__main__':
-    main()
+    mainProgram()

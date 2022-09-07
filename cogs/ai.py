@@ -259,5 +259,5 @@ class Ai(commands.Cog):
     #             )
     #         print(textgen.model.summary())
 
-def setup(bot):
-    bot.add_cog(Ai(bot))
+async def setup(bot):
+    await bot.add_cog(Ai(bot))

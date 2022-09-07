@@ -70,5 +70,5 @@ class scanner(commands.Cog):
     #         # await ctx.channel.send(embed=discord.Embed(title="All Data.").add_field(name="Returned -", value=scam).add_field(name="URLs -", value=URLs))
     #     else:
     #         pass
-def setup(bot):
-    bot.add_cog(scanner(bot))
+async def setup(bot):
+    await bot.add_cog(scanner(bot))

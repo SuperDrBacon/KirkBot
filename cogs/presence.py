@@ -24,5 +24,5 @@ class Presence(commands.Cog):
             await self.bot.change_presence(activity=discord.Game(name=status))
             await asyncio.sleep(10)
 
-def setup(bot):
-    bot.add_cog(Presence(bot))
+async def setup(bot):
+    await bot.add_cog(Presence(bot))

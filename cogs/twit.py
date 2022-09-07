@@ -81,8 +81,8 @@ class Twitter(commands.Cog):
     def cog_unload(self):
         self.get_tweet_stream.cancel()
 
-def setup(bot):
-    bot.add_cog(Twitter(bot))
+async def setup(bot):
+    await bot.add_cog(Twitter(bot))
 
 
 # url = f"https://twitter.com/user/status/{tweet.id}"
