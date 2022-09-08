@@ -25,6 +25,10 @@ class Error(commands.Cog):
         elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(f"You missed the argument `{error.param.name}` for this command!")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
+        
+        elif isinstance(error, commands.MissingPermissions):
+            await ctx.send(f"Missing permissions: {error.missing_permissions}")
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
             
         elif isinstance(error, discord.Forbidden):
             msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
