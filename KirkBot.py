@@ -15,9 +15,31 @@ def mainProgram():
     config.read(rf'{path}/config.ini')
     title = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
     intents = discord.Intents().all()
-
+    
     bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True, intents=intents)
-
+    
+    @bot.event
+    async def on_ready():
+        print(f'{title} main online')
+    
+    @bot.event
+    async def on_connect():
+        print(f'{title} connected successfully.')
+    
+    @bot.event
+    async def on_disconnect():
+        print(f'{title} disconnected.')
+    
+    @bot.event
+    async def on_resumed():
+        print(f'{title} resumed.')
+    
+    # @bot.event
+    # async def on_error(event, *args, **kwargs):
+    #     print(f'{title}, {event} error: {args}, {kwargs}')
+    #     with open(rf'{path}/error.txt', 'a') as f:
+    #         f.write(f'ERROR EVENT-> {event}. ARGS -> {args}. KWARGS -> {kwargs}\n')
+    
     async def loadCogs():
         for filename in os.listdir(rf'{path}/cogs'):
             if filename.endswith('.py'):
@@ -30,29 +52,7 @@ def mainProgram():
     async def mainStart():
         await loadCogs()
         await bot.start(config['BOTCONFIG']['token'])
-
-    @bot.event
-    async def on_ready():
-        print(f'{title} main online')
-
-    @bot.event
-    async def on_connect():
-        print(f'{title} connected successfully.')
-
-    @bot.event
-    async def on_disconnect():
-        print(f'{title} disconnected.')
-
-    @bot.event
-    async def on_resumed():
-        print(f'{title} resumed.')
-
-    # @bot.event
-    # async def on_error(event, *args, **kwargs):
-    #     print(f'{title}, {event} error: {args}, {kwargs}')
-    #     with open(rf'{path}/error.txt', 'a') as f:
-    #         f.write(f'ERROR EVENT-> {event}. ARGS -> {args}. KWARGS -> {kwargs}\n')
-
+    
     try:
         asyncio.run(mainStart())
     except Exception as e:

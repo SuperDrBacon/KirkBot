@@ -284,7 +284,7 @@ class fun(commands.Cog):
         pics = [discord.File(byteiogcpdot, filename='gcpdot.png'), discord.File(f'{imagepath}wholechart.png', filename='wholechart.png')]
         colorint = int(color[1:], 16)
         gcppercent = round(high * 100, 2)
-        embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint, inline=True)
+        embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint)
         embed.set_image(url='attachment://wholechart.png')
         embed.set_thumbnail(url='attachment://gcpdot.png')
         embed.set_footer(text='Use .,gcp full for an explanation of all the colours.')
