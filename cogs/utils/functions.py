@@ -6,6 +6,18 @@ import shutil
 import os
 
 
+def checkForFile(filepath, filename):
+    if os.path.isfile(os.path.join(filepath, filename)):
+        print (f"{filename} exists")	
+    else:
+        try:
+            open(f'{os.path.join(filepath, filename)}', "x").close
+        except FileExistsError:
+            print ("Somehow tried to create a file that already exists whilst failing os.path.isfile. Something is definitely brokey.")
+        else:
+            print (f"{filename} created")
+
+
 def filter(message):
     emojipattern = r'<.*?>'
     text2 = re.sub(emojipattern, '', message)

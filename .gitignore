@@ -22,3 +22,4 @@ cogs/kirklines.txt
 cogs/log.json
 cogs/bannedwords.txt
 cogs/flags.json
+cogs/basedList.json

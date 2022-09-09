@@ -7,6 +7,7 @@ import asyncio
 import os
 import re
 import urllib.parse, urllib.request, re
+import cogs.utils.functions as functions
 from io import BytesIO
 from discord.ext import commands
 from selenium import webdriver
@@ -21,7 +22,7 @@ from numpy import interp
 from PIL import Image, ImageDraw, ImageColor
 
 ospath = os.path.abspath(os.getcwd())
-path = rf'{ospath}/cogs/kirklines.txt'
+kirklinePath = rf'{ospath}/cogs/kirklines.txt'
 tagpath = rf'{ospath}/cogs/tag.json'
 imagepath = rf'{ospath}/images/'
 flagpath = rf'{ospath}/cogs/flags.json'
@@ -31,12 +32,15 @@ MSG_DEL_DELAY = 2
 byteiogcpdot = BytesIO()
 byteiogchart = BytesIO()
 
-with open(path, 'r') as f:
+with open(kirklinePath, 'r') as f:
     lines = [line.rstrip() for line in f]
 
 class fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        functions.checkForFile(os.path.dirname(kirklinePath), os.path.basename(kirklinePath))
+        functions.checkForFile(os.path.dirname(tagpath), os.path.basename(tagpath))
+        functions.checkForFile(os.path.dirname(flagpath), os.path.basename(flagpath))
 
     #events
     @commands.Cog.listener()

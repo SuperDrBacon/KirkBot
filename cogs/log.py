@@ -38,6 +38,7 @@ init = {
 class logger(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
+        functions.checkForFile(os.path.dirname(jsonpath), os.path.basename(jsonpath))
     
     @commands.Cog.listener()
     async def on_ready(self):
