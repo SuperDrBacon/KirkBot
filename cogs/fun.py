@@ -229,7 +229,7 @@ class fun(commands.Cog):
             try:
                 reaction, user = await self.bot.wait_for("reaction_add", timeout=15, check=check)
                 
-                if str(reaction.emoji) == "▶️" and cur_page != 10:
+                if str(reaction.emoji) == "▶️" and cur_page != 8:
                     await message.remove_reaction(f'{cur_page+1}\uFE0F\u20E3', self.bot.user)
                     cur_page += 1
                     await message.edit(content='https://www.youtube.com/watch?v=' + search_results[cur_page])
