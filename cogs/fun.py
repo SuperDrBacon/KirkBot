@@ -35,12 +35,34 @@ byteiogchart = BytesIO()
 with open(kirklinePath, 'r') as f:
     lines = [line.rstrip() for line in f]
 
+flagInit = {
+    "flags": [],
+    "allowedChannels": []
+}
+tagInit = {
+    "Servers": [
+        {
+            "Servername": "serverNAME",
+            "ServerID": 123,
+            "Tags": []
+        }
+    ]
+}
 class fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         functions.checkForFile(os.path.dirname(kirklinePath), os.path.basename(kirklinePath))
         functions.checkForFile(os.path.dirname(tagpath), os.path.basename(tagpath))
         functions.checkForFile(os.path.dirname(flagpath), os.path.basename(flagpath))
+        if os.stat(tagpath).st_size == 0:
+            with open(tagpath, 'w') as f:
+                json.dump(tagInit, f, indent=4)
+        if os.stat(flagpath).st_size == 0:
+            with open(flagpath, 'w') as f:
+                json.dump(flagInit, f, indent=4)
+        if os.stat(kirklinePath).st_size == 0:
+            with open(kirklinePath, 'w') as f:
+                f.write("Kirk is a based god")
 
     #events
     @commands.Cog.listener()
@@ -191,7 +213,44 @@ class fun(commands.Cog):
         query_string = urllib.parse.urlencode({'search_query':search})
         html_content = urllib.request.urlopen('https://www.youtube.com/results?' + query_string)
         search_results = re.findall(r"watch\?v=(\S{11})", html_content.read().decode())
-        await ctx.send('https://www.youtube.com/watch?v=' + search_results[0])
+        cur_page = 0
+        message = await ctx.send('https://www.youtube.com/watch?v=' + search_results[cur_page])
+        
+        await message.add_reaction("◀️")
+        await message.add_reaction("▶️")
+        # await message.add_reaction("\U0001f50d") #Magnifying glass
+        await message.add_reaction("#\uFE0F\u20E3") #Number sign
+        await message.add_reaction(f"{cur_page+1}\uFE0F\u20E3") #Page number
+        
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+            # This makes sure nobody except the command sender can interact with the "menu"
+        while True:
+            try:
+                reaction, user = await self.bot.wait_for("reaction_add", timeout=15, check=check)
+                
+                if str(reaction.emoji) == "▶️" and cur_page != 10:
+                    await message.remove_reaction(f'{cur_page+1}\uFE0F\u20E3', self.bot.user)
+                    cur_page += 1
+                    await message.edit(content='https://www.youtube.com/watch?v=' + search_results[cur_page])
+                    await message.add_reaction(f"{cur_page+1}\uFE0F\u20E3")
+                    await message.remove_reaction(reaction, user)
+                
+                elif str(reaction.emoji) == "◀️" and cur_page > 0:
+                    await message.remove_reaction(f'{cur_page+1}\uFE0F\u20E3', self.bot.user)                    
+                    cur_page -= 1
+                    await message.edit(content='https://www.youtube.com/watch?v=' + search_results[cur_page])
+                    await message.add_reaction(f"{cur_page+1}\uFE0F\u20E3")                    
+                    await message.remove_reaction(reaction, user)
+                
+                else:
+                    await message.remove_reaction(reaction, user)
+            except asyncio.TimeoutError:
+                await message.remove_reaction('▶️', self.bot.user)
+                await message.remove_reaction('◀️', self.bot.user)
+                await message.remove_reaction('#\uFE0F\u20E3', self.bot.user)
+                await message.remove_reaction(f'{cur_page+1}\uFE0F\u20E3', self.bot.user)
+                break
     
     @commands.group(name='gcp', invoke_without_command=True)
     async def gcp_dot_base(self, ctx):
