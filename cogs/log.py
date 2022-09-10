@@ -29,7 +29,7 @@ init = {
             "messages":[{
                 "username": "newuser",
                 "userID": 789,
-                "message": "fukoff"
+                "message": "a message"
                 }
             ]}
         ]}
@@ -39,6 +39,9 @@ class logger(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
         functions.checkForFile(os.path.dirname(jsonpath), os.path.basename(jsonpath))
+        if os.stat(jsonpath).st_size == 0:
+            with open(jsonpath, 'w') as f:
+                json.dump(init, f, indent=4) 
     
     @commands.Cog.listener()
     async def on_ready(self):
@@ -167,27 +170,29 @@ class logger(commands.Cog):
 
         with open(jsonpath, 'r') as fin:
             file_data = json.load(fin)
-        try:
-            for servers in file_data["servers"]:
-                if serverID == servers["serverID"]:
-                    for channels in servers["channels"]:
-                        if channelID == channels["channelID"]:
-                            if reply:
-                                channels["messages"].append(newmessagereplied)#if the channel exist post new message. with replied to message
-                            else:
-                                channels["messages"].append(newmessage)#if the channel exist post new message
-                            raise StopIteration
+        
+        for servers in file_data["servers"]:
+            if serverID == servers["serverID"]:
+                for channels in servers["channels"]:
+                    if channelID == channels["channelID"]:
+                        if reply:
+                            channels["messages"].append(newmessagereplied) #if the channel exists post new message. With replied message.
+                        else:
+                            channels["messages"].append(newmessage)#if the channel exists post new message.
+                        break
+                else:
                     if reply:
-                        servers["channels"].append(newchannelreplied)#if the channel id doesnt excist post new channel, message. with replied to message
+                        servers["channels"].append(newchannelreplied) #if the channel id doesn't exist post new channel and message. With replied message.
                     else:
-                        servers["channels"].append(newchannel) #if the channel id doesnt excist post new channel, message
-                    raise StopIteration
+                        servers["channels"].append(newchannel) #if the channel id doesn't exist post new channeland message.
+                    break
+                break
+        else:
             if reply:
-                file_data["servers"].append(newserverreplied) #if the server id doesnt exist post new server, channel, message. with replied to message
+                file_data["servers"].append(newserverreplied) #if the server id doesn't exist post new server, channel and message. With replied message.
             else:
-                file_data["servers"].append(newserver) #if the server id doesnt exist post new server, channel, message
-        except StopIteration:
-            pass 
+                file_data["servers"].append(newserver) #if the server id doesn't exist post new server, channel and message.
+        
         with open(jsonpath, 'w') as fout:
             json.dump(file_data, fout, indent = 4)
 
