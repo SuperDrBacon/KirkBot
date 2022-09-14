@@ -109,12 +109,14 @@ class fun(commands.Cog):
                             with open(flagpath, 'w') as flagout:
                                 json.dump(flagdata, flagout, indent=4)  
                         break
-                    else:
-                        if random.randint(0, 10) == 1:
-                            emojiList = [emoji for emoji in ctx.guild.emojis]
-                            await ctx.add_reaction(random.choice(emojiList))
-                        break
+                    # else:
+                    #     if random.randint(0, 10) == 1:
+                    #         emojiList = [emoji for emoji in ctx.guild.emojis]
+                    #         await ctx.add_reaction(random.choice(emojiList))
                 else:
+                    if random.randint(0, 10) == 1:
+                        emojiList = [emoji for emoji in ctx.guild.emojis]
+                        await ctx.add_reaction(random.choice(emojiList))                    
                     break
         else:
             pass
