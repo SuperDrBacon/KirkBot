@@ -1,4 +1,5 @@
 import shutil
+import uuid
 import discord
 import time
 import json
@@ -205,7 +206,7 @@ class logger(commands.Cog):
                 c_generator = _count_generator(fp.raw.read)
                 count = sum(buffer.count(b'\n') for buffer in c_generator)
             
-            shutil.copy(jsonpath, f'log {int(count/1000)}K.json')
+            shutil.copy(jsonpath, f'log {int(count/1000)}K-{uuid.uuid4().hex[:8]}.json')
             
             with open(jsonpath, 'w') as fnewout:
                 json.dump(init, fnewout, indent = 4)
@@ -220,7 +221,7 @@ class logger(commands.Cog):
             c_generator = _count_generator(fp.raw.read)
             count = sum(buffer.count(b'\n') for buffer in c_generator)
 
-        shutil.copy(jsonpath, f'log {int(count/1000)}K.json')
+        shutil.copy(jsonpath, f'log {int(count/1000)}K-{uuid.uuid4().hex[:8]}.json')
 
         with open(jsonpath, 'w') as fnewout:
             json.dump(init, fnewout, indent = 4)
