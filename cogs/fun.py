@@ -619,7 +619,8 @@ class fun(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.command()
     async def emojis(self, ctx):
-        await ctx.message.reply(f'Copy of all emojis in the server:\n{" ".join([str(emoji) for emoji in ctx.guild.emojis])}\n\nCopy of all emojis bot can access:\n{" ".join([str(emoji) for emoji in self.bot.emojis])}\n\nAll emojis saved.')
+        # await ctx.message.reply(f'Copy of all emojis in the server:\n{" ".join([str(emoji) for emoji in ctx.guild.emojis])}\n\nCopy of all emojis bot can access:\n{" ".join([str(emoji) for emoji in self.bot.emojis])}\n\nAll emojis saved.')
+        await ctx.send('Tried to save all emojis bot can access')
         for emoji in self.bot.emojis:
             now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             await emoji.save(rf'{emojipath}{emoji.name}_{now}.png')    
