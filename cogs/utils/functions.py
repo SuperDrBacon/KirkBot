@@ -1,4 +1,5 @@
 from functools import partial
+from pathlib import Path
 from urllib import request
 from discord.ext import commands
 import numpy, re
@@ -16,6 +17,19 @@ def checkForFile(filepath, filename):
             print ("Somehow tried to create a file that already exists whilst failing os.path.isfile. Something is definitely brokey.")
         else:
             print (f"{filename} created")
+
+def checkForDir(filepath):
+    if os.path.isdir(filepath):
+        print (f"{filepath} exists")	
+    else:
+        try:
+            Path(filepath).mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            print ("Somehow tried to create a file that already exists whilst failing os.path.isdir. Something is definitely brokey.")
+        else:
+            print (f"{filepath} created")
+
+
 
 
 def filter(message):
