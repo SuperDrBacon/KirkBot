@@ -11,6 +11,7 @@ import cogs.utils.functions as functions
 from io import BytesIO
 from discord.ext import commands
 from selenium import webdriver
+from datetime import datetime
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -25,6 +26,7 @@ ospath = os.path.abspath(os.getcwd())
 kirklinePath = rf'{ospath}/cogs/kirklines.txt'
 tagpath = rf'{ospath}/cogs/tag.json'
 imagepath = rf'{ospath}/images/'
+emojipath = rf'{ospath}/emojis/'
 flagpath = rf'{ospath}/cogs/flags.json'
 high = 0
 delay = 1
@@ -54,6 +56,8 @@ class fun(commands.Cog):
         functions.checkForFile(os.path.dirname(kirklinePath), os.path.basename(kirklinePath))
         functions.checkForFile(os.path.dirname(tagpath), os.path.basename(tagpath))
         functions.checkForFile(os.path.dirname(flagpath), os.path.basename(flagpath))
+        functions.checkForDir(imagepath)
+        functions.checkForDir(emojipath)
         if os.stat(tagpath).st_size == 0:
             with open(tagpath, 'w') as f:
                 json.dump(tagInit, f, indent=4)
@@ -611,8 +615,15 @@ class fun(commands.Cog):
             json.dump(flagdata, flagout, indent=4)        
         await response.delete(delay=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
-
-
+    
+    @commands.has_permissions(administrator=True)
+    @commands.command()
+    async def emojis(self, ctx):
+        await ctx.message.reply(f'Copy of all emojis in the server:\n{" ".join([str(emoji) for emoji in ctx.guild.emojis])}\n\nCopy of all emojis bot can access:\n{" ".join([str(emoji) for emoji in self.bot.emojis])}\n\nAll emojis saved.')
+        for emoji in self.bot.emojis:
+            now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            await emoji.save(rf'{emojipath}{emoji.name}_{now}.png')    
+    
     @tag_base.error
     async def tag_base_handeler(self, ctx, error):
         if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
