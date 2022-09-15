@@ -114,7 +114,7 @@ class fun(commands.Cog):
                     #         emojiList = [emoji for emoji in ctx.guild.emojis]
                     #         await ctx.add_reaction(random.choice(emojiList))
                 else:
-                    if random.randint(0, 10) == 1:
+                    if random.randint(0, 30) == 1:
                         emojiList = [emoji for emoji in ctx.guild.emojis]
                         await ctx.add_reaction(random.choice(emojiList))                    
                     break
