@@ -1,3 +1,4 @@
+from collections import Counter
 import json
 import discord
 import random
@@ -652,10 +653,11 @@ class fun(commands.Cog):
     
     @commands.command(name='wordcloud', aliases=["wc"])
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def wordcloud(self, ctx, server_or_channel:str, limit:int=100000):
+    async def wordcloud(self, ctx, server_or_channel:str, limit:int=10000):
         byteiowordcloud = BytesIO()
         messages = []
-        words = []
+        wordlist = []
+        links = r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,10}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
         async with ctx.typing():
             if server_or_channel.lower() == 'server':
                 for channel in ctx.guild.text_channels:
@@ -671,10 +673,15 @@ class fun(commands.Cog):
                 return
             
             for message in messages:
-                if message.author.bot:
-                    continue
-                words += message.content.split()
-            wordcloud = WordCloud(width=3840, height=2160, random_state=42, colormap='hsv').generate(' '.join(words))
+                # if message.author.bot:
+                #     continue
+                # sentence = functions.filter(message.content)
+                nolinks = re.sub(links, '', message.content)
+                wordlist += nolinks.split()
+            
+            # data5 = Counter(wordlist)
+            wordcloud = WordCloud(width=3840, height=2160, colormap='hsv').generate(' '.join(wordlist))
+            # wordcloud = WordCloud(width=3840, height=2160, colormap='hsv').generate_from_frequencies(data5)
             wordcloudImage = wordcloud.to_image()
             wordcloudImage.save(byteiowordcloud, format='PNG')
             byteiowordcloud.seek(0)
