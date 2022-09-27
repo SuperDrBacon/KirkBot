@@ -8,15 +8,15 @@ from discord.ext import commands
 from configparser import ConfigParser
 
 path = os.path.abspath(os.getcwd())
-info = ConfigParser()
-config = ConfigParser()
-functions.checkForFile(path, 'info.ini') 
-functions.checkForFile(path, 'config.ini') 
-info.read(rf'{path}/info.ini')
-config.read(rf'{path}/config.ini')
 
 def mainProgram():
     print('Logging in...')
+    info = ConfigParser()
+    config = ConfigParser()
+    functions.checkForFile(path, 'info.ini') 
+    functions.checkForFile(path, 'config.ini') 
+    info.read(rf'{path}/info.ini')
+    config.read(rf'{path}/config.ini')
     title = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
     intents = discord.Intents().all()
     
