@@ -122,6 +122,7 @@ class fun(commands.Cog):
             pass
     
     @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def ping(self, ctx):
         '''See delay of the bot'''
         before = time.monotonic()
@@ -132,6 +133,7 @@ class fun(commands.Cog):
         await message.edit(content=f"🏓 WS: {before_ws}ms  |  REST: {int(ping)}ms")
     
     @commands.command(aliases=['8ball'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def _8ball(self, ctx, *, question: str):
         '''[_8ball] [8ball]. Ask a question and get a response'''
         responses = ["It is certain.",
@@ -157,6 +159,7 @@ class fun(commands.Cog):
         await ctx.send(f'question: {question}\n Answer: {random.choice(responses)}')
     
     @commands.command(name='checkem', aliases=['check', 'c'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def checkem(self, ctx):
         '''[checkem] [check] [c]. Check random number for dubs trips etc.'''
         number = random.randint(100000000, 999999999)
@@ -196,6 +199,7 @@ class fun(commands.Cog):
         await ctx.send(embed=embedVar)
 
     @commands.command(name='bigletter', aliases=['em'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def bigletter(self, ctx, *, input:str):
         '''[bigletter] [em]. Types you messages in letter emojis. '''
         await ctx.message.delete()
@@ -213,12 +217,14 @@ class fun(commands.Cog):
         await ctx.send(''.join(emojis))
     
     @commands.command(name='braille', aliases=['br'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def braille(self, ctx, *, input:str):
         '''[braille] [br]. Converts you message to braille so blind people can read it.'''
         braille = input.lower().replace("a", "⠁").replace("b", "⠃").replace("c", "⠉").replace("d", "⠙").replace("e", "⠑").replace("f", "⠋").replace("g", "⠛").replace("h", "⠓").replace("i", "⠊").replace("j", "⠚").replace("k", "⠅").replace("l", "⠅").replace("m", "⠍").replace("n", "⠝").replace("o", "⠕").replace("p", "⠏").replace("q", "⠟").replace("r", "⠗").replace("s", "⠎").replace("t", "⠞").replace("u", "⠥").replace("v", "⠧").replace("w", "⠺").replace("x", "⠭").replace("y", "⠽").replace("z", "⠵")
         await ctx.send(f'For the blind: {braille}')
     
     @commands.command(name='youtube', aliases=['yt'])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def youtube(self, ctx, *, search:str):
         '''[youtube] [yt]. Posts youtube vid from search.'''
         query_string = urllib.parse.urlencode({'search_query':search})
@@ -264,6 +270,7 @@ class fun(commands.Cog):
                 break
     
     @commands.group(name='gcp', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def gcp_dot_base(self, ctx):
         byteiogcpdot = BytesIO()
         options = webdriver.ChromeOptions()
@@ -366,6 +373,7 @@ class fun(commands.Cog):
         await ctx.reply(embed=embed, files=pics)
     
     @gcp_dot_base.command(name='full', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def gcp_dot_full(self, ctx):
         byteiogcpdot = BytesIO()
         options = webdriver.ChromeOptions()
@@ -474,6 +482,7 @@ class fun(commands.Cog):
     
     @commands.has_role('Tag')
     @commands.group(name='tag', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def tag_base(self, ctx, member:discord.Member):
         serverNAME = ctx.guild.name
         serverID = ctx.guild.id
@@ -512,6 +521,7 @@ class fun(commands.Cog):
         await ctx.channel.send(f'{member.mention} got tagged!')
 
     @tag_base.command(name='get', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def tag_get(self, ctx):
         role = discord.utils.get(ctx.guild.roles, name='Tag')
         guild = self.bot.get_guild(ctx.guild.id)
@@ -519,8 +529,9 @@ class fun(commands.Cog):
             if role in members.roles:
                 await ctx.channel.send(f'{members.mention} is tagged!')
     
-    # @commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True)
     @commands.command(name='whocare')
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def who_care(self, ctx):
         if ctx.message.reference:
             await ctx.message.delete()
@@ -539,6 +550,7 @@ class fun(commands.Cog):
     
     @commands.has_permissions(administrator=True)
     @commands.command(aliases=["p"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def probe(self, ctx):
         await ctx.message.delete()
         if ctx.message.reference:
@@ -548,6 +560,7 @@ class fun(commands.Cog):
     
     @commands.has_permissions(administrator=True)
     @commands.group(name='flag', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_base(self, ctx, member:discord.Member, emoji:str):
         re_emoji_custom = r'<a?:.+?:\d{18,19}>'
         re_emoji_generic = re.compile("[""\U0001F1E0-\U0001F1FF"  # flags (iOS)
@@ -587,6 +600,7 @@ class fun(commands.Cog):
     
     @commands.has_permissions(administrator=True)
     @flag_base.command(name='remove', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_remove(self, ctx, member:discord.Member):
         with open(flagpath, 'r') as flagin:
             flagdata = json.load(flagin)  
@@ -606,6 +620,7 @@ class fun(commands.Cog):
     
     @commands.has_permissions(administrator=True)
     @flag_base.command(name='toggle', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_toggle(self, ctx):
         with open(flagpath, 'r') as flagin:
             flagdata = json.load(flagin)  
@@ -627,6 +642,7 @@ class fun(commands.Cog):
     
     @commands.has_permissions(administrator=True)
     @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def emojis(self, ctx):
         # await ctx.message.reply(f'Copy of all emojis in the server:\n{" ".join([str(emoji) for emoji in ctx.guild.emojis])}\n\nCopy of all emojis bot can access:\n{" ".join([str(emoji) for emoji in self.bot.emojis])}\n\nAll emojis saved.')
         await ctx.send('Tried to save all emojis bot can access')
@@ -635,6 +651,7 @@ class fun(commands.Cog):
             await emoji.save(rf'{emojipath}{emoji.name}_{now}.png')    
     
     @commands.command(name='wordcloud', aliases=["wc"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcloud(self, ctx, server_or_channel:str, limit:int=100000):
         byteiowordcloud = BytesIO()
         messages = []
@@ -665,6 +682,7 @@ class fun(commands.Cog):
     
     
     # @commands.command(aliases=["sc"])
+    # @commands.cooldown(1, 5, commands.BucketType.user)
     # async def server_conciousness(self, ctx):
     #     # await ctx.send("")
     #     messagelist = []
