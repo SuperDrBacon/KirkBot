@@ -1,3 +1,4 @@
+from ast import alias
 from configparser import ConfigParser
 import os
 import discord
@@ -20,7 +21,7 @@ class Help(commands.Cog):
     @commands.group(name='help', invoke_without_command=True)
     async def help_base(self, ctx):
         embed = Embed(title='Help commands per group', color=discord.Colour.gold(), timestamp=timestamp)
-        embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n`.,tag` `.,tag get`\n`.,gcp` `.,gcp full`", inline=True)
+        embed.add_field(name="Fun", value="`.,ping`\n`.,8ball`\n`.,checkem` `.,check` `.,c`\n`.,bigletter` `.,em`\n`.,braille` `.,br`\n`.,youtube` `.,yt`\n`.,tag` `.,tag get`\n`.,gcp` `.,gcp full`\n`.,wordcloud` `.,wc`", inline=True)
         embed.add_field(name="AI", value="`.,ai`", inline=True) #\n`@David Marcus`
         embed.add_field(name="Admin", value="`.,botstatus`\n`.,botstatus set`\n`.,flag @user emoji`\n`.,flag remove @user`\n`.,flag toggle`", inline=True)
         embed.add_field(name="Moderator", value="`No commands lmao`", inline=True)
@@ -28,8 +29,8 @@ class Help(commands.Cog):
         embed.set_footer(text=botversion)
         await ctx.channel.send(embed=embed)
         
-    @help_base.command(name='fun', invoke_without_command=True)
-    async def help_fun(self, ctx,):
+    @help_base.group(name='fun', invoke_without_command=True)
+    async def help_fun(self, ctx):
         embed = Embed(title='Help -> Fun', color=discord.Colour.green(), timestamp=timestamp)
         embed.add_field(name="Commands and descriptions", 
                         value="`.,8ball` Ask the 8ball your burning questions\n"+
@@ -38,19 +39,29 @@ class Help(commands.Cog):
                             "`.,braille, .,br` Convert your message into braille so blind people can read it\n"+
                             "`.,youtube, .,yt` Input a search and get the first Youtube result back\n"+
                             "`.,tag, .,tag get` Tag another person in the server when you're tagged! Or see who is currently tagged\n"+
-                            "`.,gcp, .,gcp full` Get the current position of the Global Consciousness Project Dot. Use full to get an explanation of the different colours")
+                            "`.,gcp, .,gcp full` Get the current position of the Global Consciousness Project Dot. Use full to get an explanation of the different colours\n"+
+                            "`.,wordcloud, .,wc` Get a wordcloud of the channel or server. Specify 'server' or 'channel' as the first argument and the amount of messages as the second argument. E.g `.,wc server 1000`. Default amount is 100000 to get basically all messages")
+        embed.add_field(name='―――――――――――――――――――', value='Use .,help fun [command] to see further command descriptions', inline=False)
         embed.set_footer(text=botversion)
-        await ctx.channel.send(embed=embed,)
-        
+        await ctx.channel.send(embed=embed)
+    
+    @help_fun.command(name='wordcloud', aliases=['wc'], invoke_without_command=True)
+    async def help_wordcloud(self, ctx):
+        embed = Embed(title='Help -> Fun -> Wordcloud', color=discord.Colour.green(), timestamp=timestamp)
+        embed.add_field(name="Wordcloud description", 
+                        value="\n`.,wordcloud, .,wc`\nGet a wordcloud of the channel or server. Specify 'server' or 'channel' as the first argument and the amount of messages as the second argument. E.g `.,wc server 1000`. Default amount is 100000 to get basically all messages")
+        embed.set_footer(text=botversion)
+        await ctx.channel.send(embed=embed)
+    
     @help_base.command(name='ai', invoke_without_command=True)
-    async def help_AI(self, ctx,):
+    async def help_AI(self, ctx):
         embed = Embed(title='Help -> AI', color=discord.Colour.blue(), timestamp=timestamp)
         embed.add_field(name="Commands and descriptions", 
                         value="`.,ai` Talk to the GPT-3 bot and get a response\n"+
                             "`@David Marcus` Uses the custom AI model created from chat messages\n"+
                             "`Reply to the bot` Replying to the bot will take previous messages into account when generating a response")
         embed.set_footer(text=botversion)
-        await ctx.channel.send(embed=embed,)
+        await ctx.channel.send(embed=embed)
         
     # @commands.has_permissions(administrator=True)
     @help_base.command(name='admin', invoke_without_command=True)

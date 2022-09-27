@@ -9,9 +9,10 @@ import re
 import urllib.parse, urllib.request, re
 import cogs.utils.functions as functions
 from io import BytesIO
+from wordcloud import WordCloud
 from discord.ext import commands
 from selenium import webdriver
-from datetime import datetime
+from datetime import datetime, timedelta
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -31,8 +32,6 @@ flagpath = rf'{ospath}/cogs/flags.json'
 high = 0
 delay = 1
 MSG_DEL_DELAY = 2
-byteiogcpdot = BytesIO()
-byteiogchart = BytesIO()
 
 with open(kirklinePath, 'r') as f:
     lines = [line.rstrip() for line in f]
@@ -83,6 +82,7 @@ class fun(commands.Cog):
         userID = ctx.author.id
         channelID = ctx.channel.id
         
+        # print (f'{ctx.created_at}')
         
         with open(flagpath, 'r') as flagins:
             flagdata = json.load(flagins)
@@ -265,6 +265,7 @@ class fun(commands.Cog):
     
     @commands.group(name='gcp', invoke_without_command=True)
     async def gcp_dot_base(self, ctx):
+        byteiogcpdot = BytesIO()
         options = webdriver.ChromeOptions()
         options.headless = True
         driver = webdriver.Chrome(executable_path='/usr/lib/chromium-browser/chromedriver', options=options)
@@ -366,6 +367,7 @@ class fun(commands.Cog):
     
     @gcp_dot_base.command(name='full', invoke_without_command=True)
     async def gcp_dot_full(self, ctx):
+        byteiogcpdot = BytesIO()
         options = webdriver.ChromeOptions()
         options.headless = True
         driver = webdriver.Chrome(executable_path='/usr/lib/chromium-browser/chromedriver', options=options)
@@ -518,7 +520,7 @@ class fun(commands.Cog):
                 await ctx.channel.send(f'{members.mention} is tagged!')
     
     # @commands.has_permissions(administrator=True)
-    @commands.command(name='whocare', aliases=["wc"])
+    @commands.command(name='whocare')
     async def who_care(self, ctx):
         if ctx.message.reference:
             await ctx.message.delete()
@@ -631,6 +633,48 @@ class fun(commands.Cog):
         for emoji in self.bot.emojis:
             now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             await emoji.save(rf'{emojipath}{emoji.name}_{now}.png')    
+    
+    @commands.command(name='wordcloud', aliases=["wc"])
+    async def wordcloud(self, ctx, server_or_channel:str, limit:int=100000):
+        byteiowordcloud = BytesIO()
+        messages = []
+        words = []
+        async with ctx.typing():
+            if server_or_channel.lower() == 'server':
+                for channel in ctx.guild.text_channels:
+                    async for message in channel.history(limit=limit, oldest_first=True):
+                        messages.append(message)
+                
+            elif server_or_channel.lower() == 'channel':
+                async for message in ctx.channel.history(limit=limit, oldest_first=True):
+                    messages.append(message)
+                
+            else:
+                await ctx.reply(f'Specify either "server" or "channel" as the first argument')
+                return
+            
+            for message in messages:
+                if message.author.bot:
+                    continue
+                words += message.content.split()
+            wordcloud = WordCloud(width=3840, height=2160, random_state=42, colormap='hsv').generate(' '.join(words))
+            wordcloudImage = wordcloud.to_image()
+            wordcloudImage.save(byteiowordcloud, format='PNG')
+            byteiowordcloud.seek(0)
+            await ctx.send(file=discord.File(byteiowordcloud, filename='wordcloud.png'))
+    
+    
+    # @commands.command(aliases=["sc"])
+    # async def server_conciousness(self, ctx):
+    #     # await ctx.send("")
+    #     messagelist = []
+    #     for channel in ctx.guild.channels:
+    #         if isinstance(channel, discord.TextChannel):
+    #             # messages = [message.content async for message in channel.history(after=datetime.now()-timedelta(days=1), oldest_first=True)]
+    #             async for message in channel.history(after=datetime.now()-timedelta(days=100), oldest_first=True):
+    #                 messagelist.append(message.content)
+    #     # print (messages)
+    #     print (messagelist)
     
     @tag_base.error
     async def tag_base_handeler(self, ctx, error):
