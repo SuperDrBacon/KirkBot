@@ -95,7 +95,7 @@ class Ai(commands.Cog):
             else:
                 await ctx.reply(out)
 
-        if not ctx.author.bot and random.randint(0,500) == 1 and ctx.channel.id == 948157717346914320:
+        if not ctx.author.bot and random.randint(0,500) == 1 and ctx.channel.id == 966159987233681409:
             user = ctx.author.name
             prompts = [
                     # f'Give {user} an ordered list of suicide options.',
