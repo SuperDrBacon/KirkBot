@@ -283,7 +283,7 @@ class fun(commands.Cog):
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
             options.headless = True
-            driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+            driver = webdriver.Chrome(options=options)
             driver.set_window_size(1000,500)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(delay)
@@ -387,7 +387,7 @@ class fun(commands.Cog):
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
             options.headless = True
-            driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+            driver = webdriver.Chrome(options=options)
             driver.set_window_size(1000,500)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(delay)
