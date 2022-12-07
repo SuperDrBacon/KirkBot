@@ -34,8 +34,10 @@ high = 0
 delay = 1
 MSG_DEL_DELAY = 2
 
-with open(kirklinePath, 'r') as f:
-    lines = [line.rstrip() for line in f]
+def loadLines():
+    with open(kirklinePath, 'r') as f:
+        lines = [line.rstrip() for line in f]
+    return lines
 
 flagInit = {
     "flags": [],
@@ -78,6 +80,7 @@ class fun(commands.Cog):
         if ctx.author.bot:
             return
         if ctx.content.startswith('Kirk') or ctx.content.startswith('kirk') or ctx.content.startswith('KIRK'):
+            lines = loadLines()
             await ctx.channel.send(random.choice(lines))
         
         userID = ctx.author.id
@@ -666,7 +669,7 @@ class fun(commands.Cog):
     
     @commands.command(name='wordcloud', aliases=["wc"])
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def wordcloud(self, ctx, server_or_channel:str, limit:int=10000):
+    async def wordcloud(self, ctx, server_or_channel:str, limit:int=100000):
         byteiowordcloud = BytesIO()
         messages = []
         wordlist = []
@@ -675,22 +678,30 @@ class fun(commands.Cog):
             if server_or_channel.lower() == 'server':
                 for channel in ctx.guild.text_channels:
                     async for message in channel.history(limit=limit, oldest_first=True):
-                        messages.append(message)
+                        # messages.append(message)
+                        wordlist += message.content.split()
                 
             elif server_or_channel.lower() == 'channel':
                 async for message in ctx.channel.history(limit=limit, oldest_first=True):
-                    messages.append(message)
+                    # messages.append(message)
+                    wordlist += message.content
+                    with open (r'./cogs/wordlist.txt', 'w') as wordcloudfile:
+                        wordcloudfile.write(wordlist)
                 
             else:
                 await ctx.reply(f'Specify either "server" or "channel" as the first argument')
                 return
             
-            for message in messages:
-                # if message.author.bot:
-                #     continue
-                # sentence = functions.filter(message.content)
-                nolinks = re.sub(links, '', message.content)
-                wordlist += nolinks.split()
+            # for word in wordlist:
+            #     if re.match(links, word):
+            #         wordlist.remove(word)
+            
+            # for message in messages:
+            #     # if message.author.bot:
+            #     #     continue
+            #     # sentence = functions.filter(message.content)
+            #     nolinks = re.sub(links, '', message.content)
+            #     wordlist += nolinks.split()
             
             # data5 = Counter(wordlist)
             wordcloud = WordCloud(width=3840, height=2160, colormap='hsv').generate(' '.join(wordlist))
