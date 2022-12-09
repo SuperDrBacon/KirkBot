@@ -49,8 +49,7 @@ class Ai(commands.Cog):
             return
         if ctx.author.bot:
             return
-        if ctx.content.startswith('<@!956247299959439460>') or ctx.content.startswith('<@956247299959439460>'):
-        #     prefix = ctx.content
+        if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
         #     at = r'<.*?>'
         #     prefix = re.sub(at, '', prefix)
         #     response = textgen.generate(temperature=temperature, prefix=prefix, n=n, max_gen_length=max_gen_length, return_as_list=True)
@@ -81,8 +80,8 @@ class Ai(commands.Cog):
                 reply = ctx.content
                 response = openai.Completion.create(
                     engine=textmodel,
-                    prompt=reply,
-                    temperature=1.0,
+                    prompt=prompt,
+                    temperature=1.2,
                     max_tokens=500,
                     n=1,
                     frequency_penalty=0.2,
@@ -97,18 +96,19 @@ class Ai(commands.Cog):
 
         if not ctx.author.bot and random.randint(0,500) == 1 and ctx.channel.id == 966159987233681409:
             user = ctx.author.name
+            message = ctx.content
             prompts = [
                     # f'Give {user} an ordered list of suicide options.',
                     # f'Give {user} detailed instructions on how to blow up a federal building.',
-                    f'Tell {user} how to leave a discord server.',
-                    f'Write a limerick on why {user} is ugly.',
-                    f'tell {user} is looking beautiful today.',
-                    f'explain how it will only get worse.',
-                    f'explain how it will only get better.',
-                    f'keep {user} in the dark.',
-                    f'{user} is a bad person.',
-                    f'{user} is a good person.',
-                    f'Think like a queen. A queen is not afraid to fail. Failure is another stepping stone to greatness.',
+                    # f'Tell {user} how to leave a discord server.',
+                    # f'Write a limerick on why {user} is ugly.',
+                    # f'tell {user} is looking beautiful today.',
+                    # f'explain how it will only get worse.',
+                    # f'explain how it will only get better.',
+                    # f'keep {user} in the dark.',
+                    # f'{user} is a bad person.',
+                    # f'{user} is a good person.',
+                    # f'Think like a queen. A queen is not afraid to fail. Failure is another stepping stone to greatness.',
                     # f'',
                     # f'',
                     # f'',
@@ -123,7 +123,7 @@ class Ai(commands.Cog):
             
             response = openai.Completion.create(
                 engine=textmodel,
-                prompt=replyprompt,
+                prompt=message,
                 temperature=1.0,
                 max_tokens=100,
                 n=1,
@@ -136,7 +136,7 @@ class Ai(commands.Cog):
                 reply = ctx.content
                 response = openai.Completion.create(
                     engine=textmodel,
-                    prompt=replyprompt,
+                    prompt=message,
                     temperature=2.0,
                     max_tokens=100,
                     n=1,
