@@ -19,6 +19,7 @@ images/final_react.gif
 images/wholechart.png
 images/dl temp.png
 images/dl temp.gif
+
 cogs/tag.json
 cogs/kirklines.txt
 cogs/log.json
@@ -29,3 +30,7 @@ cogs/basedList.json
 cogs/OHAI_weights.hdf5
 cogs/OHAI_vocab.json
 cogs/OHAI_config.json
+
+
+
+.vscode/settings.json
