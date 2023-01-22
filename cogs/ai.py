@@ -5,7 +5,7 @@ import openai
 import os
 from os import path
 import re
-from textgenrnn import textgenrnn
+# from textgenrnn import textgenrnn
 from discord.ext import commands
 from configparser import ConfigParser
 
