@@ -27,9 +27,9 @@ weights_path = os.path.dirname(os.path.realpath(__file__))+'/'+model_name+"_weig
 temperature = 1.4
 n = 1
 max_gen_length = 50
-textgen = textgenrnn(config_path=config_path,
-                    weights_path=weights_path,
-                    vocab_path=vocab_path)
+# textgen = textgenrnn(config_path=config_path,
+#                     weights_path=weights_path,
+#                     vocab_path=vocab_path)
 
 
 # messagecount = 0
@@ -50,14 +50,14 @@ class Ai(commands.Cog):
         if ctx.author.bot:
             return
         if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
-            at = r'<.*?>'
-            prefix = re.sub(at, '', prefix)
-            response = textgen.generate(temperature=temperature, prefix=prefix, n=n, max_gen_length=max_gen_length, return_as_list=True)
-            out = response[0]
-            out2 = out[len(prefix):]
-            await ctx.reply(out2)
-            return
-            # await ctx.reply('@ the bot is currently not a command use .,ai for ai.')
+            # at = r'<.*?>'
+            # prefix = re.sub(at, '', prefix)
+            # response = textgen.generate(temperature=temperature, prefix=prefix, n=n, max_gen_length=max_gen_length, return_as_list=True)
+            # out = response[0]
+            # out2 = out[len(prefix):]
+            # await ctx.reply(out2)
+            # return
+            await ctx.reply('@ the bot is currently not a command use .,ai for ai.')
 
 
 
