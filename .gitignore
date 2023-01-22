@@ -9,6 +9,7 @@ __pycache__
 
 log*
 error.txt
+requirements.txt
 seriouslinks.txt
 seriouschannel.txt
 copypastachannel.txt
@@ -25,3 +26,6 @@ cogs/bannedwords.txt
 cogs/flags.json
 cogs/basedList.json
 # /emojis/
+cogs/OHAI_weights.hdf5
+cogs/OHAI_vocab.json
+cogs/OHAI_config.json
