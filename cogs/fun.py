@@ -10,7 +10,7 @@ import re
 import urllib.parse, urllib.request, re
 import cogs.utils.functions as functions
 from io import BytesIO
-from wordcloud import WordCloud
+# from wordcloud import WordCloud
 from discord.ext import commands
 from selenium import webdriver
 from datetime import datetime, timedelta
