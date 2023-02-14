@@ -8,9 +8,8 @@ from urllib import request
 from discord.ext import commands
 
 path = os.path.abspath(os.getcwd())
-worddatabase = rf'{path}/cogs/log.json'
 
-setup_table = '''CREATE TABLE IF NOT EXISTS wordcount_data(
+setup_table = '''CREATE TABLE IF NOT EXISTS log_data(
                     ID                      INTEGER     PRIMARY KEY AUTOINCREMENT,
                     SERVER_NAME             TEXT,
                     SERVER_ID               INTEGER,
@@ -40,7 +39,7 @@ def checkForFile(filepath, filename, database=False):
             print (f"{filename} created")
     elif database == True:
         try:
-            con = sqlite3.connect(f'{path}/cogs/wordcount_data.db')
+            con = sqlite3.connect(f'{path}/cogs/log_data.db')
             cur = con.cursor()
             cur.execute(setup_table)
             con.commit()
