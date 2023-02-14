@@ -1,48 +1,18 @@
-import shutil
-import uuid
 import discord
 import time
-import json
+import sqlite3
 import os
-import re
 import cogs.utils.functions as functions
 from discord.ext import commands
 from datetime import datetime, timezone
 
 path = os.path.abspath(os.getcwd())
-jsonpath = rf'{path}/cogs/log.json'
-
-jsonmaxsize = 5242880
-
-def _count_generator(reader):
-    b = reader(1024 * 1024)
-    while b:
-        yield b
-        b = reader(1024 * 1024)
-
-init = {
-    "servers":[{
-        "servername": "newserver",
-        "serverID": 123,
-        "channels":[{
-            "channelname": "newchannel",
-            "channelID": 456,                  
-            "messages":[{
-                "username": "newuser",
-                "userID": 789,
-                "message": "a message"
-                }
-            ]}
-        ]}
-    ]}
+logdatabase = rf'{path}/cogs/log_data.db'
 
 class logger(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
-        functions.checkForFile(os.path.dirname(jsonpath), os.path.basename(jsonpath))
-        if os.stat(jsonpath).st_size == 0:
-            with open(jsonpath, 'w') as f:
-                json.dump(init, f, indent=4) 
+        functions.checkForFile(os.path.dirname(logdatabase), os.path.basename(logdatabase), True)
     
     @commands.Cog.listener()
     async def on_ready(self):
@@ -50,20 +20,25 @@ class logger(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        now_utc = str(datetime.now(timezone.utc))
-        now_unix =  str(time.time())
-        serverNAME = ctx.guild.name
-        serverID = ctx.guild.id
-        userNAME = ctx.author.name
-        userID = ctx.author.id
-        channelNAME = ctx.channel.name
-        channelID = ctx.channel.id
+        server_name = ctx.guild.name
+        server_id= ctx.guild.id
+        channel_name = ctx.channel.name
+        channel_id = ctx.channel.id
+        user_name = ctx.author.name
+        user_id = ctx.author.id
         message = ctx.content
+        message_id = ctx.id
+        reply = 0
+        now_utc = str(datetime.now(timezone.utc))
+        now_unix = str(time.time())
         
-        reply = False
         if ctx.reference:
-            reply = True
+            reply = 1
             print(f'╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
+            original_username = ctx.reference.resolved.author.name
+            original_username_id = ctx.reference.resolved.author.id
+            original_message = ctx.reference.resolved.content
+            original_message_id = ctx.reference.resolved.id
         
         try:
             if message == "":
@@ -73,158 +48,97 @@ class logger(commands.Cog):
                 message = ctx.attachments[0].proxy_url
             except Exception:
                 return
-
-        print(f'{userNAME}: {message}')
-
-        if not reply:
-            newserver = {
-                "servername": serverNAME,
-                "serverID": serverID,
-                "channels":[{
-                    "channelname": channelNAME,
-                    "channelID": channelID,                  
-                    "messages":[{
-                        "username": userNAME,
-                        "userID": userID,
-                        "message": message,
-                        "reply": reply,
-                        "dateTime": now_utc,
-                        "Unix": now_unix,
-                        }]
-                    }]
-                }
-            newchannel = {
-                "channelname": channelNAME,
-                "channelID": channelID,
-                "messages":[{
-                        "username": userNAME,
-                        "userID": userID,
-                        "message": message,
-                        "reply": reply,
-                        "dateTime": now_utc,
-                        "Unix": now_unix,
-                        }]
-                    }
-            newmessage = {
-                "username": userNAME,
-                "userID": userID,
-                "message": message,
-                "reply": reply,
-                "dateTime": now_utc,
-                "Unix": now_unix,
-            }
-        else:
-            repliedmessage = ctx.reference.resolved.content
-            replieduser = ctx.reference.resolved.author.name
-            repliedID = ctx.reference.resolved.author.id
-            newserverreplied = {
-                "servername": serverNAME,
-                "serverID": serverID,
-                "channels":[{
-                    "channelname": channelNAME,
-                    "channelID": channelID,                  
-                    "messages":[{
-                        "username": userNAME,
-                        "userID": userID,
-                        "message": message,
-                        "reply": reply,
-                        "dateTime": now_utc,
-                        "Unix": now_unix,
-                        "replied too message":[{
-                            "username": replieduser,
-                            "userID": repliedID,
-                            "message": repliedmessage,
-                            }]
-                        }]
-                    }]
-                }
-            newchannelreplied = {
-                "channelname": channelNAME,
-                "channelID": channelID,
-                "messages":[{
-                    "username": userNAME,
-                    "userID": userID,
-                    "message": message,
-                    "reply": reply,
-                    "dateTime": now_utc,
-                    "Unix": now_unix,
-                    "replied too message":[{
-                        "username": replieduser,
-                        "userID": repliedID,
-                        "message": repliedmessage,
-                        }]
-                    }]
-                }
-            newmessagereplied = {
-                "username": userNAME,
-                "userID": userID,
-                "message": message,
-                "reply": reply,
-                "dateTime": now_utc,
-                "Unix": now_unix,
-                "replied too message":[{
-                    "username": replieduser,
-                    "userID": repliedID,
-                    "message": repliedmessage,
-                    }]
-                }
-
-        with open(jsonpath, 'r') as fin:
-            file_data = json.load(fin)
         
-        for servers in file_data["servers"]:
-            if serverID == servers["serverID"]:
-                for channels in servers["channels"]:
-                    if channelID == channels["channelID"]:
-                        if reply:
-                            channels["messages"].append(newmessagereplied) #if the channel exists post new message. With replied message.
-                        else:
-                            channels["messages"].append(newmessage)#if the channel exists post new message.
-                        break
-                else:
-                    if reply:
-                        servers["channels"].append(newchannelreplied) #if the channel id doesn't exist post new channel and message. With replied message.
-                    else:
-                        servers["channels"].append(newchannel) #if the channel id doesn't exist post new channeland message.
-                    break
-                break
-        else:
-            if reply:
-                file_data["servers"].append(newserverreplied) #if the server id doesn't exist post new server, channel and message. With replied message.
-            else:
-                file_data["servers"].append(newserver) #if the server id doesn't exist post new server, channel and message.
+        print(f'{user_name}: {message}')
         
-        with open(jsonpath, 'w') as fout:
-            json.dump(file_data, fout, indent = 4)
-
-        '''
-        Reset the json file to init when it gets too big but make a cold copy first.
-        '''
-        file_size = os.stat(jsonpath).st_size
-        if file_size > jsonmaxsize:
-            with open(jsonpath, 'rb') as fp:
-                c_generator = _count_generator(fp.raw.read)
-                count = sum(buffer.count(b'\n') for buffer in c_generator)
-            
-            shutil.copy(jsonpath, f'log {int(count/1000)}K-{uuid.uuid4().hex[:8]}.json')
-            
-            with open(jsonpath, 'w') as fnewout:
-                json.dump(init, fnewout, indent = 4)
-
-    '''
-    Reset the json log the manual way if bot get slow or some bs. also make a cold copy first.
-    '''
-    @commands.has_permissions(administrator=True)  
-    @commands.command(aliases=['resetlog'])
-    async def reset(self, ctx,):
-        with open(jsonpath, 'rb') as fp:
-            c_generator = _count_generator(fp.raw.read)
-            count = sum(buffer.count(b'\n') for buffer in c_generator)
-
-        shutil.copy(jsonpath, f'log {int(count/1000)}K-{uuid.uuid4().hex[:8]}.json')
-
-        with open(jsonpath, 'w') as fnewout:
-            json.dump(init, fnewout, indent = 4)
+        if reply == 1:
+            try:
+                con = sqlite3.connect(f'{path}/cogs/wordcount_data.db')
+                cur = con.cursor()
+                data_to_inset = '''INSERT INTO wordcount_data(
+                            SERVER_NAME,
+                            SERVER_ID,
+                            CHANNEL_NAME,
+                            CHANNEL_ID,
+                            USERNAME,
+                            USER_ID,
+                            MESSAGE,
+                            MESSAGE_ID,
+                            IS_REPLY,
+                            ORIGINAL_USERNAME,
+                            ORIGINAL_USER_ID,
+                            ORIGINAL_MESSAGE,
+                            ORIGINAL_MESSAGE_ID,
+                            DATE_TIME,
+                            UNIX_TIME) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);'''
+                data_tuple = (
+                            server_name, 
+                            server_id, 
+                            channel_name, 
+                            channel_id, 
+                            user_name, 
+                            user_id, 
+                            message, 
+                            message_id, 
+                            reply, 
+                            original_username, 
+                            original_username_id, 
+                            original_message, 
+                            original_message_id, 
+                            now_utc,
+                            now_unix)
+                cur.execute(data_to_inset, data_tuple)
+                con.commit()
+                # cur.execute('SELECT max(id) FROM wordcount_data')
+                # max_id = cur.fetchone()[0]
+                # print("Record inserted successfully into wordcount_data table ", max_id)
+            except Exception as error:
+                print("Failed to insert multiple records into sqlite table:", error)
+            finally:
+                if con:
+                    cur.close()
+                    con.close()
+                    # print("The SQLite connection is closed")
+        else:
+            try:
+                con = sqlite3.connect(f'{path}/cogs/wordcount_data.db')
+                cur = con.cursor()
+                data_to_inset = '''INSERT INTO wordcount_data(
+                            SERVER_NAME,
+                            SERVER_ID,
+                            CHANNEL_NAME,
+                            CHANNEL_ID,
+                            USERNAME,
+                            USER_ID,
+                            MESSAGE,
+                            MESSAGE_ID,
+                            IS_REPLY,
+                            DATE_TIME,
+                            UNIX_TIME) VALUES (?,?,?,?,?,?,?,?,?,?,?);'''
+                data_tuple = (
+                            server_name, 
+                            server_id, 
+                            channel_name, 
+                            channel_id, 
+                            user_name, 
+                            user_id, 
+                            message, 
+                            message_id, 
+                            reply, 
+                            now_utc,
+                            now_unix)
+                cur.execute(data_to_inset, data_tuple)
+                con.commit()
+                # cur.execute('SELECT max(id) FROM wordcount_data')
+                # max_id = cur.fetchone()[0]
+                # print("Record inserted successfully into wordcount_data table ", max_id)
+            except Exception as error:
+                print("Failed to insert multiple records into sqlite table:", error)
+            finally:
+                if con:
+                    cur.close()
+                    con.close()
+                    # print("The SQLite connection is closed")
 
     '''
     Gets all the links in the channel and puts them in a file named the channel name.

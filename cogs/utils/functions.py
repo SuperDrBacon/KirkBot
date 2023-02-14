@@ -1,22 +1,57 @@
+import numpy, re
+import shutil
+import os
+import sqlite3
 from functools import partial
 from pathlib import Path
 from urllib import request
 from discord.ext import commands
-import numpy, re
-import shutil
-import os
 
+path = os.path.abspath(os.getcwd())
+worddatabase = rf'{path}/cogs/log.json'
 
-def checkForFile(filepath, filename):
+setup_table = '''CREATE TABLE IF NOT EXISTS wordcount_data(
+                    ID                      INTEGER     PRIMARY KEY AUTOINCREMENT,
+                    SERVER_NAME             TEXT,
+                    SERVER_ID               INTEGER,
+                    CHANNEL_NAME            TEXT,
+                    CHANNEL_ID              INTEGER,
+                    USERNAME                TEXT,
+                    USER_ID                 INTEGER,
+                    MESSAGE                 TEXT,
+                    MESSAGE_ID              INTEGER,
+                    IS_REPLY                INTEGER,
+                    ORIGINAL_USERNAME       TEXT,
+                    ORIGINAL_USER_ID        INTEGER,
+                    ORIGINAL_MESSAGE        TEXT,
+                    ORIGINAL_MESSAGE_ID     INTEGER,
+                    DATE_TIME               TEXT,
+                    UNIX_TIME               INTEGER);'''
+
+def checkForFile(filepath, filename, database=False):
     if os.path.isfile(os.path.join(filepath, filename)):
-        print (f"{filename} exists")	
-    else:
+        print (f"{filename} exists")
+    elif database == False:
         try:
             open(f'{os.path.join(filepath, filename)}', "x").close
         except FileExistsError:
             print ("Somehow tried to create a file that already exists whilst failing os.path.isfile. Something is definitely brokey.")
         else:
             print (f"{filename} created")
+    elif database == True:
+        try:
+            con = sqlite3.connect(f'{path}/cogs/wordcount_data.db')
+            cur = con.cursor()
+            cur.execute(setup_table)
+            con.commit()
+        except Exception as error:
+            print("Failed to insert multiple records into sqlite table:", error)
+        finally:
+            if con:
+                cur.close()
+                con.close()
+    else:
+        print("Something is wrong with the checkForFile function.")
 
 def checkForDir(filepath):
     if os.path.isdir(filepath):
