@@ -53,9 +53,9 @@ class logger(commands.Cog):
         
         if reply == 1:
             try:
-                con = sqlite3.connect(f'{path}/cogs/wordcount_data.db')
+                con = sqlite3.connect(f'{path}/cogs/log_data.db')
                 cur = con.cursor()
-                data_to_inset = '''INSERT INTO wordcount_data(
+                data_to_inset = '''INSERT INTO log_data(
                             SERVER_NAME,
                             SERVER_ID,
                             CHANNEL_NAME,
@@ -101,9 +101,9 @@ class logger(commands.Cog):
                     # print("The SQLite connection is closed")
         else:
             try:
-                con = sqlite3.connect(f'{path}/cogs/wordcount_data.db')
+                con = sqlite3.connect(f'{path}/cogs/log_data.db')
                 cur = con.cursor()
-                data_to_inset = '''INSERT INTO wordcount_data(
+                data_to_inset = '''INSERT INTO log_data(
                             SERVER_NAME,
                             SERVER_ID,
                             CHANNEL_NAME,
