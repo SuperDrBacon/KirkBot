@@ -44,11 +44,12 @@ def checkForFile(filepath, filename, database=False):
             cur.execute(setup_table)
             con.commit()
         except Exception as error:
-            print("Failed to insert multiple records into sqlite table:", error)
+            print("Failed to make sqlite3 database:", error)
         finally:
             if con:
                 cur.close()
                 con.close()
+                print ("sqlite3 database created")
     else:
         print("Something is wrong with the checkForFile function.")
 
