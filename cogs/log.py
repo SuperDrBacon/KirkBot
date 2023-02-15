@@ -34,7 +34,7 @@ class logger(commands.Cog):
         
         if ctx.reference:
             reply = 1
-            print(f'#{channel_name[:10]:<10} - ╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
+            print(f'#{channel_name[:20]:<20} ╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
             original_username = ctx.reference.resolved.author.name
             original_username_id = ctx.reference.resolved.author.id
             original_message = ctx.reference.resolved.content
@@ -49,7 +49,7 @@ class logger(commands.Cog):
             except Exception:
                 return
         
-        print(f'#{channel_name[:10]:<10} - {user_name}: {message}')
+        print(f'#{channel_name[:20]:<20} {user_name}: {message}')
         
         if reply == 1:
             try:
