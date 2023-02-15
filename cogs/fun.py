@@ -678,7 +678,7 @@ class fun(commands.Cog):
     
     @commands.command(aliases=["wc"])
     async def wordcount(self, ctx):
-        await ctx.send("")
+        pass
     
 async def setup(bot):
     await bot.add_cog(fun(bot))
