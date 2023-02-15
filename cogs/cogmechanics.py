@@ -7,7 +7,7 @@ from configparser import ConfigParser
 path = os.path.abspath(os.getcwd())
 config = ConfigParser()
 config.read(rf'{path}/config.ini')
-owner_id = config['BOTCONFIG']['ownerid']
+owner_id = int(config['BOTCONFIG']['ownerid'])
 
 class Cogs(commands.Cog):
     '''This Cogs module is used to load or unload different modules to update the bot without having to take it offline'''
