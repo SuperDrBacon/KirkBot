@@ -34,7 +34,7 @@ class logger(commands.Cog):
         
         if ctx.reference:
             reply = 1
-            print(f'#{channel_name[:15]:<15} - ╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
+            print(f'                 ╔═══ {ctx.reference.resolved.author.name}: {ctx.reference.resolved.content}')
             original_username = ctx.reference.resolved.author.name
             original_username_id = ctx.reference.resolved.author.id
             original_message = ctx.reference.resolved.content
