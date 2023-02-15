@@ -10,7 +10,7 @@ from discord.ext import commands
 path = os.path.abspath(os.getcwd())
 
 setup_table = '''CREATE TABLE IF NOT EXISTS log_data(
-                    ID                      INTEGER     PRIMARY KEY AUTOINCREMENT,
+                    ID                      INTEGER     PRIMARY KEY,
                     SERVER_NAME             TEXT,
                     SERVER_ID               INTEGER,
                     CHANNEL_NAME            TEXT,
