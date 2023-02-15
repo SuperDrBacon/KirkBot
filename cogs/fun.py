@@ -667,51 +667,23 @@ class fun(commands.Cog):
             now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             await emoji.save(rf'{emojipath}{emoji.name}_{now}.png')    
     
-    @commands.command(name='wordcloud', aliases=["wc"])
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def wordcloud(self, ctx, server_or_channel:str, limit:int=100000):
-        byteiowordcloud = BytesIO()
-        messages = []
-        wordlist = []
-        links = r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,10}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
-        async with ctx.typing():
-            if server_or_channel.lower() == 'server':
-                for channel in ctx.guild.text_channels:
-                    async for message in channel.history(limit=limit, oldest_first=True):
-                        # messages.append(message)
-                        wordlist += message.content.split()
-                
-            elif server_or_channel.lower() == 'channel':
-                async for message in ctx.channel.history(limit=limit, oldest_first=True):
-                    # messages.append(message)
-                    wordlist += message.content
-                    with open (r'./cogs/wordlist.txt', 'w') as wordcloudfile:
-                        wordcloudfile.write(wordlist)
-                
-            else:
-                await ctx.reply(f'Specify either "server" or "channel" as the first argument')
-                return
+    @tag_base.error
+    async def tag_base_handeler(self, ctx, error):
+        if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
+            await ctx.guild.create_role(name='Tag')
+            await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Tag'))
             
-            # for word in wordlist:
-            #     if re.match(links, word):
-            #         wordlist.remove(word)
-            
-            # for message in messages:
-            #     # if message.author.bot:
-            #     #     continue
-            #     # sentence = functions.filter(message.content)
-            #     nolinks = re.sub(links, '', message.content)
-            #     wordlist += nolinks.split()
-            
-            # data5 = Counter(wordlist)
-            wordcloud = WordCloud(width=3840, height=2160, colormap='hsv').generate(' '.join(wordlist))
-            # wordcloud = WordCloud(width=3840, height=2160, colormap='hsv').generate_from_frequencies(data5)
-            wordcloudImage = wordcloud.to_image()
-            wordcloudImage.save(byteiowordcloud, format='PNG')
-            byteiowordcloud.seek(0)
-            await ctx.send(file=discord.File(byteiowordcloud, filename='wordcloud.png'))
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.reply('To tag use .,tag @user')
     
+    @commands.command(aliases=["wc"])
+    async def wordcount(self, ctx):
+        await ctx.send("")
     
+async def setup(bot):
+    await bot.add_cog(fun(bot))
+
+
     # @commands.command(aliases=["sc"])
     # @commands.cooldown(1, 5, commands.BucketType.user)
     # async def server_conciousness(self, ctx):
@@ -724,15 +696,50 @@ class fun(commands.Cog):
     #                 messagelist.append(message.content)
     #     # print (messages)
     #     print (messagelist)
-    
-    @tag_base.error
-    async def tag_base_handeler(self, ctx, error):
-        if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
-            await ctx.guild.create_role(name='Tag')
-            await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Tag'))
+
+
+
+    # @commands.command(name='wordcloud', aliases=["wc"])
+    # @commands.cooldown(1, 5, commands.BucketType.user)
+    # async def wordcloud(self, ctx, server_or_channel:str, limit:int=100000):
+    #     byteiowordcloud = BytesIO()
+    #     messages = []
+    #     wordlist = []
+    #     links = r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,10}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
+    #     async with ctx.typing():
+    #         if server_or_channel.lower() == 'server':
+    #             for channel in ctx.guild.text_channels:
+    #                 async for message in channel.history(limit=limit, oldest_first=True):
+    #                     # messages.append(message)
+    #                     wordlist += message.content.split()
+                
+    #         elif server_or_channel.lower() == 'channel':
+    #             async for message in ctx.channel.history(limit=limit, oldest_first=True):
+    #                 # messages.append(message)
+    #                 wordlist += message.content
+    #                 with open (r'./cogs/wordlist.txt', 'w') as wordcloudfile:
+    #                     wordcloudfile.write(wordlist)
+                
+    #         else:
+    #             await ctx.reply(f'Specify either "server" or "channel" as the first argument')
+    #             return
             
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply('To tag use .,tag @user')
+    #         # for word in wordlist:
+    #         #     if re.match(links, word):
+    #         #         wordlist.remove(word)
+            
+    #         # for message in messages:
+    #         #     # if message.author.bot:
+    #         #     #     continue
+    #         #     # sentence = functions.filter(message.content)
+    #         #     nolinks = re.sub(links, '', message.content)
+    #         #     wordlist += nolinks.split()
+            
+    #         # data5 = Counter(wordlist)
+    #         wordcloud = WordCloud(width=3840, height=2160, colormap='hsv').generate(' '.join(wordlist))
+    #         # wordcloud = WordCloud(width=3840, height=2160, colormap='hsv').generate_from_frequencies(data5)
+    #         wordcloudImage = wordcloud.to_image()
+    #         wordcloudImage.save(byteiowordcloud, format='PNG')
+    #         byteiowordcloud.seek(0)
+    #         await ctx.send(file=discord.File(byteiowordcloud, filename='wordcloud.png'))
     
-async def setup(bot):
-    await bot.add_cog(fun(bot))
