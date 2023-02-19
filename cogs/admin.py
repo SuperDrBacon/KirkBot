@@ -27,6 +27,7 @@ class adminCommands(commands.Cog):
             print('Admin module online')
     
     
+    
     @commands.command(aliases=["update"])
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
