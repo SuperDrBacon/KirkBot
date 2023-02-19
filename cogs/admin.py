@@ -31,7 +31,7 @@ class adminCommands(commands.Cog):
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
             try:
-                repo = git.Repo('KirkBot')
+                repo = git.Repo(path)
                 repo.remotes.origin.fetch()
                 commits_behind = repo.iter_commits('master..origin/master')
                 commits_ahead = repo.iter_commits('origin/master..master')
