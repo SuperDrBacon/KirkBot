@@ -1,5 +1,5 @@
-from collections import Counter
 import json
+import sqlite3
 import discord
 import random
 import time
@@ -10,6 +10,7 @@ import re
 import urllib.parse, urllib.request, re
 import cogs.utils.functions as functions
 from io import BytesIO
+from configparser import ConfigParser
 # from wordcloud import WordCloud
 from discord.ext import commands
 from selenium import webdriver
@@ -30,9 +31,13 @@ tagpath = rf'{ospath}/cogs/tag.json'
 imagepath = rf'{ospath}/images/'
 emojipath = rf'{ospath}/emojis/'
 flagpath = rf'{ospath}/cogs/flags.json'
+logdatabase = rf'{ospath}/cogs/log_data.db'
+config = ConfigParser()
+config.read(rf'{ospath}/config.ini')
+command_prefix = config['BOTCONFIG']['prefix']
 high = 0
 delay = 1
-MSG_DEL_DELAY = 2
+MSG_DEL_DELAY = 5
 
 def loadLines():
     with open(kirklinePath, 'r') as f:
@@ -52,7 +57,7 @@ tagInit = {
         }
     ]
 }
-class fun(commands.Cog):
+class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         functions.checkForFile(os.path.dirname(kirklinePath), os.path.basename(kirklinePath))
@@ -355,7 +360,7 @@ class fun(commands.Cog):
                     gcpStatus = 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 95%'
                     colorname = 'blue'
                 else:
-                    color = 'grey'
+                    colorname = 'grey'
                     gcpStatus = 'The Dot is broken!'
             
             except(TimeoutException, InvalidSessionIdException, Exception) as e:
@@ -380,7 +385,7 @@ class fun(commands.Cog):
             embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint)
             embed.set_image(url='attachment://wholechart.png')
             embed.set_thumbnail(url='attachment://gcpdot.png')
-            embed.set_footer(text='Use .,gcp full for an explanation of all the colours.')
+            embed.set_footer(text=f'Use {command_prefix}gcp full for an explanation of all the colours.')
             await ctx.reply(embed=embed, files=pics)
     
     @gcp_dot_base.command(name='full', invoke_without_command=True)
@@ -459,7 +464,7 @@ class fun(commands.Cog):
                     gcpStatus = 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 95%'
                     colorname = 'blue'
                 else:
-                    color = 'grey'
+                    colorname = 'grey'
                     gcpStatus = 'The Dot is broken!'
             
             except(TimeoutException, InvalidSessionIdException, Exception) as e:
@@ -674,14 +679,68 @@ class fun(commands.Cog):
             await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Tag'))
             
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply('To tag use .,tag @user')
+            await ctx.reply(f'To tag use {command_prefix}tag @user')
     
-    @commands.command(aliases=["wc"])
-    async def wordcount(self, ctx):
+    @commands.group(name='wordcount', aliases=["wc"], invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def wordcount_base(self, ctx, member:discord.Member=None, *, word:str=None):
+        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        cur = con.cursor()
+        # lines = [messages[0] for messages in cur.execute(f'SELECT message FROM log_data WHERE server_id = {ctx.guild.id}')]
+        lines = [messages[0] for messages in cur.execute(f'SELECT message FROM log_data')]
+        words = [word for line in lines for word in line.split()]
+        count = dict()
+        for word in words:
+            if word in count:
+                count[word] += 1
+            else:
+                count[word] = 1
+        ranked = sorted(count.items(), key=lambda x: x[1], reverse=True)
+        
+        for i in range(len(ranked)):
+            if ranked[i][0] == 'nigger':
+                await ctx.send(f'{ranked[i][0]}: {ranked[i][1]}')
+        
+        if member is None:
+            await ctx.send(f'1')
+            pass
+        else:
+            await ctx.send(f'2')
+            pass
+        
+        # await ctx.send(f'Word count: {len(words)}')
+        cur.close()
+        con.close()
+    
+    @wordcount_base.error
+    async def wordcount_base_error(self, ctx, error):
+        if isinstance(error, commands.UserInputError):
+            await ctx.reply('The second argument needs to be either empty or @user')
+            ctx._ignore_ = True
+            # await ctx.message.delete(delay=MSG_DEL_DELAY)
+    
+    @wordcount_base.command(name='server', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def wordcount_server(self, ctx, *, word:str=None):
+        await ctx.send('3')
+        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        cur = con.cursor()
+        lines = [messages[0] for messages in cur.execute(f'SELECT message FROM log_data WHERE server_id = {ctx.guild.id} AND WHERE ')]
+        pass
+        
+    
+    @wordcount_base.command(name='channel', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def wordcount_channel(self, ctx, *, word:str=None):
+        await ctx.send('4')
+        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        cur = con.cursor()
+        lines = [messages[0] for messages in cur.execute(f'SELECT message FROM log_data WHERE server_id = {ctx.guild.id}')]
         pass
     
+    
 async def setup(bot):
-    await bot.add_cog(fun(bot))
+    await bot.add_cog(Fun(bot))
 
 
     # @commands.command(aliases=["sc"])
