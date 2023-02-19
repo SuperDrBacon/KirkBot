@@ -36,8 +36,9 @@ class adminCommands(commands.Cog):
             commits_behind = repo.iter_commits('master..origin/master')
             commits_ahead = repo.iter_commits('origin/master..master')
             await ctx.send(f'{len(list(commits_behind))} commits behind, {len(list(commits_ahead))} commits ahead')
-            await ctx.send(f'{list(commits_behind)} commits behind, {list(commits_ahead)} commits ahead')
-            await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead')
+            count1 = sum(1 for c in commits_ahead)
+            count2 = sum(1 for c in commits_behind)
+            await ctx.send(f'{count1} commits behind, {count2} commits ahead')
             
             if len(list(commits_behind)) > 0:
                 repo.remotes.origin.pull()
