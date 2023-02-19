@@ -30,7 +30,10 @@ class adminCommands(commands.Cog):
     @commands.command(aliases=["update"])
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
-            repo = git.Git('KirkBot')
+            try:
+                repo = git.Git('KirkBot')
+            except Exception as e:
+                await ctx.send(f'Error when updating bot: {e}')
             current = repo.head.commit
             
             if current != repo.head.commit:
