@@ -35,20 +35,17 @@ class adminCommands(commands.Cog):
             repo.remotes.origin.fetch()
             commits_behind = len(list(repo.iter_commits('master..origin/master')))
             commits_ahead = len(list(repo.iter_commits('origin/master..master')))
-            bot_msg1 = await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead')
+            bot_msg = await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead')
             
             if commits_behind > 0:
                 repo.remotes.origin.pull()
-                bot_msg2 = await ctx.send('KirkBot local Updated')
+                await bot_msg.edit(content='KirBot local updated')
             elif commits_ahead > 0:
                 repo.remotes.origin.push()
-                bot_msg3 = await ctx.send('KirkBot remote Updated')
+                await bot_msg.edit(content='KirBot remote updated')
             else:
-                bot_msg4 = await ctx.send('KirkBot is already up to date with the remote')
-        await bot_msg1.delete(delay=MSG_DEL_DELAY)
-        await bot_msg2.delete(delay=MSG_DEL_DELAY)
-        await bot_msg3.delete(delay=MSG_DEL_DELAY)
-        await bot_msg4.delete(delay=MSG_DEL_DELAY)
+                await bot_msg.edit(content='KirkBot is already up to date with the remote')
+        await bot_msg.delete(delay=MSG_DEL_DELAY)
 
 
 
