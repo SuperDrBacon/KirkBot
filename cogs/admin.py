@@ -49,6 +49,7 @@ class adminCommands(commands.Cog):
                 bot_msg2 = await ctx.send('KirBot remote updated')
             else:
                 bot_msg2 = await ctx.send('KirkBot is already up to date with the remote')
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
         await bot_msg1.delete(delay=MSG_DEL_DELAY)
         await bot_msg2.delete(delay=MSG_DEL_DELAY)
 
