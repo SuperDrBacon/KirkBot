@@ -33,12 +33,12 @@ class adminCommands(commands.Cog):
         if ctx.author.id == owner_id:
             repo = git.Repo(path)
             repo.remotes.origin.fetch()
-            commits_behind = repo.iter_commits('master..origin/master')
-            commits_ahead = repo.iter_commits('origin/master..master')
-            await ctx.send(f'{len(list(commits_behind))} commits behind, {len(list(commits_ahead))} commits ahead')
+            commits_behind = len(list(repo.iter_commits('master..origin/master')))
+            commits_ahead = len(list(repo.iter_commits('origin/master..master')))
+            await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead')
             
-            print(len(list(commits_behind)))
-            if len(list(commits_behind)) > 0:
+            # print(len(list(commits_behind)))
+            if commits_behind > 0:
                 repo.remotes.origin.pull()
                 await ctx.send('KirkBot local Updated')
             else:
