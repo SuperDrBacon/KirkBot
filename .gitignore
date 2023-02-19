@@ -13,7 +13,7 @@ requirements.txt
 seriouslinks.txt
 seriouschannel.txt
 copypastachannel.txt
-chromedriver.exe
+# chromedriver.exe
 images/final_react.png
 images/final_react.gif
 images/wholechart.png
