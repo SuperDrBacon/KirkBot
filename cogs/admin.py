@@ -52,6 +52,7 @@ class adminCommands(commands.Cog):
 
 
 
+
     # @commands.command()
     # @commands.has_permissions(administrator=True)
     # async def warn(self, ctx, member:discord.Member=None, *, reason=None):
