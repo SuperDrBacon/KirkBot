@@ -13,6 +13,8 @@ config = ConfigParser()
 config.read(rf'{path}/config.ini')
 owner_id = int(config['BOTCONFIG']['ownerid'])
 
+MSG_DEL_DELAY = 3
+
 class MemberRoles(commands.MemberConverter):
     async def convert(self, ctx, argument):
         member = await super().convert(ctx, argument)
@@ -26,8 +28,6 @@ class adminCommands(commands.Cog):
     async def on_ready(self):
             print('Admin module online')
     
-    
-    
     @commands.command(aliases=["update"])
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
@@ -35,21 +35,21 @@ class adminCommands(commands.Cog):
             repo.remotes.origin.fetch()
             commits_behind = len(list(repo.iter_commits('master..origin/master')))
             commits_ahead = len(list(repo.iter_commits('origin/master..master')))
-            await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead')
+            bot_msg1 = await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead')
             
-            # print(len(list(commits_behind)))
             if commits_behind > 0:
                 repo.remotes.origin.pull()
-                await ctx.send('KirkBot local Updated')
+                bot_msg2 = await ctx.send('KirkBot local Updated')
             else:
-                await ctx.send('KirkBot is already up to date with the remote')
+                bot_msg2 = await ctx.send('KirkBot is already up to date with the remote')
             
-            if len(list(commits_ahead)) > 0:
+            if commits_ahead > 0:
                 repo.remotes.origin.push()
-                await ctx.send('KirkBot remote Updated')
+                bot_msg2 = await ctx.send('KirkBot remote Updated')
             else:
-                await ctx.send('Remote is already up to date with the KirkBot')
-
+                bot_msg2 = await ctx.send('Remote is already up to date with the KirkBot')
+        await bot_msg1.delete(delay=MSG_DEL_DELAY)
+        await bot_msg2.delete(delay=MSG_DEL_DELAY)
 
 
     # @commands.command()
