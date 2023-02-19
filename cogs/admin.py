@@ -35,13 +35,12 @@ class adminCommands(commands.Cog):
                     repo = git.Git(path)
                 except Exception as e:
                     await ctx.send(f'Error when updating bot: {e}')
-                current = repo.head.commit
+                repo.remotes.origin.fetch()
+                commits_behind = repo.iter_commits('master..origin/master')
+                commits_ahead = repo.iter_commits('origin/master..master')
+                await ctx.send(f'{len(list(commits_behind))} commits behind, {len(list(commits_ahead))} commits ahead')
                 
-                if current != repo.head.commit:
-                    commits_behind = repo.iter_commits('master..origin/master')
-                    commits_ahead = repo.iter_commits('origin/master..master')
-                    
-                    await ctx.send(f'{len(list(commits_behind))} commits behind, {len(list(commits_ahead))} commits ahead')
+                if len(list(commits_behind)) > 0:
                     repo.remotes.origin.pull()
                     await ctx.send('Kirkbot local Updated')
                 else:
