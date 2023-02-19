@@ -31,10 +31,7 @@ class adminCommands(commands.Cog):
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
             try:
-                try:
-                    repo = git.Git(path)
-                except Exception as e:
-                    await ctx.send(f'Error when updating bot: {e}')
+                repo = git.Git(path)
                 repo.remotes.origin.fetch()
                 commits_behind = repo.iter_commits('master..origin/master')
                 commits_ahead = repo.iter_commits('origin/master..master')
