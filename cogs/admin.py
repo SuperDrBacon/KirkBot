@@ -1,10 +1,17 @@
+import os
+import git
 import datetime
 import discord
 import aiofiles
 import asyncio
+from configparser import ConfigParser
 from discord.ext import commands
 from discord.ext.commands import CheckFailure
 
+path = os.path.abspath(os.getcwd())
+config = ConfigParser()
+config.read(rf'{path}/config.ini')
+owner_id = int(config['BOTCONFIG']['ownerid'])
 
 class MemberRoles(commands.MemberConverter):
     async def convert(self, ctx, argument):
@@ -18,26 +25,44 @@ class adminCommands(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
             print('Admin module online')
+    
+    
+    @commands.command(aliases=["update"])
+    async def update_bot(self, ctx):
+        if ctx.author.id == owner_id:
+            repo = git.Repo(path)
+            current = repo.head.commit
+            
+            if current != repo.head.commit:
+                commits_behind = repo.iter_commits('master..origin/master')
+                commits_ahead = repo.iter_commits('origin/master..master')
+                
+                await ctx.send(f'{len(list(commits_behind))} commits behind, {len(list(commits_ahead))} commits ahead')
+                repo.remotes.origin.pull()
+                await ctx.send('Kirkbot local Updated')
+            else:
+                await ctx.send('Kirkbot is already up to date with the remote')
+    
 
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def warn(self, ctx, member:discord.Member=None, *, reason=None):
-        '''warns a user'''
-        try:
-            first_warning = False
-            commands.warnings[ctx.guild.id][member.id][0] += 1
-            commands.warnings[ctx.guild.id][member.id][1].append((ctx.author.id, reason))
+    # @commands.command()
+    # @commands.has_permissions(administrator=True)
+    # async def warn(self, ctx, member:discord.Member=None, *, reason=None):
+    #     '''warns a user'''
+    #     try:
+    #         first_warning = False
+    #         commands.warnings[ctx.guild.id][member.id][0] += 1
+    #         commands.warnings[ctx.guild.id][member.id][1].append((ctx.author.id, reason))
 
-        except KeyError:
-            first_warning = True
-            commands.warnings[ctx.guild.id][member.id] = [1, [(ctx.author.id, reason)]]
+    #     except KeyError:
+    #         first_warning = True
+    #         commands.warnings[ctx.guild.id][member.id] = [1, [(ctx.author.id, reason)]]
 
-        count = commands.warnings[ctx.guild.id][member.id][0]
+    #     count = commands.warnings[ctx.guild.id][member.id][0]
 
-        with open(f"{ctx.guild.id}.txt", mode="a") as f:
-            f.write(f"{member.id} {ctx.author.id} {reason}\n")
+    #     with open(f"{ctx.guild.id}.txt", mode="a") as f:
+    #         f.write(f"{member.id} {ctx.author.id} {reason}\n")
 
-        await ctx.send(f"{member.mention} has {count} {'warning' if first_warning else 'warnings'}.")
+    #     await ctx.send(f"{member.mention} has {count} {'warning' if first_warning else 'warnings'}.")
 
 
 
