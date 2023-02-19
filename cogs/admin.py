@@ -30,7 +30,7 @@ class adminCommands(commands.Cog):
     @commands.command(aliases=["update"])
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
-            repo = git.Repo(path)
+            repo = git.Git('KirkBot')
             current = repo.head.commit
             
             if current != repo.head.commit:
