@@ -54,6 +54,7 @@ class adminCommands(commands.Cog):
                 await ctx.send('Remote is already up to date with the KirkBot')
 
 
+
     # @commands.command()
     # @commands.has_permissions(administrator=True)
     # async def warn(self, ctx, member:discord.Member=None, *, reason=None):
