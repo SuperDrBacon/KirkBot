@@ -31,20 +31,23 @@ class adminCommands(commands.Cog):
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
             try:
-                repo = git.Git('KirkBot')
+                try:
+                    repo = git.Git(path)
+                except Exception as e:
+                    await ctx.send(f'Error when updating bot: {e}')
+                current = repo.head.commit
+                
+                if current != repo.head.commit:
+                    commits_behind = repo.iter_commits('master..origin/master')
+                    commits_ahead = repo.iter_commits('origin/master..master')
+                    
+                    await ctx.send(f'{len(list(commits_behind))} commits behind, {len(list(commits_ahead))} commits ahead')
+                    repo.remotes.origin.pull()
+                    await ctx.send('Kirkbot local Updated')
+                else:
+                    await ctx.send('Kirkbot is already up to date with the remote')
             except Exception as e:
                 await ctx.send(f'Error when updating bot: {e}')
-            current = repo.head.commit
-            
-            if current != repo.head.commit:
-                commits_behind = repo.iter_commits('master..origin/master')
-                commits_ahead = repo.iter_commits('origin/master..master')
-                
-                await ctx.send(f'{len(list(commits_behind))} commits behind, {len(list(commits_ahead))} commits ahead')
-                repo.remotes.origin.pull()
-                await ctx.send('Kirkbot local Updated')
-            else:
-                await ctx.send('Kirkbot is already up to date with the remote')
     
 
 
