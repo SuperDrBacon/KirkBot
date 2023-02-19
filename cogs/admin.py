@@ -23,7 +23,7 @@ class MemberRoles(commands.MemberConverter):
 class adminCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+    
     @commands.Cog.listener()
     async def on_ready(self):
             print('Admin module online')
@@ -52,8 +52,14 @@ class adminCommands(commands.Cog):
         await ctx.message.delete(delay=MSG_DEL_DELAY)
         await bot_msg1.delete(delay=MSG_DEL_DELAY)
         await bot_msg2.delete(delay=MSG_DEL_DELAY)
-
-
+    
+    @commands.command()
+    async def roles(self, ctx, *, member: MemberRoles):
+        """Tells you a member's roles."""
+        await ctx.send('I see the following roles:``` '+', '.join(member)+'```')
+    
+async def setup(bot):
+    await bot.add_cog(adminCommands(bot))
 
     # @commands.command()
     # @commands.has_permissions(administrator=True)
@@ -87,11 +93,6 @@ class adminCommands(commands.Cog):
     #     memberCount = guild.members.member_count
     #     await ctx.reply(f'```{memberCount}```')
         
-
-    @commands.command()
-    async def roles(self, ctx, *, member: MemberRoles):
-        """Tells you a member's roles."""
-        await ctx.send('I see the following roles:``` '+', '.join(member)+'```')
         
 
     # @commands.command()
@@ -194,8 +195,6 @@ class adminCommands(commands.Cog):
 
 
 
-async def setup(bot):
-    await bot.add_cog(adminCommands(bot))
     
     
     
