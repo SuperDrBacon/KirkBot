@@ -14,7 +14,7 @@ from configparser import ConfigParser
 # from wordcloud import WordCloud
 from discord.ext import commands
 from selenium import webdriver
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -38,6 +38,9 @@ config.read(rf'{ospath}/config.ini')
 command_prefix = config['BOTCONFIG']['prefix']
 high = 0
 delay = 1
+today = date.today()
+log_data_startdate = date(2023, 2, 15)
+daysago = (today - log_data_startdate).days
 MSG_DEL_DELAY = 5
 
 def loadLines():
@@ -738,6 +741,8 @@ class Fun(commands.Cog):
                 embed = discord.Embed(title=f"{display_name}'s use of", color=0x00ff00)
                 count = data['word_counts'].get(input_word, 0)
                 embed.add_field(name=input_word, value=f"Occurrences: {count}", inline=False)
+            
+            embed.set_footer(text=f'Wordcount record {daysago} days old.')
             await ctx.send(embed=embed)
         cur.close()
         con.close()
@@ -803,7 +808,7 @@ class Fun(commands.Cog):
             for i, (word, count) in enumerate(sorted_users[0]['word_counts'].items()):
                 output.append(f"{i+1}. {word}: {count}")
             embed.add_field(name="Top Words", value="\n".join(output))
-
+        embed.set_footer(text=f'Wordcount record {daysago} days old.')
         await ctx.send(embed=embed)
 
         cur.close()
