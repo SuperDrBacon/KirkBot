@@ -718,7 +718,7 @@ class Fun(commands.Cog):
                 # User is not currently in the server but is in the database so we need to get their name from the database
                 cur.execute(f'SELECT username FROM log_data WHERE server_id = {ctx.guild.id} AND user_id = {user_id} ORDER BY id DESC LIMIT 1')
                 result = cur.fetchone()
-                display_name = result[0] if result is not None else f"Unknown User ({user_id})"
+                display_name = result[0] if result is not None else user_id
             
             top_words = sorted(data['word_counts'], key=data['word_counts'].get, reverse=True)[:num_words]
             if input_word is None:
