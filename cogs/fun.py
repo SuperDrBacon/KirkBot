@@ -23,6 +23,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from numpy import interp
+from typing import Union
 from PIL import Image, ImageDraw, ImageColor
 
 ospath = os.path.abspath(os.getcwd())
@@ -683,15 +684,19 @@ class Fun(commands.Cog):
     
     @commands.group(name='wordcount', aliases=["wc"], invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def wordcount_base(self, ctx, member: discord.Member, input_word: str = None):
-        user_id = member.id
+    async def wordcount_base(self, ctx, member: Union[discord.Member, int], input_word: str = None):
+        if isinstance(member, discord.Member):
+            user_id = member.id
+        else:
+            user_id = member
+        
         con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
         cur = con.cursor()
-        cur.execute(f'SELECT user_id, message FROM log_data')
-        usernames_messages = cur.fetchall()
+        cur.execute(f'SELECT user_id, message FROM log_data WHERE server_id = {ctx.guild.id}')
+        userid_messages = cur.fetchall()
         
         grouped = {}
-        for id, value in usernames_messages:
+        for id, value in userid_messages:
             if id not in grouped:
                 grouped[id] = {'id': id, 'words': [], 'word_counts': {}}
             words = value.split()
@@ -702,25 +707,42 @@ class Fun(commands.Cog):
                 else:
                     grouped[id]['word_counts'][word] += 1
         
-        embed = discord.Embed(title="Word Count Results", color=0x00ff00)
-        for id, data in grouped.items():
-            if user_id is not None and id != user_id:
-                continue
-            top_words = sorted(data['word_counts'], key=data['word_counts'].get, reverse=True)[:3]
-            if input_word is not None:
-                top_words = [w for w in top_words if w == input_word]
-            display_name = ctx.guild.get_member(id).display_name
+        num_words = 5
+        if user_id not in grouped:
+            await ctx.send(f"{member} has no recorded messages")
+        else:
+            data = grouped[user_id]
+            try:
+                display_name = ctx.guild.get_member(user_id).display_name
+            except Exception:
+                # User is not currently in the server but is in the database so we need to get their name from the database
+                cur.execute(f'SELECT username FROM log_data WHERE server_id = {ctx.guild.id} AND user_id = {user_id} ORDER BY id DESC LIMIT 1')
+                result = cur.fetchone()
+                display_name = result[0] if result is not None else f"Unknown User ({user_id})"
+            
+            top_words = sorted(data['word_counts'], key=data['word_counts'].get, reverse=True)[:num_words]
             if input_word is None:
-                top_words_str = "\n".join([f"{w}: {data['word_counts'].get(w, 0)}" for w in top_words])
-                embed.add_field(name=display_name, value=f"Top Words:\n{top_words_str}", inline=False)
+                embed = discord.Embed(title=f"Top {num_words} for {display_name}", color=0x00ff00)
+                rank_field = ""
+                word_field = ""
+                count_field = ""
+                for i, word in enumerate(top_words):
+                    count = data['word_counts'].get(word, 0)
+                    rank_field += f"> #{i+1}\n"
+                    word_field += f"> {word}\n"
+                    count_field += f"> {count}\n"
+                embed.add_field(name=f"> Rank", value=rank_field, inline=True)
+                embed.add_field(name=f"> Word", value=word_field, inline=True)
+                embed.add_field(name=f"> Occurrence", value=count_field, inline=True)
             else:
+                embed = discord.Embed(title=f"{display_name}'s use of", color=0x00ff00)
                 count = data['word_counts'].get(input_word, 0)
-                embed.add_field(name=display_name, value=f"Occurrences of '{input_word}': {count}", inline=False)
-        
-        await ctx.send(embed=embed)
-        
+                embed.add_field(name=input_word, value=f"Occurrences: {count}", inline=False)
+            await ctx.send(embed=embed)
         cur.close()
         con.close()
+
+
 
     
     @wordcount_base.error
@@ -736,11 +758,11 @@ class Fun(commands.Cog):
     async def wordcount_server(self, ctx, *, input_word:str=None):
         con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
         cur = con.cursor()
-        cur.execute(f"SELECT user_id, message FROM log_data WHERE server_id = {ctx.guild.id}")
-        usernames_messages = cur.fetchall()
+        cur.execute(f"SELECT username, user_id, message FROM log_data WHERE server_id = {ctx.guild.id}")
+        userid_messages = cur.fetchall()
 
         grouped = {}
-        for user_id, message in usernames_messages:
+        for user_id, message in userid_messages:
             if user_id not in grouped:
                 grouped[user_id] = {'user_id': user_id, 'word_counts': {}}
             words = message.split()
