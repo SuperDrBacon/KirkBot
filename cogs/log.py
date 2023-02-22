@@ -89,16 +89,13 @@ class logger(commands.Cog):
                             now_unix)
                 cur.execute(data_to_inset, data_tuple)
                 con.commit()
-                # cur.execute('SELECT max(id) FROM wordcount_data')
-                # max_id = cur.fetchone()[0]
-                # print("Record inserted successfully into wordcount_data table ", max_id)
+            
             except Exception as error:
                 print("Failed to insert multiple records into sqlite table:", error)
             finally:
                 if con:
                     cur.close()
                     con.close()
-                    # print("The SQLite connection is closed")
         else:
             try:
                 con = sqlite3.connect(f'{path}/cogs/log_data.db')
@@ -129,16 +126,13 @@ class logger(commands.Cog):
                             now_unix)
                 cur.execute(data_to_inset, data_tuple)
                 con.commit()
-                # cur.execute('SELECT max(id) FROM wordcount_data')
-                # max_id = cur.fetchone()[0]
-                # print("Record inserted successfully into wordcount_data table ", max_id)
+            
             except Exception as error:
                 print("Failed to insert multiple records into sqlite table:", error)
             finally:
                 if con:
                     cur.close()
                     con.close()
-                    # print("The SQLite connection is closed")
 
     '''
     Gets all the links in the channel and puts them in a file named the channel name.
@@ -149,64 +143,13 @@ class logger(commands.Cog):
         await ctx.message.delete()
         channelNAME = ctx.channel.name
         messages = await ctx.channel.history(limit=number, oldest_first=True).flatten()
-
+        
         with open(f'{channelNAME}.txt', 'w', encoding='utf-8') as f:
             for message in messages:
                 out = message.content
                 if out.startswith('http'):
                     f.write(out+'\n')
             await ctx.channel.send('Got all messages in channel cause drink nut asked me again')
-    
-    @commands.has_permissions(administrator=True)
-    @getlinksbase.command(name='all', invoke_without_command=True)
-    async def getlinkall(self, ctx):
-        # run through every channel, get all messages
-        channellist = discord.Guild.text_channels
-        threadlist = discord.Guild.threads
-        pass
-
 
 async def setup(bot):
     await bot.add_cog(logger(bot))
-
-    # '''
-    # get all the logged messages and put them in a file. and combine other files to make one big file.
-    # '''
-    # @commands.command(aliases=["up"])
-    # @commands.has_permissions(administrator=True)      
-    # async def update_mesages(self, ctx):
-    #     iserver = 0
-    #     ichannel = 0
-    #     imessage = 0
-    #     before = time.monotonic_ns()
-    #     with open(jsonpath, 'r') as fin:
-    #         file_data = json.load(fin)
-    #     with open(messagestxt, 'w', encoding='utf-8') as messagein:  
-    #         for servers in file_data["servers"]:
-    #             if servers["serverID"] == 123 or servers["serverID"] == 937056927312150599:
-    #                 continue
-    #             iserver += 1
-    #             for channels in servers["channels"]:
-    #                 if channels["channelID"] == 939083691790061601 or channels["channelID"] == 939221538949980210:
-    #                     ichannel += 1
-    #                     for message in channels["messages"]:
-    #                         text = str(message["message"])
-    
-    #                         if text == "[]":
-    #                             continue
-    
-    #                         cleaned = functions.filter(text)
-
-    #                         if not cleaned:
-    #                             continue
-    
-    #                         messagein.write(cleaned+'\n')
-    #                         imessage += 1
-    #     totalLineCount = functions.joinfiles()
-    #     after = (time.monotonic_ns() - before) / 1000000000
-    #     await ctx.send(f'{after}s')
-    #     await ctx.send(f'\n`servers: {iserver}`\n`channels: {ichannel}`\n`messages json: {imessage}`\n`total lines json+genAI: {totalLineCount}`')
-
-    # @commands.command(aliases=["getlink"])
-    # async def getlinks(self, ctx):
-    #     messages = await ctx.channel.history(limit=123).flatten()
