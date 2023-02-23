@@ -24,6 +24,7 @@ from selenium.common.exceptions import InvalidSessionIdException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
+from collections import Counter, defaultdict
 from numpy import interp
 from typing import Union
 from PIL import Image, ImageDraw, ImageColor
@@ -43,6 +44,7 @@ today = date.today()
 log_data_startdate = date(2023, 2, 15)
 daysago = (today - log_data_startdate).days
 MSG_DEL_DELAY = 5
+NUM_OF_RANKED_WORDS = 5
 
 def loadLines():
     with open(kirklinePath, 'r') as f:
@@ -319,7 +321,7 @@ class Fun(commands.Cog):
                     colorname = 'grey'
                 else:
                     intervals = {
-                        (0.0, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%', 'red'),
+                        (0.0, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 1%', 'pink'),
                         (0.01, 0.05): ('#FF1E1E', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%', 'red'),
                         (0.05, 0.08): ('#FFB82E', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
                         (0.08, 0.15): ('#FFD517', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
@@ -398,7 +400,7 @@ class Fun(commands.Cog):
                     colorname = 'grey'
                 else:
                     intervals = {
-                        (0.0, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%', 'red'),
+                        (0.0, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 1%', 'pink'),
                         (0.01, 0.05): ('#FF1E1E', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%', 'red'),
                         (0.05, 0.08): ('#FFB82E', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
                         (0.08, 0.15): ('#FFD517', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
@@ -635,6 +637,67 @@ class Fun(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply(f'To tag use {command_prefix}tag @user')
     
+    # @commands.group(name='wordcount', aliases=["wc"], invoke_without_command=True)
+    # @commands.cooldown(1, 5, commands.BucketType.user)
+    # async def wordcount_base(self, ctx, member:Union[discord.Member, int], input_word: str = None):
+    #     if isinstance(member, discord.Member):
+    #         user_id = member.id
+    #     else:
+    #         user_id = member
+        
+    #     con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+    #     cur = con.cursor()
+    #     cur.execute(f'SELECT user_id, message FROM log_data WHERE server_id = {ctx.guild.id}')
+    #     userid_messages = cur.fetchall()
+        
+    #     grouped = {}
+    #     for id, value in userid_messages:
+    #         if id not in grouped:
+    #             grouped[id] = {'id': id, 'words': [], 'word_counts': {}}
+    #         words = value.split()
+    #         grouped[id]['words'].extend(words)
+    #         for word in words:
+    #             if word not in grouped[id]['word_counts']:
+    #                 grouped[id]['word_counts'][word] = 1
+    #             else:
+    #                 grouped[id]['word_counts'][word] += 1
+        
+    #     if user_id not in grouped:
+    #         await ctx.send(f"{member} has no recorded messages")
+    #     else:
+    #         data = grouped[user_id]
+    #         try:
+    #             display_name = ctx.guild.get_member(user_id).display_name
+    #         except Exception:
+    #             # User is not currently in the server but is in the database so we need to get their name from the database
+    #             cur.execute(f'SELECT username FROM log_data WHERE server_id = {ctx.guild.id} AND user_id = {user_id} ORDER BY id DESC LIMIT 1')
+    #             result = cur.fetchone()
+    #             display_name = result[0] if result is not None else user_id
+            
+    #         top_words = sorted(data['word_counts'], key=data['word_counts'].get, reverse=True)[:NUM_OF_RANKED_WORDS]
+    #         if input_word is None:
+    #             embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} for {display_name}", color=0x00ff00)
+    #             rank_field = ""
+    #             word_field = ""
+    #             count_field = ""
+    #             for i, word in enumerate(top_words):
+    #                 count = data['word_counts'].get(word, 0)
+    #                 rank_field += f"> #{i+1}\n"
+    #                 word_field += f"> {word}\n"
+    #                 count_field += f"> {count}\n"
+    #             embed.add_field(name=f"> Rank", value=rank_field, inline=True)
+    #             embed.add_field(name=f"> Word", value=word_field, inline=True)
+    #             embed.add_field(name=f"> Occurrence", value=count_field, inline=True)
+    #         else:
+    #             embed = discord.Embed(title=f"{display_name}'s use of", color=0x00ff00)
+    #             count = data['word_counts'].get(input_word, 0)
+    #             embed.add_field(name=input_word, value=f"Occurrences: {count}", inline=False)
+            
+    #         embed.set_footer(text=f'Wordcount record {daysago} days old.')
+    #         await ctx.send(embed=embed)
+    #     cur.close()
+    #     con.close()
+    
     @commands.group(name='wordcount', aliases=["wc"], invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_base(self, ctx, member: Union[discord.Member, int], input_word: str = None):
@@ -645,7 +708,148 @@ class Fun(commands.Cog):
         
         con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
         cur = con.cursor()
-        cur.execute(f'SELECT user_id, message FROM log_data WHERE server_id = {ctx.guild.id}')
+        cur.execute('SELECT user_id, message FROM log_data WHERE server_id = ?', (ctx.guild.id,))
+        userid_messages = cur.fetchall()
+        
+        grouped = defaultdict(lambda: {'id': None, 'words': [], 'word_counts': Counter()})
+        for id, value in userid_messages:
+            grouped[id]['id'] = id
+            grouped[id]['words'].extend(value.split())
+            grouped[id]['word_counts'].update(value.split())
+        
+        if user_id not in grouped:
+            await ctx.send(f"{member} has no recorded messages")
+        else:
+            data = grouped[user_id]
+            try:
+                display_name = ctx.guild.get_member(user_id).display_name
+            except Exception:
+                # User is not currently in the server but is in the database so we need to get their name from the database
+                cur.execute('SELECT username FROM log_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, user_id))
+                result = cur.fetchone()
+                display_name = result[0] if result is not None else user_id
+            
+            top_words = [word for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
+            if input_word is None:
+                embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} for {display_name}", color=0x00ff00)
+                embed.add_field(name=f"> Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
+                embed.add_field(name=f"> Word", value='\n'.join(f"> {word}" for word in top_words), inline=True)
+                embed.add_field(name=f"> Occurrence", value='\n'.join(f"> {count}" for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)), inline=True)
+            else:
+                count = data['word_counts'].get(input_word, 0)
+                embed = discord.Embed(title=f"{display_name}'s use of {input_word}", color=0x00ff00)
+                embed.add_field(name=input_word, value=f"Occurrences: {count}", inline=False)
+            embed.set_footer(text=f'Wordcount record {daysago} days old.')
+            await ctx.send(embed=embed)
+        cur.close()
+        con.close()
+
+    @wordcount_base.error
+    async def wordcount_base_error(self, ctx, error):
+        if isinstance(error, commands.UserInputError):
+            msg = await ctx.reply('The second argument needs to be either {[@user] or [ID]}, [server], or [channel]')
+            ctx._ignore_ = True
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            await msg.delete(delay=MSG_DEL_DELAY)
+    
+    # @wordcount_base.command(name='server', invoke_without_command=True)
+    # @commands.cooldown(1, 5, commands.BucketType.user)
+    # async def wordcount_server(self, ctx, *, input_word:str=None, member: Union[discord.Member, int] = None):
+    #     if isinstance(member, discord.Member):
+    #         user_id = member.id
+    #     else:
+    #         user_id = member
+    #     con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+    #     cur = con.cursor()
+    #     cur.execute(f"SELECT user_id, message FROM log_data WHERE server_id = {ctx.guild.id}")
+    #     userid_messages = cur.fetchall()
+        
+    #     grouped = {}
+    #     for id, value in userid_messages:
+    #         if id not in grouped:
+    #             grouped[id] = {'id': id, 'words': [], 'word_counts': {}}
+    #         words = value.split()
+    #         grouped[id]['words'].extend(words)
+    #         for word in words:
+    #             if word not in grouped[id]['word_counts']:
+    #                 grouped[id]['word_counts'][word] = 1
+    #             else:
+    #                 grouped[id]['word_counts'][word] += 1
+        
+    #     if input_word is not None:
+    #         # Get the total word count for the input word for each user
+    #         word_counts = {}
+    #         for user_data in grouped.values():
+    #             word_counts[user_data['id']] = user_data['word_counts'].get(input_word, 0)
+
+    #         # Sort the users by their word count for the input word
+    #         sorted_users = sorted(grouped.values(), key=lambda x: x['word_counts'].get(input_word, 0), reverse=True)
+    #         # Check if the input word exists in the word counts dictionary of at least one user
+    #         if not any(user_data['word_counts'].get(input_word, 0) for user_data in sorted_users):
+    #             await ctx.send(f"No users in this server have used the word '{input_word}'.")
+    #             return
+    #         # Display the top users who used the input word
+    #         embed = discord.Embed(title=f"Word Count for '{input_word}'", color=0x00ff00)
+    #         output = []
+    #         for i in range(min(NUM_OF_RANKED_WORDS, len(sorted_users))):
+    #             user_data = sorted_users[i]
+    #             count = word_counts[user_data['id']]
+    #             if count > 0:
+    #                 user_id = user_data['id']
+    #                 try:
+    #                     display_name = ctx.guild.get_member(user_id).display_name
+    #                 except Exception:
+    #                     # User is not currently in the server but is in the database so we need to get their name from the database
+    #                     cur.execute(f'SELECT username FROM log_data WHERE server_id = {ctx.guild.id} AND user_id = {user_id} ORDER BY id DESC LIMIT 1')
+    #                     result = cur.fetchone()
+    #                     display_name = result[0] if result is not None else user_id
+    #                 output.append(f"{i+1}. {display_name}: {count}")
+    #         embed.add_field(name="Top Users", value="\n".join(output))
+    #     else:
+    #         # Get the total word count for all words for each user
+    #         for user_data in grouped.values():
+    #             user_data['word_count'] = sum(user_data['word_counts'].values())
+
+    #         # Sort the users by their total word count
+    #         sorted_users = sorted(grouped.values(), key=lambda x: x['word_count'], reverse=True)
+
+    #         # Display the top 10 words and their counts
+    #         embed = discord.Embed(title="Word Count", color=0x0000ff)
+    #         output = []
+    #         for i, (word, count) in enumerate(sorted_users[0]['word_counts'].items()):
+    #             if i >= NUM_OF_RANKED_WORDS:
+    #                 break
+    #             output.append(f"{i+1}. {word}: {count}")
+    #         embed.add_field(name="Top Words", value="\n".join(output))
+    #     embed.set_footer(text=f'Wordcount record {daysago} days old.')
+        
+        # if len(output) == 0:
+        #     await ctx.send("No results found.")
+        # else:
+        #     await ctx.send(embed=embed)
+
+        # cur.close()
+        # con.close()
+    
+    @wordcount_base.command(name='channel', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def wordcount_channel(self, ctx, *, word:str=None):
+        await ctx.send('4')
+        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        cur = con.cursor()
+        lines = [messages[0] for messages in cur.execute(f'SELECT message FROM log_data WHERE server_id = {ctx.guild.id}')]
+        pass
+    
+    @wordcount_base.command(name='server', invoke_without_command=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def wordcount_server(self, ctx, *, input_word:str=None, member: Union[discord.Member, int] = None):
+        if isinstance(member, discord.Member):
+            user_id = member.id
+        else:
+            user_id = member
+        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        cur = con.cursor()
+        cur.execute(f"SELECT user_id, message FROM log_data WHERE server_id = {ctx.guild.id}")
         userid_messages = cur.fetchall()
         
         grouped = {}
@@ -660,119 +864,63 @@ class Fun(commands.Cog):
                 else:
                     grouped[id]['word_counts'][word] += 1
         
-        num_words = 5
-        if user_id not in grouped:
-            await ctx.send(f"{member} has no recorded messages")
-        else:
-            data = grouped[user_id]
-            try:
-                display_name = ctx.guild.get_member(user_id).display_name
-            except Exception:
-                # User is not currently in the server but is in the database so we need to get their name from the database
-                cur.execute(f'SELECT username FROM log_data WHERE server_id = {ctx.guild.id} AND user_id = {user_id} ORDER BY id DESC LIMIT 1')
-                result = cur.fetchone()
-                display_name = result[0] if result is not None else user_id
-            
-            top_words = sorted(data['word_counts'], key=data['word_counts'].get, reverse=True)[:num_words]
-            if input_word is None:
-                embed = discord.Embed(title=f"Top {num_words} for {display_name}", color=0x00ff00)
-                rank_field = ""
-                word_field = ""
-                count_field = ""
-                for i, word in enumerate(top_words):
-                    count = data['word_counts'].get(word, 0)
-                    rank_field += f"> #{i+1}\n"
-                    word_field += f"> {word}\n"
-                    count_field += f"> {count}\n"
-                embed.add_field(name=f"> Rank", value=rank_field, inline=True)
-                embed.add_field(name=f"> Word", value=word_field, inline=True)
-                embed.add_field(name=f"> Occurrence", value=count_field, inline=True)
-            else:
-                embed = discord.Embed(title=f"{display_name}'s use of", color=0x00ff00)
-                count = data['word_counts'].get(input_word, 0)
-                embed.add_field(name=input_word, value=f"Occurrences: {count}", inline=False)
-            
-            embed.set_footer(text=f'Wordcount record {daysago} days old.')
-            await ctx.send(embed=embed)
-        cur.close()
-        con.close()
-
-
-
-    
-    @wordcount_base.error
-    async def wordcount_base_error(self, ctx, error):
-        if isinstance(error, commands.UserInputError):
-            msg = await ctx.reply('The second argument needs to be either [@user], [server], or [channel]')
-            ctx._ignore_ = True
-            await ctx.message.delete(delay=MSG_DEL_DELAY)
-            await msg.delete(delay=MSG_DEL_DELAY)
-    
-    @wordcount_base.command(name='server', invoke_without_command=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def wordcount_server(self, ctx, *, input_word:str=None):
-        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
-        cur = con.cursor()
-        cur.execute(f"SELECT username, user_id, message FROM log_data WHERE server_id = {ctx.guild.id}")
-        userid_messages = cur.fetchall()
-
-        grouped = {}
-        for user_id, message in userid_messages:
-            if user_id not in grouped:
-                grouped[user_id] = {'user_id': user_id, 'word_counts': {}}
-            words = message.split()
-            for word in words:
-                if word not in grouped[user_id]['word_counts']:
-                    grouped[user_id]['word_counts'][word] = 1
-                else:
-                    grouped[user_id]['word_counts'][word] += 1
-
         if input_word is not None:
             # Get the total word count for the input word for each user
             word_counts = {}
             for user_data in grouped.values():
-                word_counts[user_data['user_id']] = user_data['word_counts'].get(input_word, 0)
+                word_counts[user_data['id']] = user_data['word_counts'].get(input_word, 0)
 
             # Sort the users by their word count for the input word
             sorted_users = sorted(grouped.values(), key=lambda x: x['word_counts'].get(input_word, 0), reverse=True)
-
-            # Display the top 10 users who used the input word
+            # Check if the input word exists in the word counts dictionary of at least one user
+            if not any(user_data['word_counts'].get(input_word, 0) for user_data in sorted_users):
+                await ctx.send(f"No users in this server have used the word '{input_word}'.")
+                return
+            
+            # Get the index of the member in the sorted user list, if provided
+            member_rank = None
+            if user_id is not None:
+                for i, user_data in enumerate(sorted_users):
+                    if user_data['id'] == user_id:
+                        member_rank = i + 1
+                        break
+            
+            # Display the top users who used the input word
             embed = discord.Embed(title=f"Word Count for '{input_word}'", color=0x00ff00)
             output = []
-            for i, user_data in enumerate(sorted_users[:10]):
-                username = ctx.guild.get_member(user_data['user_id']).display_name
-                count = word_counts[user_data['user_id']]
-                output.append(f"{i+1}. {username}: {count}")
-            embed.add_field(name="Users", value="\n".join(output))
-        else:
-            # Get the total word count for all words for each user
-            for user_data in grouped.values():
-                user_data['word_count'] = sum(user_data['word_counts'].values())
+            for i, user_data in enumerate(sorted_users):
+                if i >= NUM_OF_RANKED_WORDS:
+                    break
+                user_id = user_data['id']
+                try:
+                    display_name = ctx.guild.get_member(user_id).display_name
+                except Exception:
+                    # User is not currently in the server but is in the database so we need to get their name from the database
+                    cur.execute(f'SELECT username FROM log_data WHERE server_id = {ctx.guild.id} AND user_id = {user_id} ORDER BY id DESC LIMIT 1')
+                    result = cur.fetchone()
+                    display_name = result[0] if result is not None else user_id
+                count = word_counts[user_data['id']]
+                output.append(f"{i+1}. {display_name}: {count}")
+                if user_data['id'] == user_id:
+                    output[-1] += " (you)"
+                    member_rank = i + 1
+            embed.add_field(name="Top Users", value="\n".join(output))
 
-            # Sort the users by their total word count
-            sorted_users = sorted(grouped.values(), key=lambda x: x['word_count'], reverse=True)
-
-            # Display the top 10 words and their counts
-            embed = discord.Embed(title="Word Count", color=0x00ff00)
-            output = []
-            for i, (word, count) in enumerate(sorted_users[0]['word_counts'].items()):
-                output.append(f"{i+1}. {word}: {count}")
-            embed.add_field(name="Top Words", value="\n".join(output))
-        embed.set_footer(text=f'Wordcount record {daysago} days old.')
+            if user_id is not None and member_rank is not None:
+                # Find the specified user's rank
+                user_rank = None
+                for i, user_data in enumerate(sorted_users):
+                    if user_data['id'] == user_id:
+                        user_rank = i + 1
+                        break
+                    if user_rank is not None:
+                        await ctx.send(f"{ctx.guild.get_member(user_id).display_name} is ranked #{user_rank} for the word '{input_word}'.")
+                    else:
+                        await ctx.send(f"{ctx.guild.get_member(user_id).display_name} has not used the word '{input_word}'.")
         await ctx.send(embed=embed)
-
         cur.close()
         con.close()
-    
-    @wordcount_base.command(name='channel', invoke_without_command=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def wordcount_channel(self, ctx, *, word:str=None):
-        await ctx.send('4')
-        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
-        cur = con.cursor()
-        lines = [messages[0] for messages in cur.execute(f'SELECT message FROM log_data WHERE server_id = {ctx.guild.id}')]
-        pass
-    
+
     
 async def setup(bot):
     await bot.add_cog(Fun(bot))
