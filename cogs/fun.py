@@ -43,7 +43,7 @@ delay = 1
 today = date.today()
 log_data_startdate = date(2023, 2, 15)
 daysago = (today - log_data_startdate).days
-MSG_DEL_DELAY = 5
+MSG_DEL_DELAY = 10
 NUM_OF_RANKED_WORDS = 5
 
 def loadLines():
@@ -677,7 +677,7 @@ class Fun(commands.Cog):
             
             top_words = [word for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
             if input_word is None:
-                embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} for {display_name}", color=0x00ff00)
+                embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words for {display_name} in {ctx.guild.name}", color=0x00ff00)
                 embed.add_field(name=f"> Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
                 embed.add_field(name=f"> Word", value='\n'.join(f"> {word}" for word in top_words), inline=True)
                 embed.add_field(name=f"> Occurrence", value='\n'.join(f"> {count}" for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)), inline=True)
@@ -693,7 +693,7 @@ class Fun(commands.Cog):
     @wordcount_base.error
     async def wordcount_base_error(self, ctx, error):
         if isinstance(error, commands.UserInputError):
-            msg = await ctx.reply('The second argument needs to be either {[@user] or [ID]}, [server], or [channel]')
+            msg = await ctx.reply('The second argument needs to be either: [`@user` or `ID`]'+f', `server`, or `channel`. Refer to `{command_prefix}help fun wordcount` for details on all the possible commands.')
             ctx._ignore_ = True
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
