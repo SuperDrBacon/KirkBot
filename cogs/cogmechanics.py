@@ -55,31 +55,32 @@ class Cogs(commands.Cog):
     async def reall(self, ctx):
         '''Reloads all modules.'''
         if ctx.author.id == owner_id:
+            msg = await ctx.send("Trying to reload all modules...")
             for filename in os.listdir(os.path.abspath(os.getcwd()) + '/cogs'):
                 if filename.endswith(".py"):
                     name = filename[:-3]
                     try:
                         await self.bot.reload_extension(f"cogs.{name}")
-                        await ctx.send(f"Reloaded module **{name}**")
+                        await msg.edit(content=f"Reloaded module **{name}**")
                     except Exception as e:
-                        print(f"The following module failed...\n\n{e}")
-                        pass
-            await ctx.send("Successfully reloaded all modules")
+                        return print(f"The following module failed...\n\n{e}")
+            await msg.edit(content="Successfully reloaded all modules")
         
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def loadall(self, ctx):
         '''Loads all modules.'''
         if ctx.author.id == owner_id:
+            msg = await ctx.send("Trying to load all modules...")
             for filename in os.listdir(os.path.abspath(os.getcwd()) + '/cogs'):
                 if filename.endswith(".py"):
                     name = filename[:-3]
                     try:
                         await self.bot.load_extension(f"cogs.{name}")
-                        await ctx.send(f"Loaded module **{name}**")
+                        await msg.edit(content=f"Loaded module **{name}**")
                     except Exception as e:
                         return print(f"The following module failed...\n\n{e}")
-            await ctx.send("Successfully loaded all modules")
+            await msg.edit(content="Successfully loaded all modules")
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -94,8 +95,7 @@ class Cogs(commands.Cog):
                         await self.bot.unload_extension(f"cogs.{name}")
                         await message.edit(content=f"unloaded module **{name}**")
                     except Exception as e:
-                        print(f"The following module failed...\n\n{e}")
-                        pass
+                        return print(f"The following module failed...\n\n{e}")
             await message.edit(content="Going offline, goodbye, finally at rest")
             await self.bot.close()
             sys.exit('Bot stopped manually')
