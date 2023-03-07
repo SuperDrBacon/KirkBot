@@ -1,7 +1,5 @@
-from calendar import c
 import os
 import random
-import discord
 import tweepy
 from discord.ext import commands, tasks
 from configparser import ConfigParser

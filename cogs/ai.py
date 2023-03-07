@@ -1,4 +1,3 @@
-from email.mime import base
 import random
 import discord
 import openai

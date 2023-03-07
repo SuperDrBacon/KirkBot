@@ -2,8 +2,6 @@ import random
 import discord
 import asyncio
 import os
-import traceback
-import time
 from discord.ext import commands, tasks
 from configparser import ConfigParser
 from pypresence import Presence 

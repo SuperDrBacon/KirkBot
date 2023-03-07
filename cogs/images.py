@@ -1,5 +1,4 @@
 import asyncio
-import glob
 import os
 import random
 import shutil
@@ -11,11 +10,9 @@ from PIL import ImageFont
 from PIL import ImageDraw
 from PIL import ImageSequence
 from PIL import ImageOps
-from pickletools import optimize
 from configparser import ConfigParser
 from discord.ext import commands
 from io import BytesIO
-from discord import File
 from string import ascii_letters
 from bs4 import BeautifulSoup
 

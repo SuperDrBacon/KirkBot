@@ -1,5 +1,4 @@
 import base64
-import io
 import json
 import sqlite3
 import discord
@@ -9,7 +8,7 @@ import typing
 import asyncio
 import os
 import re
-import urllib.parse, urllib.request, re
+import urllib.parse, urllib.request
 import cogs.utils.functions as functions
 from io import BytesIO, StringIO
 from configparser import ConfigParser

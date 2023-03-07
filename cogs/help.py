@@ -1,4 +1,3 @@
-from ast import alias
 from configparser import ConfigParser
 import os
 import discord

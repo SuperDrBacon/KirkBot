@@ -1,11 +1,8 @@
 import numpy, re
-import shutil
 import os
 import sqlite3
-from functools import partial
 from pathlib import Path
 from urllib import request
-from discord.ext import commands
 
 path = os.path.abspath(os.getcwd())
 
