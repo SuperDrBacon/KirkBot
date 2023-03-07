@@ -7,6 +7,7 @@ kirkai wordmodel_vocab.json
 kirkai wordmodel_config.json
 __pycache__
 
+*.db
 log*
 error.txt
 requirements.txt
@@ -32,6 +33,4 @@ cogs/OHAI_vocab.json
 cogs/OHAI_config.json
 /webpage/
 
-
 .vscode/settings.json
-cogs/old_log_data.db
