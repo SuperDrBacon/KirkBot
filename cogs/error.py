@@ -90,7 +90,7 @@ class Error(commands.Cog):
                 await bot_msg.delete(delay=MSG_DEL_DELAY)
                 print(f'CONSOLE ONLY, COMMAND FAILED: {error}')        
         else:            
-            print(f'CONSOLE ONLY, ALL FAILED: {error}')
+            print(f'CONSOLE ONLY, ALL FAILED: {error} and {traceback.format_exc()}')
 
 async def setup(bot):
     await bot.add_cog(Error(bot))
