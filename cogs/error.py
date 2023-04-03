@@ -10,7 +10,7 @@ config = ConfigParser()
 config.read(rf'{path}/config.ini')
 command_prefix = config['BOTCONFIG']['prefix']
 
-MSG_DEL_DELAY = 8
+MSG_DEL_DELAY = 10
 
 class Error(commands.Cog):
     def __init__(self, bot):
