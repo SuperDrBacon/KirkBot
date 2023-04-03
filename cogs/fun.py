@@ -37,8 +37,7 @@ logdatabase = rf'{ospath}/cogs/log_data.db'
 config = ConfigParser()
 config.read(rf'{ospath}/config.ini')
 command_prefix = config['BOTCONFIG']['prefix']
-high = 0
-delay = 1
+GCP_DELAY = 1
 MSG_DEL_DELAY = 10
 NUM_OF_RANKED_WORDS = 5
 
@@ -296,7 +295,7 @@ class Fun(commands.Cog):
             driver = webdriver.Chrome(options=options)
             driver.set_window_size(1500,750)
             driver.get("https://gcpdot.com/gcpchart.php")
-            time.sleep(delay)
+            time.sleep(GCP_DELAY)
             
             chart_screenshot_base64 = driver.get_screenshot_as_base64()
             chart_file = BytesIO(base64.b64decode(chart_screenshot_base64))
@@ -309,6 +308,7 @@ class Fun(commands.Cog):
                 dot_height = float(dot_height.replace('px', ''))
                 
                 # Map dot height into domain [0.0...1.0] rather than raw css property value
+                high = 0
                 high = interp(float(dot_height), [0, chart_height], [0.0, 1.0])
                 
                 if high == 0:
@@ -317,19 +317,14 @@ class Fun(commands.Cog):
                     colorname = 'grey'
                 else:
                     intervals = {
-                        (0.0, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 1%', 'pink'),
-                        (0.01, 0.05): ('#FF1E1E', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%', 'red'),
-                        (0.05, 0.08): ('#FFB82E', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
-                        (0.08, 0.15): ('#FFD517', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
-                        (0.15, 0.23): ('#FFFA40', 'Slightly increased network variance. Probably chance fluctuation. The index is between 15% and 40%', 'yellow'),
-                        (0.23, 0.30): ('#F9FA00', 'Slightly increased network variance. Probably chance fluctuation. The index is between 15% and 40%', 'yellow'),
-                        (0.30, 0.40): ('#AEFA00', 'Slightly increased network variance. Probably chance fluctuation. The index is between 15% and 40%', 'yellow'),
-                        (0.40, 0.90): ('#64FA64', 'Random network variance. This is average or expected behavior. The index is between 40% and 90%', 'green'),
-                        (0.90, 0.9125): ('#64FAAB', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'teal'),
-                        (0.9125, 0.93): ('#ACF2FF', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'teal'),
-                        (0.93, 0.96): ('#0EEEFF', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'teal'),
-                        (0.96, 0.98): ('#24CBFD', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 96%', 'blue'),
-                        (0.98, 1.0): ('#5655CA', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 96%', 'blue')
+                        (0.00, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 1%', 'pink'),
+                        (0.01, 0.05): ('#FF0000', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is between 1% and 5%', 'red'),
+                        (0.05, 0.10): ('#FFB82E', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 10%', 'orange'),
+                        (0.10, 0.40): ('#FFFA40', 'Slightly increased network variance. Probably chance fluctuation. The index is between 10% and 40%', 'yellow'),
+                        (0.40, 0.90): ('#00FF00', 'Normally random network variance. This is average or expected behavior. The index is between 40% and 90%', 'green'),
+                        (0.90, 0.95): ('#00FFFF', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'cyan'),
+                        (0.95, 0.99): ('#0000FF', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is between 95% and 99%', 'blue'),
+                        (0.99, 1.00): ('#4B0082', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 99%', 'indigo')
                     }
 
                     for interval, (interval_color, interval_status, interval_colorname) in intervals.items():
@@ -375,7 +370,7 @@ class Fun(commands.Cog):
             driver = webdriver.Chrome(options=options)
             driver.set_window_size(1000,500)
             driver.get("https://gcpdot.com/gcpchart.php")
-            time.sleep(delay)
+            time.sleep(GCP_DELAY)
             
             chart_screenshot_base64 = driver.get_screenshot_as_base64()
             chart_file = BytesIO(base64.b64decode(chart_screenshot_base64))
@@ -388,6 +383,7 @@ class Fun(commands.Cog):
                 dot_height = float(dot_height.replace('px', ''))
                 
                 # Map dot height into domain [0.0...1.0] rather than raw css property value
+                high = 0
                 high = interp(float(dot_height), [0, chart_height], [0.0, 1.0])
                 
                 if high == 0:
@@ -396,19 +392,14 @@ class Fun(commands.Cog):
                     colorname = 'grey'
                 else:
                     intervals = {
-                        (0.0, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 1%', 'pink'),
-                        (0.01, 0.05): ('#FF1E1E', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 5%', 'red'),
-                        (0.05, 0.08): ('#FFB82E', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
-                        (0.08, 0.15): ('#FFD517', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 15%', 'orange'),
-                        (0.15, 0.23): ('#FFFA40', 'Slightly increased network variance. Probably chance fluctuation. The index is between 15% and 40%', 'yellow'),
-                        (0.23, 0.30): ('#F9FA00', 'Slightly increased network variance. Probably chance fluctuation. The index is between 15% and 40%', 'yellow'),
-                        (0.30, 0.40): ('#AEFA00', 'Slightly increased network variance. Probably chance fluctuation. The index is between 15% and 40%', 'yellow'),
-                        (0.40, 0.90): ('#64FA64', 'Random network variance. This is average or expected behavior. The index is between 40% and 90%', 'green'),
-                        (0.90, 0.9125): ('#64FAAB', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'teal'),
-                        (0.9125, 0.93): ('#ACF2FF', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'teal'),
-                        (0.93, 0.96): ('#0EEEFF', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'teal'),
-                        (0.96, 0.98): ('#24CBFD', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 96%', 'blue'),
-                        (0.98, 1.0): ('#5655CA', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 96%', 'blue')
+                        (0.00, 0.01): ('#FFA8C0', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is less than 1%', 'pink'),
+                        (0.01, 0.05): ('#FF0000', 'Significantly large network variance. Suggests broadly shared coherence of thought and emotion. The index is between 1% and 5%', 'red'),
+                        (0.05, 0.10): ('#FFB82E', 'Strongly increased network variance. May be chance fluctuation, with the index between 5% and 10%', 'orange'),
+                        (0.10, 0.40): ('#FFFA40', 'Slightly increased network variance. Probably chance fluctuation. The index is between 10% and 40%', 'yellow'),
+                        (0.40, 0.90): ('#00FF00', 'Normally random network variance. This is average or expected behavior. The index is between 40% and 90%', 'green'),
+                        (0.90, 0.95): ('#00FFFF', 'Small network variance. Probably chance fluctuation. The index is between 90% and 95%', 'cyan'),
+                        (0.95, 0.99): ('#0000FF', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is between 95% and 99%', 'blue'),
+                        (0.99, 1.00): ('#4B0082', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 99%', 'indigo')
                     }
                     
                     for interval, (interval_color, interval_status, interval_colorname) in intervals.items():
