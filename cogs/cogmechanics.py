@@ -8,15 +8,17 @@ config = ConfigParser()
 config.read(rf'{path}/config.ini')
 owner_id = int(config['BOTCONFIG']['ownerid'])
 
+MSG_DEL_DELAY = 10
+
 class Cogs(commands.Cog):
     '''This Cogs module is used to load or unload different modules to update the bot without having to take it offline'''
     def __init__(self, bot):
         self.bot = bot
-
+    
     @commands.Cog.listener()
     async def on_ready(self):
             print('Cog loader/unloader/reloader module online')
-
+    
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def load(self, ctx, name: str):
@@ -26,8 +28,10 @@ class Cogs(commands.Cog):
                 await self.bot.load_extension(f"cogs.{name}")
             except Exception as e:
                 return print(f"Error when loading module: {e}")
-            await ctx.send(f"Loaded module **{name}**")
-
+            msg = await ctx.send(f"Loaded module **{name}**")
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            await msg.delete(delay=MSG_DEL_DELAY)
+    
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def un(self, ctx, name: str):
@@ -37,8 +41,10 @@ class Cogs(commands.Cog):
                 await self.bot.unload_extension(f"cogs.{name}")
             except Exception as e:
                 return print(f"Error when unloading module: {e}")
-            await ctx.send(f"Unloaded module **{name}**")
-
+            msg = await ctx.send(f"Unloaded module **{name}**")
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            await msg.delete(delay=MSG_DEL_DELAY)
+    
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def re(self, ctx, name: str):
@@ -48,8 +54,10 @@ class Cogs(commands.Cog):
                 await self.bot.reload_extension(f"cogs.{name}")
             except Exception as e:
                 return print(f"Error when reloading module: {e}")
-            await ctx.send(f"Reloaded module **{name}**")
-
+            msg = await ctx.send(f"Reloaded module **{name}**")
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            await msg.delete(delay=MSG_DEL_DELAY)
+    
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def reall(self, ctx):
@@ -65,7 +73,9 @@ class Cogs(commands.Cog):
                     except Exception as e:
                         return print(f"The following module failed...\n\n{e}")
             await msg.edit(content="Successfully reloaded all modules")
-        
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            await msg.delete(delay=MSG_DEL_DELAY)
+    
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def loadall(self, ctx):
@@ -81,7 +91,9 @@ class Cogs(commands.Cog):
                     except Exception as e:
                         return print(f"The following module failed...\n\n{e}")
             await msg.edit(content="Successfully loaded all modules")
-
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            await msg.delete(delay=MSG_DEL_DELAY)
+    
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
@@ -99,7 +111,6 @@ class Cogs(commands.Cog):
             await message.edit(content="Going offline, goodbye, finally at rest")
             await self.bot.close()
             sys.exit('Bot stopped manually')
-
 
 async def setup(bot):
     await bot.add_cog(Cogs(bot))
