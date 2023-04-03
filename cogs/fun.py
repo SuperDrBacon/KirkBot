@@ -702,7 +702,7 @@ class Fun(commands.Cog):
         cur.execute('SELECT user_id, message FROM log_data WHERE server_id = ?', (ctx.guild.id,))
         userid_messages = cur.fetchall()
         
-        async def getusername(userid):
+        def getusername(userid):
             cur.execute('SELECT username FROM log_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, userid))
             display_name = cur.fetchone()
             return display_name[0]
