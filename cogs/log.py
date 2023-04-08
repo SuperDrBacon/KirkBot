@@ -6,8 +6,8 @@ import cogs.utils.functions as functions
 from discord.ext import commands
 from datetime import datetime, timezone
 
-path = os.path.abspath(os.getcwd())
-log_database = rf'{path}/cogs/log_data.db'
+ospath = os.path.abspath(os.getcwd())
+log_database = rf'{ospath}/cogs/log_data.db'
 
 class logger(commands.Cog):
     def __init__(self, bot): 
@@ -53,7 +53,7 @@ class logger(commands.Cog):
         
         if reply == 1:
             try:
-                con = sqlite3.connect(f'{path}/cogs/log_data.db')
+                con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
                 cur = con.cursor()
                 data_to_inset = '''INSERT INTO log_data(
                             SERVER_NAME,
@@ -98,7 +98,7 @@ class logger(commands.Cog):
                     con.close()
         else:
             try:
-                con = sqlite3.connect(f'{path}/cogs/log_data.db')
+                con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
                 cur = con.cursor()
                 data_to_inset = '''INSERT INTO log_data(
                             SERVER_NAME,
@@ -139,7 +139,7 @@ class logger(commands.Cog):
     '''
     @commands.has_permissions(administrator=True)
     @commands.group(name='getlinks', invoke_without_command=True)
-    async def getlinksbase(self, ctx, number:int):
+    async def getlinksbase(self, ctx, number:int=100000000):
         await ctx.message.delete()
         channelNAME = ctx.channel.name
         messages = await ctx.channel.history(limit=number, oldest_first=True).flatten()
