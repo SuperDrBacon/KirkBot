@@ -7,10 +7,13 @@ from configparser import ConfigParser
 from pypresence import Presence 
 
 
-path = os.path.abspath(os.getcwd())
+ospath = os.path.abspath(os.getcwd())
 info = ConfigParser()
-info.read(rf'{path}/info.ini')
+config = ConfigParser()
+info.read(rf'{ospath}/info.ini')
+config.read(rf'{ospath}/config.ini')
 
+command_prefix = config['BOTCONFIG']['prefix']
 status = info['STATUS']['status']
 activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 
@@ -22,7 +25,11 @@ class setStatus(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Status module online')
-        await self.bot.change_presence(status=status, activity=activity)
+        while True:
+            await self.bot.change_presence(status=status, activity=activity)
+            asyncio.sleep(10)
+            await self.bot.change_presence(status=status, activity=discord.Game(f'{command_prefix}help'))
+            asyncio.sleep(10)
 
     #commands
     @commands.has_permissions(administrator=True)
@@ -62,7 +69,7 @@ class setStatus(commands.Cog):
         
         info.set('STATUS', 'status', statusmessage)
 
-        with open(rf'{path}/info.ini', 'w') as infofile:
+        with open(rf'{ospath}/info.ini', 'w') as infofile:
             info.write(infofile)
         await message.edit(content=f'Updated Status to: {strstatus} {statusmessage}')
         await message.clear_reactions()
