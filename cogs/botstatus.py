@@ -26,9 +26,9 @@ class setStatus(commands.Cog):
     async def on_ready(self):
         print('Status module online')
         while True:
-            await self.bot.change_presence(status=status, activity=activity)
+            await self.bot.change_presence(status=discord.Status.online, activity=activity)
             asyncio.sleep(10)
-            await self.bot.change_presence(status=status, activity=discord.Game(f'{command_prefix}help'))
+            await self.bot.change_presence(status=discord.Status.online, activity=discord.Game(f'{command_prefix}help'))
             asyncio.sleep(10)
 
     #commands
