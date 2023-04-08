@@ -15,7 +15,7 @@ config.read(rf'{ospath}/config.ini')
 
 command_prefix = config['BOTCONFIG']['prefix']
 status = info['STATUS']['status']
-activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+# activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 
 class setStatus(commands.Cog):
     def __init__(self, bot):
@@ -26,9 +26,11 @@ class setStatus(commands.Cog):
     async def on_ready(self):
         print('Status module online')
         while True:
+            activity = discord.Activity(name=status, type=discord.ActivityType.watching)
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
             asyncio.sleep(10)
-            await self.bot.change_presence(status=discord.Status.online, activity=discord.Game(f'{command_prefix}help'))
+            activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
+            await self.bot.change_presence(status=discord.Status.online, activity=activity)
             asyncio.sleep(10)
 
     #commands
