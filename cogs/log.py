@@ -7,12 +7,12 @@ from discord.ext import commands
 from datetime import datetime, timezone
 
 path = os.path.abspath(os.getcwd())
-logdatabase = rf'{path}/cogs/log_data.db'
+log_database = rf'{path}/cogs/log_data.db'
 
 class logger(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
-        functions.checkForFile(os.path.dirname(logdatabase), os.path.basename(logdatabase), True)
+        functions.checkForFile(os.path.dirname(log_database), os.path.basename(log_database), True, 'log')
     
     @commands.Cog.listener()
     async def on_ready(self):
