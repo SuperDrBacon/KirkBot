@@ -731,9 +731,9 @@ class Fun(commands.Cog):
             sorted_users = sorted(user_word_counts.items(), key=lambda x: x[1], reverse=True)
             num_users = min(NUM_OF_RANKED_WORDS, len(sorted_users))
             embed = discord.Embed(title=f"Top {num_users} users who used '{input_word[:128]}' in {ctx.guild.name}", color=0xff0000) #27, 100 guildname
-            embed.add_field(name=f"Rank", value='\n'.join(f"{i+1}" for i in range(num_users)), inline=True)
-            embed.add_field(name=f"User", value='\n'.join(ctx.guild.get_member(user_id).display_name if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
-            embed.add_field(name=f"Occurrence", value='\n'.join(str(count) for user_id, count in sorted_users[:num_users]), inline=True)
+            embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(num_users)), inline=True)
+            embed.add_field(name=f"User", value='\n'.join(f"> {ctx.guild.get_member(user_id).display_name}" if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
+            embed.add_field(name=f"Occurrence", value='\n'.join(f"> {str(count)}" for user_id, count in sorted_users[:num_users]), inline=True)
         
         embed.set_footer(text=f'Wordcount record {daysago()} days old.')
         await ctx.send(embed=embed)
@@ -786,9 +786,9 @@ class Fun(commands.Cog):
             sorted_users = sorted(user_word_counts.items(), key=lambda x: x[1], reverse=True)
             num_users = min(NUM_OF_RANKED_WORDS, len(sorted_users))
             embed = discord.Embed(title=f"Top {num_users} users who used '{input_word[:128]}' in {ctx.channel.name}", color=0x0000ff)
-            embed.add_field(name=f"Rank", value='\n'.join(f"{i+1}" for i in range(num_users)), inline=True)
-            embed.add_field(name=f"User", value='\n'.join(ctx.guild.get_member(user_id).display_name if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
-            embed.add_field(name=f"Occurrence", value='\n'.join(str(count) for user_id, count in sorted_users[:num_users]), inline=True)
+            embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(num_users)), inline=True)
+            embed.add_field(name=f"User", value='\n'.join(f"> {ctx.guild.get_member(user_id).display_name}" if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
+            embed.add_field(name=f"Occurrence", value='\n'.join(f"> {str(count)}" for user_id, count in sorted_users[:num_users]), inline=True)
         
         embed.set_footer(text=f'Wordcount record {daysago()} days old.')
         await ctx.send(embed=embed)
