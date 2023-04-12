@@ -16,7 +16,8 @@ key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
 prefix = config['BOTCONFIG']['prefix']
 openai.api_key = key
-textmodel = 'text-curie-001'
+# textmodel = 'text-curie-001'
+textmodel = 'text-davinci-003'
 
 model_name = 'OHAI'   # change to set file name of resulting trained models/texts
 vocab_path   = os.path.dirname(os.path.realpath(__file__))+'/'+model_name+"_vocab.json"
