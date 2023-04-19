@@ -1,5 +1,7 @@
 import base64
 import json
+import math
+import mpv
 import sqlite3
 import discord
 import random
@@ -10,6 +12,7 @@ import os
 import re
 import urllib.parse, urllib.request
 import cogs.utils.functions as functions
+from multiprocessing import Pool, cpu_count
 from io import BytesIO, StringIO
 from configparser import ConfigParser
 # from wordcloud import WordCloud
@@ -37,6 +40,7 @@ logdatabase = rf'{ospath}/cogs/log_data.db'
 config = ConfigParser()
 config.read(rf'{ospath}/config.ini')
 command_prefix = config['BOTCONFIG']['prefix']
+IMAGE_SIZE = 854, 480
 GCP_DELAY = 1
 MSG_DEL_DELAY = 10
 NUM_OF_RANKED_WORDS = 5
@@ -795,6 +799,22 @@ class Fun(commands.Cog):
         cur.close()
         con.close()
     
+    @commands.command(aliases=["fish"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def fishtank_monitor(self, ctx):
+        streams = ['https://d27j2syygqshcy.cloudfront.net/live/bedroom-1/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/bedroom-2/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/bedroom-3/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/bedroom-4/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/living-room/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/kitchen/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/laundry-room/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/garage/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/hallway-upstairs/chunks.m3u8',
+                'https://d27j2syygqshcy.cloudfront.net/live/hallway-downstairs/chunks.m3u8']
+        
+        streams_matrix = mpv_screenshots(streams)
+        await ctx.reply(file=discord.File(streams_matrix, 'fishtank_monitor.jpg'))
     
 async def setup(bot):
     await bot.add_cog(Fun(bot))
@@ -809,6 +829,36 @@ def daysago():
     time_since = current_time - timestamp
     days_since = time_since.days
     return days_since
+
+def mpv_screenshot(stream):
+    player = mpv.MPV(screenshot_format='jpeg', vo='null', hwdec='yes', screenshot_sw='yes')
+    player.play(stream)
+    player.wait_until_playing()
+    screenshot = player.screenshot_raw()
+    player.terminate()
+    return screenshot
+
+def mpv_screenshots(streams):
+    streams_matrix = BytesIO()
+    count = len(streams)
+    srw = math.ceil(math.sqrt(count))
+    result_image = Image.new('RGB', (IMAGE_SIZE[0] * srw, IMAGE_SIZE[1] * (srw-1)))
+    
+    with Pool(cpu_count()//2) as pool:
+        screenshots = pool.map(mpv_screenshot, streams)
+    
+    for i, screenshot in enumerate(screenshots):
+        screenshot.thumbnail(IMAGE_SIZE, Image.Resampling.LANCZOS)
+        result_image.paste(screenshot, (IMAGE_SIZE[0] * (i % srw), IMAGE_SIZE[1] * (i // srw)))
+        result_image.save(streams_matrix, format='JPeG', quality=100)
+        streams_matrix.seek(0)
+    
+    return streams_matrix
+
+
+
+
+
 
 
     # @commands.command(aliases=["sc"])
