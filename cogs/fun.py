@@ -799,22 +799,22 @@ class Fun(commands.Cog):
         cur.close()
         con.close()
     
-    @commands.command(aliases=["fish"])
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def fishtank_monitor(self, ctx):
-        streams = ['https://d27j2syygqshcy.cloudfront.net/live/bedroom-1/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/bedroom-2/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/bedroom-3/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/bedroom-4/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/living-room/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/kitchen/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/laundry-room/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/garage/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/hallway-upstairs/chunks.m3u8',
-                'https://d27j2syygqshcy.cloudfront.net/live/hallway-downstairs/chunks.m3u8']
+    # @commands.command(aliases=["fish"])
+    # @commands.cooldown(1, 5, commands.BucketType.user)
+    # async def fishtank_monitor(self, ctx):
+    #     streams = ['https://d27j2syygqshcy.cloudfront.net/live/bedroom-1/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/bedroom-2/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/bedroom-3/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/bedroom-4/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/living-room/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/kitchen/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/laundry-room/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/garage/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/hallway-upstairs/chunks.m3u8',
+    #             'https://d27j2syygqshcy.cloudfront.net/live/hallway-downstairs/chunks.m3u8']
         
-        streams_matrix = mpv_screenshots(streams)
-        await ctx.reply(file=discord.File(streams_matrix, 'fishtank_monitor.jpg'))
+    #     streams_matrix = mpv_screenshots(streams)
+    #     await ctx.reply(file=discord.File(streams_matrix, 'fishtank_monitor.jpg'))
     
 async def setup(bot):
     await bot.add_cog(Fun(bot))
