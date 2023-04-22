@@ -1,7 +1,7 @@
 [![github](https://img.shields.io/github/stars/freeCodeCamp/freeCodeCamp.svg)]()
 
 # KirkBot
-![](KirkBot describes itself.gif)
+![](KirkBot_describes_itself.gif)
 
 ## to do list
 - [ ] make it work
