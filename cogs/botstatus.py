@@ -25,13 +25,14 @@ class setStatus(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Status module online')
-        # while True:
-        #     activity = discord.Activity(name=status, type=discord.ActivityType.watching)
-        #     await self.bot.change_presence(status=discord.Status.online, activity=activity)
-        #     asyncio.sleep(10)
-        #     activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
-        #     await self.bot.change_presence(status=discord.Status.online, activity=activity)
-        #     asyncio.sleep(10)
+        while not self.bot.is_closed():
+            activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+            await self.bot.change_presence(status=discord.Status.online, activity=activity)
+            asyncio.sleep(20)
+            
+            activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
+            await self.bot.change_presence(status=discord.Status.online, activity=activity)
+            asyncio.sleep(10)
 
     #commands
     @commands.has_permissions(administrator=True)
@@ -79,13 +80,13 @@ class setStatus(commands.Cog):
 async def setup(bot):
     await bot.add_cog(setStatus(bot))
 
-async def change_presence(self):
-    print('Waiting to start change_presence')
-    await self.bot.wait_until_ready()
-    print('change_presence started')
+# async def change_presence(self):
+#     print('Waiting to start change_presence')
+#     await self.bot.wait_until_ready()
+#     print('change_presence started')
 
-    statuses = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    while not self.bot.is_closed():
-        status = random.choice(statuses)
-        await self.bot.change_presence(activity=discord.Game(name=status))
-        await asyncio.sleep(10)
+#     statuses = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+#     while not self.bot.is_closed():
+#         status = random.choice(statuses)
+#         await self.bot.change_presence(activity=discord.Game(name=status))
+#         await asyncio.sleep(10)
