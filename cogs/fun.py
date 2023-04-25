@@ -721,7 +721,7 @@ class Fun(commands.Cog):
             top_words = [word for word, count in sorted_users[0]['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
             embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words in {ctx.guild.name}", color=0xff0000)
             embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
-            embed.add_field(name=f"Word", value='\n'.join(f"> {word[:50]}" for word in top_words), inline=True)
+            embed.add_field(name=f"Word", value='\n'.join(f"> {word[:30]}" for word in top_words), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {total_counts[word]}" for word in top_words), inline=True)
         
         else:
@@ -776,7 +776,7 @@ class Fun(commands.Cog):
             top_words = [word for word, count in sorted_users[0]['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
             embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words in {ctx.channel.name}", color=0x0000ff)
             embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
-            embed.add_field(name=f"Word", value='\n'.join(f"> {word[:50]}" for word in top_words), inline=True)
+            embed.add_field(name=f"Word", value='\n'.join(f"> {word[:30]}" for word in top_words), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {total_counts[word]}" for word in top_words), inline=True)
         
         else:
