@@ -21,26 +21,16 @@ started_tasks = []
 class setStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        taskLoop(self)
+        self.status_updater.start()
+    
+    def cog_unload(self):
+        self.status_updater.cancel()
 
     #events
     @commands.Cog.listener()
     async def on_ready(self):
-        # await taskLoop(self)
         print('Status module online')
-        # while not self.bot.is_closed():
-        #     activity = discord.Activity(name=status, type=discord.ActivityType.watching)
-        #     await self.bot.change_presence(status=discord.Status.online, activity=activity)
-        #     await asyncio.sleep(10)
-            
-        #     activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
-        #     await self.bot.change_presence(status=discord.Status.online, activity=activity)
-        #     await asyncio.sleep(10)
-            
-            # activity = discord.Activity(name=f'{command_prefix}help', type=discord.Game(name=f'{command_prefix}help'))
-            # await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            # await asyncio.sleep(10)
-
+    
     #commands
     @commands.has_permissions(administrator=True)
     @commands.group(name='botstatus', invoke_without_command=True)
@@ -84,46 +74,20 @@ class setStatus(commands.Cog):
         await message.edit(content=f'Updated Status to: {strstatus} {statusmessage}')
         await message.clear_reactions()
     
-    @commands.command(aliases=["loop1"])
-    async def loop_task_one(self, ctx, *, restinput):
-        # await ctx.send("")
-        # task_generator(ctx, restinput)
-        await taskLoop(ctx, restinput)
-
-async def setup(bot):
-    await bot.add_cog(setStatus(bot))
-
-async def say_1_loop(restinput):
-    print(restinput)
-
-
-async def say_2_loop():
-    print('2')
-
-
-def task_generator(ctx, restinput):
-    t = tasks.loop(seconds=3)(say_1_loop)
-    started_tasks.append(t)
-    t.start(ctx, restinput) 
-
-@tasks.loop(seconds=10)
-async def taskLoop(self):
-    activity = discord.Activity(name=status, type=discord.ActivityType.watching)
-    await self.bot.change_presence(status=discord.Status.online, activity=activity)
-    await asyncio.sleep(10)
+    @tasks.loop()
+    async def status_updater(self):
+        activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        await asyncio.sleep(10)
+        
+        activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
+        await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        await asyncio.sleep(10)
     
-    activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
-    await self.bot.change_presence(status=discord.Status.online, activity=activity)
-    await asyncio.sleep(10)
+    @status_updater.after_loop
+    async def after_status_updater(self):
+        pass
     
-
-# async def change_presence(self):
-#     print('Waiting to start change_presence')
-#     await self.bot.wait_until_ready()
-#     print('change_presence started')
-
-#     statuses = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-#     while not self.bot.is_closed():
-#         status = random.choice(statuses)
-#         await self.bot.change_presence(activity=discord.Game(name=status))
-#         await asyncio.sleep(10)
+    @status_updater.before_loop
+    async def before_status_updater(self):
+        await self.bot.wait_until_ready()
