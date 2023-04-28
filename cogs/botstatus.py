@@ -91,3 +91,6 @@ class setStatus(commands.Cog):
     @status_updater.before_loop
     async def before_status_updater(self):
         await self.bot.wait_until_ready()
+
+async def setup(bot):
+    await bot.add_cog(setStatus(bot))
