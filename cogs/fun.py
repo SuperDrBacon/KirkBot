@@ -670,7 +670,7 @@ class Fun(commands.Cog):
             if input_word is None:
                 embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words for {display_name} in {ctx.guild.name}", color=0x00ff00)
                 embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
-                embed.add_field(name=f"Word", value='\n'.join(f"> {word}" for word in top_words), inline=True)
+                embed.add_field(name=f"Word", value='\n'.join(f"> {word[:30]}" for word in top_words), inline=True)
                 embed.add_field(name=f"Occurrence", value='\n'.join(f"> {count}" for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)), inline=True)
             else:
                 count = data['word_counts'].get(input_word, 0)
