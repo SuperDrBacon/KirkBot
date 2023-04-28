@@ -16,6 +16,7 @@ config.read(rf'{ospath}/config.ini')
 command_prefix = config['BOTCONFIG']['prefix']
 status = info['STATUS']['status']
 activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+started_tasks = []
 
 class setStatus(commands.Cog):
     def __init__(self, bot):
@@ -24,15 +25,20 @@ class setStatus(commands.Cog):
     #events
     @commands.Cog.listener()
     async def on_ready(self):
+        # await taskLoop('loop')
         print('Status module online')
         while not self.bot.is_closed():
             activity = discord.Activity(name=status, type=discord.ActivityType.watching)
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            asyncio.sleep(20)
+            await asyncio.sleep(10)
             
             activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            asyncio.sleep(10)
+            await asyncio.sleep(10)
+            
+            activity = discord.Activity(name=f'{command_prefix}help', type=discord.Game(name=f'{command_prefix}help'))
+            await self.bot.change_presence(status=discord.Status.online, activity=activity)
+            await asyncio.sleep(10)
 
     #commands
     @commands.has_permissions(administrator=True)
@@ -76,9 +82,33 @@ class setStatus(commands.Cog):
             info.write(infofile)
         await message.edit(content=f'Updated Status to: {strstatus} {statusmessage}')
         await message.clear_reactions()
+    
+    @commands.command(aliases=["loop1"])
+    async def loop_task_one(self, ctx, *, restinput):
+        # await ctx.send("")
+        # task_generator(ctx, restinput)
+        await taskLoop(ctx, restinput)
 
 async def setup(bot):
     await bot.add_cog(setStatus(bot))
+
+async def say_1_loop(restinput):
+    print(restinput)
+
+
+async def say_2_loop():
+    print('2')
+
+
+def task_generator(ctx, restinput):
+    t = tasks.loop(seconds=3)(say_1_loop)
+    started_tasks.append(t)
+    t.start(ctx, restinput) 
+
+@tasks.loop(seconds=10)
+async def taskLoop(ctx, something):
+
+    print(something)
 
 # async def change_presence(self):
 #     print('Waiting to start change_presence')
