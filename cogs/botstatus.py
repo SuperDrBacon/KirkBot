@@ -21,11 +21,12 @@ started_tasks = []
 class setStatus(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        taskLoop(self)
 
     #events
     @commands.Cog.listener()
     async def on_ready(self):
-        await taskLoop(self)
+        # await taskLoop(self)
         print('Status module online')
         # while not self.bot.is_closed():
         #     activity = discord.Activity(name=status, type=discord.ActivityType.watching)
