@@ -25,20 +25,20 @@ class setStatus(commands.Cog):
     #events
     @commands.Cog.listener()
     async def on_ready(self):
-        # await taskLoop('loop')
+        await taskLoop(self)
         print('Status module online')
-        while not self.bot.is_closed():
-            activity = discord.Activity(name=status, type=discord.ActivityType.watching)
-            await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            await asyncio.sleep(10)
+        # while not self.bot.is_closed():
+        #     activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+        #     await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        #     await asyncio.sleep(10)
             
-            activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
-            await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            await asyncio.sleep(10)
+        #     activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
+        #     await self.bot.change_presence(status=discord.Status.online, activity=activity)
+        #     await asyncio.sleep(10)
             
-            activity = discord.Activity(name=f'{command_prefix}help', type=discord.Game(name=f'{command_prefix}help'))
-            await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            await asyncio.sleep(10)
+            # activity = discord.Activity(name=f'{command_prefix}help', type=discord.Game(name=f'{command_prefix}help'))
+            # await self.bot.change_presence(status=discord.Status.online, activity=activity)
+            # await asyncio.sleep(10)
 
     #commands
     @commands.has_permissions(administrator=True)
@@ -106,9 +106,15 @@ def task_generator(ctx, restinput):
     t.start(ctx, restinput) 
 
 @tasks.loop(seconds=10)
-async def taskLoop(ctx, something):
-
-    print(something)
+async def taskLoop(self):
+    activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+    await self.bot.change_presence(status=discord.Status.online, activity=activity)
+    await asyncio.sleep(10)
+    
+    activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
+    await self.bot.change_presence(status=discord.Status.online, activity=activity)
+    await asyncio.sleep(10)
+    
 
 # async def change_presence(self):
 #     print('Waiting to start change_presence')
