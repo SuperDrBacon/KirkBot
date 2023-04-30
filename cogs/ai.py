@@ -16,8 +16,8 @@ key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
 prefix = config['BOTCONFIG']['prefix']
 openai.api_key = key
-# textmodel = 'text-curie-001'
-textmodel = 'text-davinci-003'
+textmodel = 'text-curie-001'
+# textmodel = 'text-davinci-003'
 
 model_name = 'OHAI'   # change to set file name of resulting trained models/texts
 vocab_path   = os.path.dirname(os.path.realpath(__file__))+'/'+model_name+"_vocab.json"
@@ -178,6 +178,11 @@ class Ai(commands.Cog):
             out = response.choices[0].text
             await ctx.reply(out)
             # await ctx.reply('Yea uuh another trial ran out and no online phone number works so I can\'t make a new account')
+    
+    @commands.command(aliases=["gen"])
+    async def image_gen(self, ctx, text:str='', number:int=0):
+        
+        await ctx.send(f"text: {text}\nnumber: {number}")
 
     # @commands.has_permissions(administrator=True)
     # @commands.command(aliases=["rtai"])
