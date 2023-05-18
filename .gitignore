@@ -14,6 +14,7 @@ requirements.txt
 seriouslinks.txt
 seriouschannel.txt
 copypastachannel.txt
+*_database-text.txt
 # chromedriver.exe
 images/final_react.png
 images/final_react.gif

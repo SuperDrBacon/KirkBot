@@ -1,16 +1,19 @@
+import datetime
 import random
 import discord
+import markovify
 import openai
+import sqlite3
 import os
-from os import path
 import re
-# from textgenrnn import textgenrnn
+import spacy
+from os import path
 from discord.ext import commands
 from configparser import ConfigParser
 
-path = os.path.abspath(os.getcwd())
+ospath = os.path.abspath(os.getcwd())
 config = ConfigParser()
-config.read(rf'{path}/config.ini')
+config.read(rf'{ospath}/config.ini')
 
 key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
@@ -19,20 +22,14 @@ openai.api_key = key
 textmodel = 'text-curie-001'
 # textmodel = 'text-davinci-003'
 
-model_name = 'OHAI'   # change to set file name of resulting trained models/texts
-vocab_path   = os.path.dirname(os.path.realpath(__file__))+'/'+model_name+"_vocab.json"
-config_path  = os.path.dirname(os.path.realpath(__file__))+'/'+model_name+"_config.json"
-weights_path = os.path.dirname(os.path.realpath(__file__))+'/'+model_name+"_weights.hdf5"
+nlp = spacy.load("en_core_web_sm")
+date = datetime.datetime.now().strftime("%Y-%m-%d")
 
-temperature = 1.4
-n = 1
-max_gen_length = 50
-# textgen = textgenrnn(config_path=config_path,
-#                     weights_path=weights_path,
-#                     vocab_path=vocab_path)
+MIN_WORDS = 5
+MAX_WORDS = 100
+TRIES = 1000
+STATE_SIZE = 3
 
-
-# messagecount = 0
 class Ai(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -50,16 +47,22 @@ class Ai(commands.Cog):
         if ctx.author.bot:
             return
         if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
-            # at = r'<.*?>'
-            # prefix = re.sub(at, '', prefix)
-            # response = textgen.generate(temperature=temperature, prefix=prefix, n=n, max_gen_length=max_gen_length, return_as_list=True)
-            # out = response[0]
-            # out2 = out[len(prefix):]
-            # await ctx.reply(out2)
-            # return
-            await ctx.reply('@ the bot is currently not a command use .,ai for ai.')
-
-
+            guild_id = ctx.guild.id
+            channel_id = ctx.channel.id
+            
+            con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+            con.row_factory = lambda cursor, row: row[0]
+            cur = con.cursor()
+            text = cur.execute('SELECT message FROM log_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
+            corpus = ' '.join(' '.join(line.split()) for line in text)
+            
+            model = markovify.Text(corpus, state_size=STATE_SIZE)
+            text = model.make_sentence(min_words=MIN_WORDS, max_words=MAX_WORDS, tries=TRIES)
+            if text is None:
+                text = model.make_sentence(min_words=MIN_WORDS-5, max_words=MAX_WORDS+50, tries=TRIES*2)
+            await ctx.reply(text)
+            
+            # await ctx.reply('@ the bot is currently not a command use .,ai for ai.')
 
         if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(botID):
             base = ctx.reference.resolved.content
@@ -150,16 +153,6 @@ class Ai(commands.Cog):
             else:
                 await ctx.reply(out)
 
-
-        # global messagecount
-        # messagecount += 1
-        # if messagecount == 15:
-        #     response = textgen.generate(temperature=temperature, n=n, max_gen_length=max_gen_length, return_as_list=True)
-        #     await ctx.channel.send(response[0])
-        #     messagecount = 0
-        #     return
-
-
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def ai(self, ctx, *, message):
@@ -183,86 +176,6 @@ class Ai(commands.Cog):
     async def image_gen(self, ctx, text:str='', number:int=0):
         
         await ctx.send(f"text: {text}\nnumber: {number}")
-
-    # @commands.has_permissions(administrator=True)
-    # @commands.command(aliases=["rtai"])
-    # async def updateAIwithtrain(self, ctx):
-    #     model_cfg = {
-    #         'word_level': True,   # set to True if want to train a word-level model (requires more data and smaller max_length)
-    #         'rnn_size': 256,   # number of LSTM cells of each layer (128/256 recommended)
-    #         'rnn_layers': 10,   # number of LSTM layers (>=2 recommended)
-    #         'rnn_bidirectional': True,   # consider text both forwards and backward, can give a training boost
-    #         'max_length': 8,   # number of tokens to consider before predicting the next (20-40 for characters, 5-10 for words recommended)
-    #         'max_words': 100000,   # maximum number of words to model; the rest will be ignored (word-level model only)
-    #     }
-    #     train_cfg = {
-    #         'line_delimited': True,   # set to True if each text has its own line in the source file
-    #         'num_epochs': 4,   # set higher to train the model for longer
-    #         'gen_epochs': 0,   # generates sample text from model after given number of epochs
-    #         'train_size': 5.0,   # proportion of input data to train on: setting < 1.0 limits model from learning perfectly
-    #         'dropout': 0.2,   # ignore a random proportion of source tokens each epoch, allowing model to generalize better
-    #         'validation': False,   # If train__size < 1.0, test on holdout dataset; will make overall training slower
-    #         'is_csv': False   # set to True if file is a CSV exported from Excel/BigQuery/pandas
-    #     }
-    #     file_name = os.path.abspath(os.getcwd())+'/messages.txt'
-    #     dim_embeddings = 200
-    #     batch_size = 256
-    #     max_gen_length = 500
-    #     await ctx.send(f"training for {train_cfg['num_epochs']} epochs")
-        
-    #     if not path.exists(weights_path):
-    #         print('not file')
-    #         textgen = textgenrnn(name=model_name)
-    #         textgen.reset()
-    #         train_function = textgen.train_from_file(
-    #             new_model=True,
-    #             dim_embeddings=dim_embeddings,
-    #             batch_size=batch_size,
-    #             max_gen_length=max_gen_length,
-    #             file_path=file_name,
-    #             vocab_path=vocab_path,
-    #             weights_path=weights_path,
-    #             num_epochs=train_cfg['num_epochs'],
-    #             gen_epochs=train_cfg['gen_epochs'],
-    #             train_size=train_cfg['train_size'],
-    #             dropout=train_cfg['dropout'],
-    #             validation=train_cfg['validation'],
-    #             is_csv=train_cfg['is_csv'],
-    #             rnn_layers=model_cfg['rnn_layers'],
-    #             rnn_size=model_cfg['rnn_size'],
-    #             rnn_bidirectional=model_cfg['rnn_bidirectional'],
-    #             max_length=model_cfg['max_length'],
-    #             word_level=model_cfg['word_level']
-    #             )
-    #         print(textgen.model.summary())
-    #     else:
-    #         print('wel file')
-    #         textgen = textgenrnn(name=model_name,
-    #                             config_path=config_path, 
-    #                             weights_path=weights_path,
-    #                             vocab_path=vocab_path)
-
-    #         train_function = textgen.train_from_file(
-    #             new_model=False,
-    #             dim_embeddings=dim_embeddings,
-    #             batch_size=batch_size,
-    #             max_gen_length=max_gen_length,
-    #             file_path=file_name,
-    #             vocab_path=vocab_path,
-    #             weights_path=weights_path,
-    #             num_epochs=train_cfg['num_epochs'],
-    #             gen_epochs=train_cfg['gen_epochs'],
-    #             train_size=train_cfg['train_size'],
-    #             dropout=train_cfg['dropout'],
-    #             validation=train_cfg['validation'],
-    #             is_csv=train_cfg['is_csv'],
-    #             rnn_layers=model_cfg['rnn_layers'],
-    #             rnn_size=model_cfg['rnn_size'],
-    #             rnn_bidirectional=model_cfg['rnn_bidirectional'],
-    #             max_length=model_cfg['max_length'],
-    #             word_level=model_cfg['word_level']
-    #             )
-    #         print(textgen.model.summary())
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))
