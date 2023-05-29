@@ -85,28 +85,28 @@ class Ai(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        if ctx.author.bot:
+        # if ctx.author.bot:
             # if ctx.user.id == 974297735559806986 and random.randint(0,3) == 1: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
-            if ctx.user.id == 974297735559806986: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
-                guild_id = ctx.guild.id	
-                channel_id = ctx.channel.id
-                con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
-                con.row_factory = lambda cursor, row: row[0]
-                cur = con.cursor()
-                text = cur.execute('SELECT message FROM log_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
-                
-                corpus = ' '.join(' '.join(line.split()) for line in text)
-                
-                chain = MarkovChain(order=4)
-                chain.add_text(corpus)
-                chain.calculate_word_weights()
-                
-                # Generating text using the generator function
-                generated_text_generator = chain.generate_text_incremental(text_word_count=30)
-                generated_text = ' '.join(word for word in generated_text_generator)
-                await ctx.reply(generated_text)
-            else:
-                return
+        if ctx.user.id == 974297735559806986: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
+            guild_id = ctx.guild.id	
+            channel_id = ctx.channel.id
+            con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+            con.row_factory = lambda cursor, row: row[0]
+            cur = con.cursor()
+            text = cur.execute('SELECT message FROM log_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
+            
+            corpus = ' '.join(' '.join(line.split()) for line in text)
+            
+            chain = MarkovChain(order=4)
+            chain.add_text(corpus)
+            chain.calculate_word_weights()
+            
+            # Generating text using the generator function
+            generated_text_generator = chain.generate_text_incremental(text_word_count=30)
+            generated_text = ' '.join(word for word in generated_text_generator)
+            await ctx.reply(generated_text)
+        else:
+            return
         
         if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
             guild_id = ctx.guild.id	
