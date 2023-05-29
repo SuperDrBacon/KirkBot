@@ -86,7 +86,8 @@ class Ai(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, ctx):
         if ctx.author.bot:
-            if ctx.user.id == 974297735559806986 and random.randint(0,3) == 1: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
+            # if ctx.user.id == 974297735559806986 and random.randint(0,3) == 1: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
+            if ctx.user.id == 974297735559806986: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
                 guild_id = ctx.guild.id	
                 channel_id = ctx.channel.id
                 con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
