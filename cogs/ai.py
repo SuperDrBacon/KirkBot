@@ -172,7 +172,7 @@ class Ai(commands.Cog):
                 presence_penalty=0.2,
                 # stop=["."]
             )
-            out = response.choices[0].text
+            out = response.choices[0].text[:2000]
             await ctx.reply(out)
             # await ctx.reply('Yea uuh another free trial ran out')
 
