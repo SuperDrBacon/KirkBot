@@ -105,8 +105,6 @@ class Ai(commands.Cog):
             generated_text_generator = chain.generate_text_incremental(text_word_count=30)
             generated_text = ' '.join(word for word in generated_text_generator)
             await ctx.reply(generated_text)
-        else:
-            return
         
         if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
             guild_id = ctx.guild.id	
