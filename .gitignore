@@ -10,7 +10,6 @@ __pycache__
 *.db
 log*
 error.txt
-requirements.txt
 seriouslinks.txt
 seriouschannel.txt
 copypastachannel.txt
