@@ -46,7 +46,7 @@ MSG_DEL_DELAY = 10
 NUM_OF_RANKED_WORDS = 5
 
 def loadLines():
-    with open(kirklinePath, 'r') as f:
+    with open(kirklinePath, 'r', encoding='utf-8') as f:
         lines = [line.rstrip() for line in f]
     return lines
 
@@ -79,7 +79,43 @@ class Fun(commands.Cog):
         if os.stat(kirklinePath).st_size == 0:
             with open(kirklinePath, 'w') as f:
                 f.write("Kirk is a based god")
-
+    
+    def daysago(self):
+        con = sqlite3.connect(log_database)
+        cur = con.cursor()
+        cur.execute('SELECT unix_time FROM log_data ORDER BY id ASC LIMIT 1', ())
+        unix_time = cur.fetchone()
+        timestamp = datetime.fromtimestamp(unix_time[0])
+        current_time = datetime.now()
+        time_since = current_time - timestamp
+        days_since = time_since.days
+        return days_since
+    
+    def mpv_screenshot(self, stream):
+        player = mpv.MPV(screenshot_format='jpeg', vo='null', hwdec='yes', screenshot_sw='yes')
+        player.play(stream)
+        player.wait_until_playing()
+        screenshot = player.screenshot_raw()
+        player.terminate()
+        return screenshot
+    
+    def mpv_screenshots(self, streams):
+        streams_matrix = BytesIO()
+        count = len(streams)
+        srw = math.ceil(math.sqrt(count))
+        result_image = Image.new('RGB', (IMAGE_SIZE[0] * srw, IMAGE_SIZE[1] * (srw-1)))
+        
+        with Pool(cpu_count()//2) as pool:
+            screenshots = pool.map(self.mpv_screenshot, streams)
+        
+        for i, screenshot in enumerate(screenshots):
+            screenshot.thumbnail(IMAGE_SIZE, Image.Resampling.LANCZOS)
+            result_image.paste(screenshot, (IMAGE_SIZE[0] * (i % srw), IMAGE_SIZE[1] * (i // srw)))
+            result_image.save(streams_matrix, format='JPeG', quality=100)
+            streams_matrix.seek(0)
+        
+        return streams_matrix
+    
     #events
     @commands.Cog.listener()
     async def on_ready(self):
@@ -676,7 +712,7 @@ class Fun(commands.Cog):
                 count = data['word_counts'].get(input_word, 0)
                 embed = discord.Embed(title=f"{display_name}'s use of '{input_word[:128]}' in {ctx.guild.name}", color=0x00ff00)
                 embed.add_field(name=f"Occurrences of {input_word}", value=f"{count}", inline=False)
-            embed.set_footer(text=f'Wordcount record {daysago()} days old.')
+            embed.set_footer(text=f'Wordcount record {self.daysago()} days old.')
             await ctx.send(embed=embed)
         cur.close()
         con.close()
@@ -739,7 +775,7 @@ class Fun(commands.Cog):
             embed.add_field(name=f"User", value='\n'.join(f"> {ctx.guild.get_member(user_id).display_name}" if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {str(count)}" for user_id, count in sorted_users[:num_users]), inline=True)
         
-        embed.set_footer(text=f'Wordcount record {daysago()} days old.')
+        embed.set_footer(text=f'Wordcount record {self.daysago()} days old.')
         await ctx.send(embed=embed)
         cur.close()
         con.close()
@@ -794,7 +830,7 @@ class Fun(commands.Cog):
             embed.add_field(name=f"User", value='\n'.join(f"> {ctx.guild.get_member(user_id).display_name}" if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {str(count)}" for user_id, count in sorted_users[:num_users]), inline=True)
         
-        embed.set_footer(text=f'Wordcount record {daysago()} days old.')
+        embed.set_footer(text=f'Wordcount record {self.daysago()} days old.')
         await ctx.send(embed=embed)
         cur.close()
         con.close()
@@ -819,41 +855,41 @@ class Fun(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Fun(bot))
 
-def daysago():
-    con = sqlite3.connect(log_database)
-    cur = con.cursor()
-    cur.execute('SELECT unix_time FROM log_data ORDER BY id ASC LIMIT 1', ())
-    unix_time = cur.fetchone()
-    timestamp = datetime.fromtimestamp(unix_time[0])
-    current_time = datetime.now()
-    time_since = current_time - timestamp
-    days_since = time_since.days
-    return days_since
+# def daysago():
+#     con = sqlite3.connect(log_database)
+#     cur = con.cursor()
+#     cur.execute('SELECT unix_time FROM log_data ORDER BY id ASC LIMIT 1', ())
+#     unix_time = cur.fetchone()
+#     timestamp = datetime.fromtimestamp(unix_time[0])
+#     current_time = datetime.now()
+#     time_since = current_time - timestamp
+#     days_since = time_since.days
+#     return days_since
 
-def mpv_screenshot(stream):
-    player = mpv.MPV(screenshot_format='jpeg', vo='null', hwdec='yes', screenshot_sw='yes')
-    player.play(stream)
-    player.wait_until_playing()
-    screenshot = player.screenshot_raw()
-    player.terminate()
-    return screenshot
+# def mpv_screenshot(stream):
+#     player = mpv.MPV(screenshot_format='jpeg', vo='null', hwdec='yes', screenshot_sw='yes')
+#     player.play(stream)
+#     player.wait_until_playing()
+#     screenshot = player.screenshot_raw()
+#     player.terminate()
+#     return screenshot
 
-def mpv_screenshots(streams):
-    streams_matrix = BytesIO()
-    count = len(streams)
-    srw = math.ceil(math.sqrt(count))
-    result_image = Image.new('RGB', (IMAGE_SIZE[0] * srw, IMAGE_SIZE[1] * (srw-1)))
+# def mpv_screenshots(streams):
+#     streams_matrix = BytesIO()
+#     count = len(streams)
+#     srw = math.ceil(math.sqrt(count))
+#     result_image = Image.new('RGB', (IMAGE_SIZE[0] * srw, IMAGE_SIZE[1] * (srw-1)))
     
-    with Pool(cpu_count()//2) as pool:
-        screenshots = pool.map(mpv_screenshot, streams)
+#     with Pool(cpu_count()//2) as pool:
+#         screenshots = pool.map(mpv_screenshot, streams)
     
-    for i, screenshot in enumerate(screenshots):
-        screenshot.thumbnail(IMAGE_SIZE, Image.Resampling.LANCZOS)
-        result_image.paste(screenshot, (IMAGE_SIZE[0] * (i % srw), IMAGE_SIZE[1] * (i // srw)))
-        result_image.save(streams_matrix, format='JPeG', quality=100)
-        streams_matrix.seek(0)
+#     for i, screenshot in enumerate(screenshots):
+#         screenshot.thumbnail(IMAGE_SIZE, Image.Resampling.LANCZOS)
+#         result_image.paste(screenshot, (IMAGE_SIZE[0] * (i % srw), IMAGE_SIZE[1] * (i // srw)))
+#         result_image.save(streams_matrix, format='JPeG', quality=100)
+#         streams_matrix.seek(0)
     
-    return streams_matrix
+#     return streams_matrix
 
 
 
