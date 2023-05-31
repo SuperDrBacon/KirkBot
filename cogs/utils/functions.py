@@ -33,46 +33,69 @@ setup_table_economy_database = '''CREATE TABLE IF NOT EXISTS economy_database(
                     UNIX_TIME               INTEGER);'''
 
 def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
+    """
+    Checks for the existence of a file and creates it if necessary.
+    If 'database' is True, it creates a SQLite database based on the 'dbtype'.
+    
+    Args:
+        filepath (str): The path where the file should be located.
+        filename (str): The name of the file to be checked or created.
+        database (bool, optional): Flag indicating whether a database should be created. Defaults to False.
+        dbtype (str, optional): The type of the database to be created. Defaults to None.
+    """
     if os.path.isfile(os.path.join(filepath, filename)):
-        print (f"{filename} exists")
-    elif database == False:
+        # File already exists
+        print(f"{filename} exists")
+    elif not database:
+        # Create a regular file
         try:
             open(f'{os.path.join(filepath, filename)}', "x").close
         except FileExistsError:
-            print ("Somehow tried to create a file that already exists whilst failing os.path.isfile. Something is definitely brokey.")
+            # Failed to create file that already exists
+            print("Somehow tried to create a file that already exists while failing os.path.isfile. Something is definitely broken.")
         else:
-            print (f"{filename} created")
-    elif database == True:
+            print(f"{filename} created")
+    elif database:
+        # Create a database
         if dbtype == 'log':
             try:
+                # Create a connection to the log database
                 con = sqlite3.connect(f'{path}/cogs/log_data.db')
                 cur = con.cursor()
+                # Execute setup_table_log_database query to create necessary tables
                 cur.execute(setup_table_log_database)
                 con.commit()
             except Exception as error:
+                # Failed to create the log database
                 print("Failed to make sqlite3 log database:", error)
             finally:
                 if con:
+                    # Close the connection
                     cur.close()
                     con.close()
-                    print ("sqlite3 log database created")
-        
+                    print("sqlite3 log database created")
         elif dbtype == 'economy':
             try:
+                # Create a connection to the economy database
                 con = sqlite3.connect(f'{path}/cogs/economy_data.db')
                 cur = con.cursor()
+                # Execute setup_table_economy_database query to create necessary tables
                 cur.execute(setup_table_economy_database)
                 con.commit()
             except Exception as error:
+                # Failed to create the economy database
                 print("Failed to make sqlite3 economy database:", error)
             finally:
                 if con:
+                    # Close the connection
                     cur.close()
                     con.close()
-                    print ("sqlite3 economy database created")
+                    print("sqlite3 economy database created")
         else:
+            # Invalid database type
             print("Database is True but dbtype is not one of the present options.")
     else:
+        # Invalid function condition
         print("Something is wrong with the checkForFile function.")
 
 def checkForDir(filepath):
