@@ -36,7 +36,7 @@ kirklinePath = rf'{ospath}/cogs/kirklines.txt'
 tagpath = rf'{ospath}/cogs/tag.json'
 emojipath = rf'{ospath}/emojis/'
 flagpath = rf'{ospath}/cogs/flags.json'
-logdatabase = rf'{ospath}/cogs/log_data.db'
+log_database = rf'{ospath}/cogs/log_data.db'
 config = ConfigParser()
 config.read(rf'{ospath}/config.ini')
 command_prefix = config['BOTCONFIG']['prefix']
@@ -638,7 +638,7 @@ class Fun(commands.Cog):
         if input_word is not None:
             input_word = input_word.lower()
         
-        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        con = sqlite3.connect(log_database)
         cur = con.cursor()
         cur.execute('SELECT user_id, message FROM log_data WHERE server_id = ?', (ctx.guild.id,))
         userid_messages = cur.fetchall()
@@ -692,7 +692,7 @@ class Fun(commands.Cog):
     @wordcount_base.command(name='server', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_server(self, ctx, input_word:str=None):
-        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        con = sqlite3.connect(log_database)
         cur = con.cursor()
         cur.execute('SELECT user_id, message FROM log_data WHERE server_id = ?', (ctx.guild.id,))
         userid_messages = cur.fetchall()
@@ -747,7 +747,7 @@ class Fun(commands.Cog):
     @wordcount_base.command(name='channel', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_channel(self, ctx, input_word:str=None):
-        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        con = sqlite3.connect(log_database)
         cur = con.cursor()
         cur.execute('SELECT user_id, message FROM log_data WHERE channel_id = ?', (ctx.channel.id,))
         userid_messages = cur.fetchall()
@@ -820,7 +820,7 @@ async def setup(bot):
     await bot.add_cog(Fun(bot))
 
 def daysago():
-    con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+    con = sqlite3.connect(log_database)
     cur = con.cursor()
     cur.execute('SELECT unix_time FROM log_data ORDER BY id ASC LIMIT 1', ())
     unix_time = cur.fetchone()
