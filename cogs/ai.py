@@ -1,5 +1,6 @@
 # import datetime
 import random
+import re
 import discord
 import openai
 import sqlite3
@@ -18,6 +19,9 @@ prefix = config['BOTCONFIG']['prefix']
 openai.api_key = key
 textmodel = 'text-curie-001'
 # textmodel = 'text-davinci-003'
+
+ORDER = 3
+TEXT_WORD_COUNT = 30
 
 class MarkovChain:
     def __init__(self, order:int):
@@ -93,14 +97,16 @@ class Ai(commands.Cog):
             cur = con.cursor()
             text = cur.execute('SELECT message FROM log_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
             
-            corpus = ' '.join(' '.join(line.split()) for line in text)
+            # Filter out messages containing links
+            filtered_text = [line for line in text if not re.search(r'(https?://\S+)', line)]
+            corpus = ' '.join(' '.join(line.split()) for line in filtered_text)
             
-            chain = MarkovChain(order=4)
+            chain = MarkovChain(order=ORDER)
             chain.add_text(corpus)
             chain.calculate_word_weights()
             
             # Generating text using the generator function
-            generated_text_generator = chain.generate_text_incremental(text_word_count=30)
+            generated_text_generator = chain.generate_text_incremental(text_word_count=TEXT_WORD_COUNT)
             generated_text = ' '.join(word for word in generated_text_generator)
             await ctx.reply(generated_text)
         
@@ -112,14 +118,16 @@ class Ai(commands.Cog):
             cur = con.cursor()
             text = cur.execute('SELECT message FROM log_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
             
-            corpus = ' '.join(' '.join(line.split()) for line in text)
+            # Filter out messages containing links
+            filtered_text = [line for line in text if not re.search(r'(https?://\S+)', line)]
+            corpus = ' '.join(' '.join(line.split()) for line in filtered_text)
             
-            chain = MarkovChain(order=4)
+            chain = MarkovChain(order=ORDER)
             chain.add_text(corpus)
             chain.calculate_word_weights()
             
             # Generating text using the generator function
-            generated_text_generator = chain.generate_text_incremental(text_word_count=30)
+            generated_text_generator = chain.generate_text_incremental(text_word_count=TEXT_WORD_COUNT)
             generated_text = ' '.join(word for word in generated_text_generator)
             await ctx.reply(generated_text)
         
