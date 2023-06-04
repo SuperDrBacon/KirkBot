@@ -3,6 +3,7 @@ import time
 import sqlite3
 import os
 import cogs.utils.functions as functions
+from io import BytesIO
 from discord.ext import commands
 from datetime import datetime, timezone
 
@@ -55,7 +56,7 @@ class logger(commands.Cog):
             try:
                 con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
                 cur = con.cursor()
-                data_to_inset = '''INSERT INTO log_data(
+                data_to_insert = '''INSERT INTO log_data(
                             SERVER_NAME,
                             SERVER_ID,
                             CHANNEL_NAME,
@@ -87,7 +88,7 @@ class logger(commands.Cog):
                             original_message_id, 
                             now_utc,
                             now_unix)
-                cur.execute(data_to_inset, data_tuple)
+                cur.execute(data_to_insert, data_tuple)
                 con.commit()
             
             except Exception as error:
@@ -100,7 +101,7 @@ class logger(commands.Cog):
             try:
                 con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
                 cur = con.cursor()
-                data_to_inset = '''INSERT INTO log_data(
+                data_to_insert = '''INSERT INTO log_data(
                             SERVER_NAME,
                             SERVER_ID,
                             CHANNEL_NAME,
@@ -124,7 +125,7 @@ class logger(commands.Cog):
                             reply, 
                             now_utc,
                             now_unix)
-                cur.execute(data_to_inset, data_tuple)
+                cur.execute(data_to_insert, data_tuple)
                 con.commit()
             
             except Exception as error:
@@ -138,11 +139,12 @@ class logger(commands.Cog):
     Gets all the links in the channel and puts them in a file named the channel name.
     '''
     @commands.has_permissions(administrator=True)
-    @commands.group(name='getlinks', invoke_without_command=True)
-    async def getlinksbase(self, ctx, number:int=100000000):
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.command(name='getlinks')
+    async def getlinks(self, ctx, number:int=None):
         await ctx.message.delete()
         channelNAME = ctx.channel.name
-        messages = await ctx.channel.history(limit=number, oldest_first=True).flatten()
+        messages = [message async for message in ctx.channel.history(limit=number, oldest_first=True)]
         
         with open(f'{channelNAME}.txt', 'w', encoding='utf-8') as f:
             for message in messages:
@@ -150,6 +152,26 @@ class logger(commands.Cog):
                 if out.startswith('http'):
                     f.write(out+'\n')
             await ctx.channel.send('Got all messages in channel cause drink nut asked me again')
+    
+    '''
+    Gets all the messages in the channel and puts them in a file named the channel name.
+    '''
+    @commands.has_permissions(administrator=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.command(name='archive')
+    async def archive(self, ctx, number:int=None):
+        channel_name = ctx.channel.name
+        channel_history = BytesIO()
+        messages = [message async for message in ctx.channel.history(limit=number, oldest_first=True)]
+        
+        await ctx.send(f'Archiving {len(messages)} messages in {channel_name}')
+        
+        for message in messages:
+            content = f"{message.author.name}: {message.content}\n"
+            channel_history.write(content.encode())
+        channel_history.seek(0)
+        
+        await ctx.send(file=discord.File(channel_history, filename=f'{channel_name}.txt'))
 
 async def setup(bot):
     await bot.add_cog(logger(bot))
