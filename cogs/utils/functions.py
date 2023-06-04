@@ -1,3 +1,4 @@
+import time
 import numpy, re
 import os
 import sqlite3
@@ -22,15 +23,16 @@ setup_table_log_database = '''CREATE TABLE IF NOT EXISTS log_data(
                     ORIGINAL_MESSAGE        TEXT,
                     ORIGINAL_MESSAGE_ID     INTEGER,
                     DATE_TIME               TEXT,
-                    UNIX_TIME               INTEGER);'''
+                    UNIX_TIME               TEXT);'''
 
-setup_table_economy_database = '''CREATE TABLE IF NOT EXISTS economy_database(
+setup_table_economy_database = '''CREATE TABLE IF NOT EXISTS economy_data(
                     ID                      INTEGER     PRIMARY KEY,
                     USER_ID                 INTEGER,
                     USERNAME                TEXT,
                     SERVER_ID               INTEGER,
+                    UNIX_TIME               TEXT,
                     BALANCE                 FLOAT,
-                    UNIX_TIME               INTEGER);'''
+                    BANK                    FLOAT);'''
 
 def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
     """
@@ -109,7 +111,8 @@ def checkForDir(filepath):
         else:
             print (f"{filepath} created")
 
-
+def get_unix_time():
+    return str(time.time())
 
 
 def filter(message):
