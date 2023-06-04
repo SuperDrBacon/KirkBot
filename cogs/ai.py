@@ -21,7 +21,7 @@ textmodel = 'text-curie-001'
 # textmodel = 'text-davinci-003'
 
 ORDER = 3
-TEXT_WORD_COUNT = 30
+TEXT_WORD_COUNT = ORDER * 15 
 
 class MarkovChain:
     def __init__(self, order:int):
