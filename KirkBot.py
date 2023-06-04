@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+import traceback
 import discord
 import os
 import cogs.utils.functions as functions
@@ -51,7 +52,7 @@ def mainProgram():
                 try:
                     await bot.load_extension(f'cogs.{name}')
                 except Exception as e:
-                    print(f'Error when loading module because: {e}')
+                    print(f'Error when loading module because: {e} and traceback: {traceback.format_exc()}')
     
     async def mainStart():
         await loadCogs()
@@ -60,7 +61,7 @@ def mainProgram():
     try:
         asyncio.run(mainStart())
     except Exception as e:
-        print(f'Error when logging in: {e}')
+        print(f'Error when logging in: {e} and traceback: {traceback.format_exc()}')
 
 if __name__ == '__main__':
     mainProgram()
