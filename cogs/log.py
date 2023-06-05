@@ -211,17 +211,15 @@ class logger(commands.Cog):
             except discord.errors.HTTPException:
                 await ctx.send("The ZIP file did not send for some reason.")
         else:
-            for i in range(num_chunks):
-                chunk_start = i * max_file_size
-                chunk_end = chunk_start + max_file_size
-                chunk_data = zip_file.getvalue()[chunk_start:chunk_end]
-
+            chunk_size = math.ceil(file_size / num_chunks)
+            chunks = [zip_file.getvalue()[i:i+chunk_size] for i in range(0, file_size, chunk_size)]
+            for i, chunk_data in enumerate(chunks):
                 chunk_file = BytesIO(chunk_data)
                 filename = f'{channel_name}_archive{uuuid}_part{i+1}.zip'
                 try:
                     await ctx.send(file=discord.File(chunk_file, filename=filename))
-                    await asyncio.sleep(1)
                 except discord.errors.HTTPException:
+
                     await ctx.send(f"Part {i+1} of the ZIP file did not send for some reason.")
 
 async def setup(bot):
