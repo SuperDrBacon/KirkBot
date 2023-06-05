@@ -95,7 +95,6 @@ class Cogs(commands.Cog):
             await msg.delete(delay=MSG_DEL_DELAY)
     
     @commands.command()
-    @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         '''Unloads all modules.'''
         if ctx.author.id == owner_id:
