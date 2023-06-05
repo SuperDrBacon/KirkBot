@@ -3,6 +3,8 @@ import time
 import sqlite3
 import os
 import cogs.utils.functions as functions
+from PIL import Image, UnidentifiedImageError
+from zipfile import ZipFile
 from io import BytesIO
 from discord.ext import commands
 from datetime import datetime, timezone
@@ -154,24 +156,48 @@ class logger(commands.Cog):
             await ctx.channel.send('Got all messages in channel cause drink nut asked me again')
     
     '''
-    Gets all the messages in the channel and puts them in a file named the channel name.
+    Gets all the messages and files in the channel and puts them in a file named the channel name.
     '''
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(name='archive')
     async def archive(self, ctx, number:int=None):
         channel_name = ctx.channel.name
-        channel_history = BytesIO()
+        text_content = ""
+        archive_content = []
         messages = [message async for message in ctx.channel.history(limit=number, oldest_first=True)]
         
         await ctx.send(f'Archiving {len(messages)} messages in {channel_name}')
         
         for message in messages:
             content = f"{message.author.name}: {message.content}\n"
-            channel_history.write(content.encode())
-        channel_history.seek(0)
-        
-        await ctx.send(file=discord.File(channel_history, filename=f'{channel_name}.txt'))
+            text_content += content
+            # channel_history.write(content.encode())
+            if message.attachments:
+                    for attachment in message.attachments:
+                        response = await attachment.read()
+                        try:
+                            # Get the file extension from the attachment's filename
+                            file_extension = attachment.filename.split('.')[-1]
+                            file_data = BytesIO(response)
+                            archive_content.append((attachment.filename, file_extension, file_data.getvalue()))
+                        except Exception as e:
+                            print(f"Failed to process attachment: {attachment.filename}. Error: {str(e)}")
+                            continue
+
+        # Create a ZIP file in memory
+        zip_file = BytesIO()
+        with ZipFile(zip_file, 'w') as zip_obj:
+            # Create a text file with all the message content
+            text_file = BytesIO(text_content.encode('utf-8'))
+            zip_obj.writestr(f'{channel_name}_messages.txt', text_file.getvalue())
+
+            # Add attachment files to the ZIP archive
+            for filename, data in archive_content:
+                zip_obj.writestr(f'{filename}', data)
+
+        zip_file.seek(0)
+        await ctx.send(file=discord.File(zip_file, filename=f'{channel_name}_archive.zip'))
 
 async def setup(bot):
     await bot.add_cog(logger(bot))
