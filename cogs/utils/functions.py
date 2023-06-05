@@ -23,14 +23,14 @@ setup_table_log_database = '''CREATE TABLE IF NOT EXISTS log_data(
                     ORIGINAL_MESSAGE        TEXT,
                     ORIGINAL_MESSAGE_ID     INTEGER,
                     DATE_TIME               TEXT,
-                    UNIX_TIME               TEXT);'''
+                    UNIX_TIME               FLOAT);'''
 
 setup_table_economy_database = '''CREATE TABLE IF NOT EXISTS economy_data(
                     ID                      INTEGER     PRIMARY KEY,
                     USER_ID                 INTEGER,
                     USERNAME                TEXT,
                     SERVER_ID               INTEGER,
-                    UNIX_TIME               TEXT,
+                    UNIX_TIME               FLOAT,
                     BALANCE                 FLOAT,
                     BANK                    FLOAT);'''
 
@@ -112,7 +112,7 @@ def checkForDir(filepath):
             print (f"{filepath} created")
 
 def get_unix_time():
-    return str(time.time())
+    return float(time.time())
 
 
 def filter(message):
