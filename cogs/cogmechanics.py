@@ -110,6 +110,10 @@ class Cogs(commands.Cog):
             await message.edit(content="Going offline, goodbye, finally at rest")
             await self.bot.close()
             sys.exit('Bot stopped manually')
+        else:
+            msg = await ctx.reply("Why are you trying to stop me?")
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            await msg.delete(delay=MSG_DEL_DELAY)
 
 async def setup(bot):
     await bot.add_cog(Cogs(bot))
