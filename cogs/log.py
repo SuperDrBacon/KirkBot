@@ -214,8 +214,10 @@ class logger(commands.Cog):
             filename = f'{channel_name}_archive{uuuid}_part{i+1}.zip'
             try:
                 await ctx.send(file=discord.File(zip_data, filename=filename))
+                await asyncio.sleep(1)
             except discord.errors.HTTPException:
                 await ctx.send(f"Part {i+1} of the ZIP file did not send for some reason.")
+                await asyncio.sleep(1)
         # zip_file = BytesIO()
         # with ZipFile(zip_file, 'w') as zip_obj:
             
