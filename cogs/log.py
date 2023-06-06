@@ -139,24 +139,6 @@ class logger(commands.Cog):
                 if con:
                     cur.close()
                     con.close()
-
-    '''
-    Gets all the links in the channel and puts them in a file named the channel name.
-    '''
-    @commands.has_permissions(administrator=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.command(name='getlinks')
-    async def getlinks(self, ctx, number:int=None):
-        await ctx.message.delete()
-        channelNAME = ctx.channel.name
-        messages = [message async for message in ctx.channel.history(limit=number, oldest_first=True)]
-        
-        with open(f'{channelNAME}.txt', 'w', encoding='utf-8') as f:
-            for message in messages:
-                out = message.content
-                if out.startswith('http'):
-                    f.write(out+'\n')
-            await ctx.channel.send('Got all messages in channel cause drink nut asked me again')
     
     '''
     Gets all the messages and files in the channel and puts them in a file named the channel name.
@@ -218,36 +200,6 @@ class logger(commands.Cog):
             except discord.errors.HTTPException:
                 await ctx.send(f"Part {i+1} of the ZIP file did not send for some reason.")
                 await asyncio.sleep(1)
-        # zip_file = BytesIO()
-        # with ZipFile(zip_file, 'w') as zip_obj:
-            
-        #     text_file = BytesIO(text_content.encode('utf-8'))
-        #     zip_obj.writestr(f'{channel_name}_messages.txt', text_file.getvalue())
-            
-        #     for filename, data in archive_content:
-        #         zip_obj.writestr(f'{filename}', data)
-        
-        # zip_file.seek(0)
-        # # Calculate the number of chunks needed
-        # file_size = len(zip_file.getvalue())
-        # max_file_size = 25 * 1024 * 1024  # 25MB in bytes
-        # num_chunks = math.ceil(file_size / max_file_size)
-        # if num_chunks == 1:
-        #     try:
-        #         await ctx.send(file=discord.File(zip_file, filename=f'{channel_name}_archive{uuuid}.zip'))
-        #     except discord.errors.HTTPException:
-        #         await ctx.send("The ZIP file did not send for some reason.")
-        # else:
-        #     chunk_size = math.ceil(file_size / num_chunks)
-        #     chunks = [zip_file.getvalue()[i:i+chunk_size] for i in range(0, file_size, chunk_size)]
-        #     for i, chunk_data in enumerate(chunks):
-        #         chunk_file = BytesIO(chunk_data)
-        #         filename = f'{channel_name}_archive{uuuid}_part{i+1}.zip'
-        #         try:
-        #             await ctx.send(file=discord.File(chunk_file, filename=filename))
-        #         except discord.errors.HTTPException:
-        #             await ctx.send(f"Part {i+1} of the ZIP file did not send for some reason.")
-
 
 async def setup(bot):
     await bot.add_cog(logger(bot))
