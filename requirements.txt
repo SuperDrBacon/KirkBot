@@ -1,6 +1,6 @@
 beautifulsoup4==4.12.2
 discord.py==2.2.3
-Flask==2.1.2
+Flask==2.3.2
 GitPython==3.1.31
 numpy==1.23.4
 openai==0.18.1
