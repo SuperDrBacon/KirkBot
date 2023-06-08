@@ -20,7 +20,7 @@ openai.api_key = key
 textmodel = 'text-curie-001'
 # textmodel = 'text-davinci-003'
 
-ORDER = 3
+ORDER = 4
 TEXT_WORD_COUNT = ORDER * 15 
 
 class MarkovChain:
