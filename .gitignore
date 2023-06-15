@@ -34,3 +34,4 @@ cogs/OHAI_config.json
 /webpage/
 
 .vscode/settings.json
+.history/
