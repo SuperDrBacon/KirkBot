@@ -17,7 +17,7 @@ class MemberRoles(commands.MemberConverter):
         member = await super().convert(ctx, argument)
         return [role.name for role in member.roles[1:]] # Remove everyone role!
 
-class adminCommands(commands.Cog):
+class AdminCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
@@ -25,7 +25,7 @@ class adminCommands(commands.Cog):
     async def on_ready(self):
             print('Admin module online')
     
-    @commands.command(aliases=["update"])
+    @commands.command(aliases=["update"], hidden=True)
     async def update_bot(self, ctx):
         if ctx.author.id == owner_id:
             repo = git.Repo(path)
@@ -50,12 +50,12 @@ class adminCommands(commands.Cog):
         await bot_msg1.delete(delay=MSG_DEL_DELAY)
         await bot_msg2.delete(delay=MSG_DEL_DELAY)
     
-    @commands.command()
+    @commands.command(hidden=True)
     async def roles(self, ctx, *, member: MemberRoles):
         """Tells you a member's roles."""
         await ctx.send('I see the following roles:``` '+', '.join(member)+'```')
     
-    @commands.command(aliases=["wh"])
+    @commands.command(aliases=["wh"], hidden=True)
     async def webhook(self, ctx, webhook_name:str, message:str):
         # async def create_webhook():
         #     server_id = ctx.guild.id
@@ -86,7 +86,7 @@ class adminCommands(commands.Cog):
         print (webhook.url)
     
 async def setup(bot):
-    await bot.add_cog(adminCommands(bot))
+    await bot.add_cog(AdminCommands(bot))
 
     # @commands.command()
     # @commands.has_permissions(administrator=True)

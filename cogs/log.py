@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 ospath = os.path.abspath(os.getcwd())
 log_database = rf'{ospath}/cogs/log_data.db'
 
-class logger(commands.Cog):
+class Logger(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
         functions.checkForFile(os.path.dirname(log_database), os.path.basename(log_database), True, 'log')
@@ -202,4 +202,4 @@ class logger(commands.Cog):
                 await asyncio.sleep(1)
 
 async def setup(bot):
-    await bot.add_cog(logger(bot))
+    await bot.add_cog(Logger(bot))

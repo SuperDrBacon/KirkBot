@@ -5,7 +5,7 @@ from discord.ext.commands import CheckFailure
 
 
 
-class modCommands(commands.Cog):
+class ModCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -60,4 +60,4 @@ class modCommands(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(modCommands(bot))
+    await bot.add_cog(ModCommands(bot))

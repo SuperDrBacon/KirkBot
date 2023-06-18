@@ -18,7 +18,7 @@ status = info['STATUS']['status']
 activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 started_tasks = []
 
-class setStatus(commands.Cog):
+class StatusManager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.status_updater.start()
@@ -93,4 +93,4 @@ class setStatus(commands.Cog):
         await self.bot.wait_until_ready()
 
 async def setup(bot):
-    await bot.add_cog(setStatus(bot))
+    await bot.add_cog(StatusManager(bot))
