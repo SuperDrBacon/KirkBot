@@ -10,7 +10,7 @@ owner_id = int(config['BOTCONFIG']['ownerid'])
 
 MSG_DEL_DELAY = 10
 
-class Cogs(commands.Cog):
+class CogManager(commands.Cog):
     '''This Cogs module is used to load or unload different modules to update the bot without having to take it offline'''
     def __init__(self, bot):
         self.bot = bot
@@ -19,7 +19,7 @@ class Cogs(commands.Cog):
     async def on_ready(self):
             print('Cog loader/unloader/reloader module online')
     
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def load(self, ctx, name: str):
         '''Loads a module.'''
@@ -32,7 +32,7 @@ class Cogs(commands.Cog):
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def un(self, ctx, name: str):
         '''Unloads a module.'''
@@ -45,7 +45,7 @@ class Cogs(commands.Cog):
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def re(self, ctx, name: str):
         '''Reloads a module.'''
@@ -58,7 +58,7 @@ class Cogs(commands.Cog):
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def reall(self, ctx):
         '''Reloads all modules.'''
@@ -76,7 +76,7 @@ class Cogs(commands.Cog):
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def loadall(self, ctx):
         '''Loads all modules.'''
@@ -94,7 +94,7 @@ class Cogs(commands.Cog):
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
-    @commands.command()
+    @commands.command(hidden=True)
     async def stop(self, ctx):
         '''Unloads all modules.'''
         if ctx.author.id == owner_id:
@@ -116,4 +116,4 @@ class Cogs(commands.Cog):
             await msg.delete(delay=MSG_DEL_DELAY)
 
 async def setup(bot):
-    await bot.add_cog(Cogs(bot))
+    await bot.add_cog(CogManager(bot))
