@@ -32,7 +32,15 @@ setup_table_economy_database = '''CREATE TABLE IF NOT EXISTS economy_data(
                     SERVER_ID               INTEGER,
                     UNIX_TIME               FLOAT,
                     BALANCE                 FLOAT,
-                    BANK                    FLOAT);'''
+                    BANK                    FLOAT,
+                    SLOTS_WINS              INTEGER,
+                    SLOTS_LOSSES            INTEGER,
+                    BJ_WINS                 INTEGER,
+                    BJ_LOSSES               INTEGER,
+                    BJ_TIES                 INTEGER,
+                    CF_WINS                 INTEGER,
+                    CF_LOSSES               INTEGER
+                    );'''
 
 def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
     """
