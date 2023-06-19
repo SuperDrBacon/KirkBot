@@ -144,7 +144,7 @@ class Logger(commands.Cog):
                     con.close()
     
     @commands.has_permissions(administrator=True)
-    @commands.command(name='archive')
+    @commands.command(name='archive', hidden=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def archive(self, ctx, number:int=None):
         '''

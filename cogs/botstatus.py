@@ -36,7 +36,7 @@ class StatusManager(commands.Cog):
     
     #commands
     @commands.has_permissions(administrator=True)
-    @commands.group(name='botstatus', invoke_without_command=True)
+    @commands.group(name='botstatus', invoke_without_command=True, hidden=True)
     async def botstatus_base(self, ctx):
         '''
         This command group is used to change the bot's status.
