@@ -6,6 +6,9 @@ from discord.ext.commands import CheckFailure
 
 
 class ModCommands(commands.Cog):
+    '''
+    This module houses all the moderation commands.
+    '''
     def __init__(self, bot):
         self.bot = bot
 

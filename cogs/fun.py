@@ -64,6 +64,9 @@ tagInit = {
     ]
 }
 class Fun(commands.Cog):
+    '''
+    This module houses all the fun commands.
+    '''
     def __init__(self, bot):
         self.bot = bot
         functions.checkForFile(os.path.dirname(kirklinePath), os.path.basename(kirklinePath))

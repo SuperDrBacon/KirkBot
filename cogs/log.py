@@ -16,6 +16,9 @@ ospath = os.path.abspath(os.getcwd())
 log_database = rf'{ospath}/cogs/log_data.db'
 
 class Logger(commands.Cog):
+    '''
+    This module is used to keep track off all messages sent in a server to use them in the ai module.
+    '''
     def __init__(self, bot): 
         self.bot = bot
         functions.checkForFile(os.path.dirname(log_database), os.path.basename(log_database), True, 'log')

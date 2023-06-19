@@ -78,6 +78,9 @@ class MarkovChain:
                 break
 
 class Ai(commands.Cog):
+    '''
+    AI module to generate text based on the server's chat history and talks to you with GPT-3.
+    '''
     def __init__(self, bot):
         self.bot = bot
 

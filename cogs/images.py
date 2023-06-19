@@ -27,6 +27,9 @@ config.read(rf'{path}/config.ini')
 prefix = config['BOTCONFIG']['prefix']
 
 class Images(commands.Cog):
+    '''
+    This module contains commands that use and create images.
+    '''
     def __init__(self, bot):
         self.bot = bot
 

@@ -18,6 +18,9 @@ class MemberRoles(commands.MemberConverter):
         return [role.name for role in member.roles[1:]] # Remove everyone role!
 
 class AdminCommands(commands.Cog):
+    '''
+    This module contains commands used by admins.
+    '''
     def __init__(self, bot):
         self.bot = bot
     

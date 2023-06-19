@@ -19,6 +19,9 @@ activity = discord.Activity(name=status, type=discord.ActivityType.watching)
 started_tasks = []
 
 class StatusManager(commands.Cog):
+    '''
+    Manages the bot's status.
+    '''
     def __init__(self, bot):
         self.bot = bot
         self.status_updater.start()
