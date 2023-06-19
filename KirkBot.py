@@ -13,8 +13,7 @@ path = os.path.abspath(os.getcwd())
 
 def mainProgram():
     print('Logging in...')
-    info = ConfigParser()
-    config = ConfigParser()
+    info, config = ConfigParser(), ConfigParser()
     functions.checkForFile(path, 'info.ini') 
     functions.checkForFile(path, 'config.ini') 
     info.read(rf'{path}/info.ini')
