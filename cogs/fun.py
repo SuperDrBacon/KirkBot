@@ -260,11 +260,7 @@ class Fun(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def bigletter(self, ctx, *, input:str):
         '''
-        Convert the given input text to a string of emojis representing each letter or number. 
-        Each letter is represented by the corresponding regional indicator emoji, 
-        each number is represented by the corresponding spelled-out emoji, 
-        and each question mark is represented by the question mark emoji. 
-        The resulting string is sent as a message to the channel and the original message is deleted.
+        Convert the given input text to a string of emojis representing each letter or number.
         '''
         await ctx.message.delete()
         emojis = []
@@ -286,7 +282,6 @@ class Fun(commands.Cog):
     async def braille(self, ctx, *, input:str):
         '''
         Convert the given input text to a string of Braille characters and send it as a message to the channel. 
-        Each letter is represented by the corresponding Braille character. 
         '''
         async with ctx.typing():
             braille = input.lower().replace("a", "⠁").replace("b", "⠃").replace("c", "⠉").replace("d", "⠙").replace("e", "⠑").replace("f", "⠋").replace("g", "⠛").replace("h", "⠓").replace("i", "⠊").replace("j", "⠚").replace("k", "⠅").replace("l", "⠅").replace("m", "⠍").replace("n", "⠝").replace("o", "⠕").replace("p", "⠏").replace("q", "⠟").replace("r", "⠗").replace("s", "⠎").replace("t", "⠞").replace("u", "⠥").replace("v", "⠧").replace("w", "⠺").replace("x", "⠭").replace("y", "⠽").replace("z", "⠵")
