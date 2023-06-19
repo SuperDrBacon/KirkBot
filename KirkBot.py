@@ -7,6 +7,7 @@ import os
 import cogs.utils.functions as functions
 from discord.ext import commands
 from configparser import ConfigParser
+from cogs.utils.helpcommand import NewHelpCommand
 
 path = os.path.abspath(os.getcwd())
 
@@ -21,7 +22,7 @@ def mainProgram():
     title = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
     intents = discord.Intents().all()
     
-    bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=None, case_insensitive=True, intents=intents)
+    bot = commands.Bot(command_prefix=config['BOTCONFIG']['prefix'], help_command=NewHelpCommand(), case_insensitive=True, intents=intents)
     
     @bot.event
     async def on_ready():
