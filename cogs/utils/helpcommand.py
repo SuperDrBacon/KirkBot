@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import discord
 import cogs.utils.functions as functions
 from discord import Embed
@@ -8,8 +9,7 @@ from configparser import ConfigParser
 
 
 path = os.path.abspath(os.getcwd())
-info = ConfigParser()
-config = ConfigParser()
+info, config = ConfigParser(), ConfigParser()
 info.read(rf'{path}/info.ini')
 config.read(rf'{path}/config.ini')
 
@@ -94,6 +94,14 @@ class NewHelpCommand(commands.HelpCommand):
         if cmd.aliases:
             embed.add_field(name="Aliases", value=", ".join(cmd.aliases), inline=False)
         
+        if cmd.signature:
+            argument_text = "\n< > is a <required> argument.\n[ ] is an [optional] argument."
+            clean_signature = re.sub(r'=\d+', '', cmd.signature)
+        else:
+            no_argument_text = "\nThis command has no extra arguments."
+            clean_signature = ""
+        embed.add_field(name="Usage", value=f"{prefix}{cmd.name} {clean_signature}{argument_text if cmd.signature else no_argument_text}", inline=False)
+        
         embed.set_footer(text=botversion)
         await self.get_destination().send(embed=embed)
 
@@ -118,4 +126,16 @@ class NewHelpCommand(commands.HelpCommand):
         embed.add_field(name="―――――――――――――――――――", value=f"Run {prefix}{self.invoked_with} [command] to learn more about a command", inline=False)
         embed.set_footer(text=botversion)
         await self.get_destination().send(embed=embed)
+        
+        
+    # async def send_command_help(self, cmd):
+    #     desc = \
+    #     f"name: {cmd.name}\ncog: {cmd.cog_name}\ndescription:\n {cmd.help or cmd.short_doc}\n\n" \
+    #     f"aliases:\n - {', '.join(cmd.aliases) if cmd.aliases else 'None'}\n\n" \
+    #     f"usage: {cmd.name} {cmd.signature}"
+
+    #     embed = discord.Embed(title=f"Command info: {cmd.qualified_name}")
+    #     embed.description = f"```yaml\n---\n{desc}\n---\n```"
+    #     embed.set_footer(text="[optional], <required>, = denotes default value")
+    #     await self.get_destination().send(embed=embed)
 
