@@ -27,6 +27,11 @@ class AdminCommands(commands.Cog):
     
     @commands.command(aliases=["update"], hidden=True)
     async def update_bot(self, ctx):
+        '''
+        Update the bot's code from the remote repository and report the number of commits behind and ahead. 
+        If the bot is already up to date, no action is taken. 
+        This command is hidden and can only be used by the bot owner.
+        '''
         if ctx.author.id == owner_id:
             repo = git.Repo(path)
             repo.remotes.origin.fetch()
@@ -50,13 +55,14 @@ class AdminCommands(commands.Cog):
         await bot_msg1.delete(delay=MSG_DEL_DELAY)
         await bot_msg2.delete(delay=MSG_DEL_DELAY)
     
-    @commands.command(hidden=True)
-    async def roles(self, ctx, *, member: MemberRoles):
-        """Tells you a member's roles."""
-        await ctx.send('I see the following roles:``` '+', '.join(member)+'```')
-    
-    @commands.command(aliases=["wh"], hidden=True)
+    @commands.has_permissions(administrator=True)
+    @commands.command(name='webhook', aliases=["wh"], hidden=True)
     async def webhook(self, ctx, webhook_name:str, message:str):
+        '''
+        Create a new webhook in the current channel with the given name and send a message using it. 
+        The message can contain any text and will be sent as the webhook's username. 
+        This command is hidden and can only be used by authorized users.
+        '''
         # async def create_webhook():
         #     server_id = ctx.guild.id
         #     channel_id = ctx.channel.id

@@ -35,11 +35,20 @@ class StatusManager(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.group(name='botstatus', invoke_without_command=True)
     async def botstatus_base(self, ctx):
+        '''
+        This command group is used to change the bot's status.
+        It Gets the current status of the bot and send it as a message to the channel.
+        '''
         await ctx.channel.send(f'current status is: {status}')
     
     @commands.has_permissions(administrator=True)
     @botstatus_base.command(name='set', invoke_without_command=False)
     async def setbotstatus(self, ctx, *, statusmessage):
+        '''
+        Changes the bot's status message to the given `statusmessage`.
+        Prompts the user to select whether the bot should be "watching" or "listening to" the status message.
+        Updates the bot's status and saves the new status message to the `info.ini` file.
+        '''
         message = await ctx.send(f"[1️⃣ for watching]. [2️⃣ for listening to.]")
         await message.add_reaction('1️⃣')
         await message.add_reaction('2️⃣')

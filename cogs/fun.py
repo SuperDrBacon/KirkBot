@@ -171,10 +171,10 @@ class Fun(commands.Cog):
         else:
             pass
     
-    @commands.command()
+    @commands.command(name='ping')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def ping(self, ctx):
-        '''See delay of the bot'''
+        '''Get the bot's current response time.'''
         async with ctx.typing():
             before = time.monotonic()
             before_ws = int(round(self.bot.latency * 1000, 1))
@@ -183,10 +183,10 @@ class Fun(commands.Cog):
             # await ctx.send(f'plong {round(self.bot.latency * 1000)} ms')
             await message.edit(content=f"🏓 WS: {before_ws}ms  |  REST: {int(ping)}ms")
     
-    @commands.command(aliases=['8ball'])
+    @commands.command(name='8ball')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def _8ball(self, ctx, *, question: str):
-        '''[_8ball] [8ball]. Ask a question and get a response'''
+        '''Ask the magic 8ball a question and get an answer back.'''
         responses = ["It is certain.",
                     "It is decidedly so.",
                     "Without a doubt.",
@@ -213,7 +213,9 @@ class Fun(commands.Cog):
     @commands.command(name='checkem', aliases=['check', 'c'])
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def checkem(self, ctx):
-        '''[checkem] [check] [c]. Check random number for dubs trips etc.'''
+        '''
+        Generate a random 9-digit number and check if it contains any repeating digits. 
+        '''
         async with ctx.typing():
             number = random.randint(100000000, 999999999)
             numlist = list(map(int, str(number)))
@@ -254,7 +256,13 @@ class Fun(commands.Cog):
     @commands.command(name='bigletter', aliases=['em'])
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def bigletter(self, ctx, *, input:str):
-        '''[bigletter] [em]. Types you messages in letter emojis. '''
+        '''
+        Convert the given input text to a string of emojis representing each letter or number. 
+        Each letter is represented by the corresponding regional indicator emoji, 
+        each number is represented by the corresponding spelled-out emoji, 
+        and each question mark is represented by the question mark emoji. 
+        The resulting string is sent as a message to the channel and the original message is deleted.
+        '''
         await ctx.message.delete()
         emojis = []
         async with ctx.typing():
@@ -273,7 +281,10 @@ class Fun(commands.Cog):
     @commands.command(name='braille', aliases=['br'])
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def braille(self, ctx, *, input:str):
-        '''[braille] [br]. Converts you message to braille so blind people can read it.'''
+        '''
+        Convert the given input text to a string of Braille characters and send it as a message to the channel. 
+        Each letter is represented by the corresponding Braille character. 
+        '''
         async with ctx.typing():
             braille = input.lower().replace("a", "⠁").replace("b", "⠃").replace("c", "⠉").replace("d", "⠙").replace("e", "⠑").replace("f", "⠋").replace("g", "⠛").replace("h", "⠓").replace("i", "⠊").replace("j", "⠚").replace("k", "⠅").replace("l", "⠅").replace("m", "⠍").replace("n", "⠝").replace("o", "⠕").replace("p", "⠏").replace("q", "⠟").replace("r", "⠗").replace("s", "⠎").replace("t", "⠞").replace("u", "⠥").replace("v", "⠧").replace("w", "⠺").replace("x", "⠭").replace("y", "⠽").replace("z", "⠵")
             await ctx.send(f'For the blind: {braille}')
@@ -281,7 +292,10 @@ class Fun(commands.Cog):
     @commands.command(name='youtube', aliases=['yt'])
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def youtube(self, ctx, *, search:str):
-        '''[youtube] [yt]. Posts youtube vid from search.'''
+        '''
+        Search for a YouTube video using the given search query and send a message with the first result. 
+        The message includes reaction buttons for navigating through the search results. 
+        '''
         async with ctx.typing():
             query_string = urllib.parse.urlencode({'search_query':search})
             html_content = urllib.request.urlopen('https://www.youtube.com/results?' + query_string)
@@ -328,6 +342,10 @@ class Fun(commands.Cog):
     @commands.group(name='gcp', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def gcp_dot_base(self, ctx):
+        '''
+        Get the current status of the GCP Dot and send it as a message to the channel. 
+        The message includes an image of the current GCP Dot and the whole chart, as well as an explanation of the dot's color and percentage. 
+        '''
         async with ctx.typing():
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
@@ -403,6 +421,11 @@ class Fun(commands.Cog):
     @gcp_dot_base.command(name='full', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def gcp_dot_full(self, ctx):
+        '''
+        Get the current status of the GCP Dot and send it as a message to the channel. 
+        The message includes an image of the current GCP Dot and the whole chart, as well as an explanation of the dot's color and percentage.
+        The message also includes an explanation of all the colors.
+        '''
         async with ctx.typing():
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
@@ -484,6 +507,10 @@ class Fun(commands.Cog):
     @commands.group(name='tag', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def tag_base(self, ctx, member:discord.Member):
+        '''
+        Tag a user and add the "Tag" role to them.
+        Removes it from the author of the command, i.e. the person who was tagged before.
+        '''
         serverNAME = ctx.guild.name
         serverID = ctx.guild.id
         userNAME = member.name
@@ -524,6 +551,9 @@ class Fun(commands.Cog):
     @tag_base.command(name='get', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def tag_get(self, ctx):
+        '''
+        Get the user who is currently tagged.
+        '''
         role = discord.utils.get(ctx.guild.roles, name='Tag')
         guild = self.bot.get_guild(ctx.guild.id)
         async with ctx.typing():
@@ -535,6 +565,9 @@ class Fun(commands.Cog):
     @commands.command(name='whocare')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def who_care(self, ctx):
+        '''
+        Add the who care(s) react to the message it reacted to.
+        '''
         if ctx.message.reference:
             await ctx.message.delete()
             message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
@@ -551,9 +584,12 @@ class Fun(commands.Cog):
             await ctx.message.delete()
     
     @commands.has_permissions(administrator=True)
-    @commands.command(aliases=["p"])
+    @commands.command(name='probe', aliases=["p"])
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def probe(self, ctx):
+        '''
+        Add the probe react to the message it reacted to.
+        '''
         await ctx.message.delete()
         if ctx.message.reference:
             message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
@@ -564,6 +600,10 @@ class Fun(commands.Cog):
     @commands.group(name='flag', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_base(self, ctx, member:discord.Member, emoji:str):
+        '''
+        Add a flag to a member. 
+        The command takes a member and an emoji as arguments and adds the emoji as a reaction to the messages send by the member.
+        '''
         re_emoji_custom = r'<a?:.+?:\d{18,19}>'
         re_emoji_generic = re.compile("[""\U0001F1E0-\U0001F1FF"  # flags (iOS)
                                         "\U0001F300-\U0001F5FF"  # symbols & pictographs
@@ -605,6 +645,9 @@ class Fun(commands.Cog):
     @flag_base.command(name='remove', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_remove(self, ctx, member:discord.Member):
+        '''
+        remove a flag from a member.
+        '''
         with open(flagpath, 'r') as flagin:
             flagdata = json.load(flagin)  
         
@@ -626,6 +669,9 @@ class Fun(commands.Cog):
     @flag_base.command(name='toggle', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_toggle(self, ctx):
+        '''
+        Toggle the flag react on or off in certain channels.
+        '''
         with open(flagpath, 'r') as flagin:
             flagdata = json.load(flagin)  
         
@@ -649,6 +695,9 @@ class Fun(commands.Cog):
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def emojis(self, ctx):
+        '''
+        Save all emojis bot can access.
+        '''
         # await ctx.message.reply(f'Copy of all emojis in the server:\n{" ".join([str(emoji) for emoji in ctx.guild.emojis])}\n\nCopy of all emojis bot can access:\n{" ".join([str(emoji) for emoji in self.bot.emojis])}\n\nAll emojis saved.')
         await ctx.send('Tried to save all emojis bot can access')
         for emoji in self.bot.emojis:
@@ -657,6 +706,9 @@ class Fun(commands.Cog):
     
     @tag_base.error
     async def tag_base_handeler(self, ctx, error):
+        '''
+        Error handler for tag_base command.
+        '''
         if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
             await ctx.guild.create_role(name='Tag')
             await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Tag'))
@@ -667,6 +719,10 @@ class Fun(commands.Cog):
     @commands.group(name='wordcount', aliases=["wc"], invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_base(self, ctx, member:Union[discord.Member, int], input_word:str=None):
+        '''
+        Get the word count statistics for a user in the server. 
+        The command takes a member and an optional input word as arguments and returns the top used words and their occurrence count for the user.
+        '''
         if isinstance(member, discord.Member):
             user_id = member.id
         else:
@@ -719,6 +775,9 @@ class Fun(commands.Cog):
 
     @wordcount_base.error
     async def wordcount_base_error(self, ctx, error):
+        '''
+        Error handler for wordcount_base command.
+        '''
         if isinstance(error, commands.UserInputError):
             msg = await ctx.reply('The second argument needs to be either: [`@user` or `ID`]'+f', `server`, or `channel`. Refer to `{command_prefix}help fun wordcount` for details on all the possible commands.')
             ctx._ignore_ = True
@@ -728,6 +787,10 @@ class Fun(commands.Cog):
     @wordcount_base.command(name='server', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_server(self, ctx, input_word:str=None):
+        '''
+        Get the word count statistics for the server. 
+        The command takes an optional input word as an argument and returns the top used words and their occurrence count for the server.
+        '''
         con = sqlite3.connect(log_database)
         cur = con.cursor()
         cur.execute('SELECT user_id, message FROM log_data WHERE server_id = ?', (ctx.guild.id,))
@@ -783,6 +846,10 @@ class Fun(commands.Cog):
     @wordcount_base.command(name='channel', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_channel(self, ctx, input_word:str=None):
+        '''
+        Get the word count statistics for the channel. 
+        The command takes an optional input word as an argument and returns the top used words and their occurrence count for the channel.
+        '''
         con = sqlite3.connect(log_database)
         cur = con.cursor()
         cur.execute('SELECT user_id, message FROM log_data WHERE channel_id = ?', (ctx.channel.id,))

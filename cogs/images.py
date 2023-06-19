@@ -34,12 +34,12 @@ class Images(commands.Cog):
     async def on_ready(self):
         print('Images module online')
     
-    '''
-    React to a message with a random react image with a speech bubble above and their message above that
-    '''
     @commands.command(name='react')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def add_speech_bubble(self, ctx, *, facetype:str = ''):
+        '''
+        React to a message with a random react image with a speech bubble above and their message above that.
+        '''
         byteio = BytesIO()
         react_images = []            
         print(imagepath)
@@ -111,12 +111,12 @@ class Images(commands.Cog):
             await mgs2.delete()
             await ctx.message.delete()
     
-    '''
-    Caption the previous image or gif posted in the chat
-    '''
     @commands.command(name='caption')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def caption_image(self, ctx, *, caption:str = ''):
+        '''
+        Caption the previous image or gif posted in the chat.
+        '''
         byteio = BytesIO()
         messages = await ctx.channel.history(limit=50, oldest_first=False).flatten()
         if os.path.exists(imagepath+'dl temp.png'):

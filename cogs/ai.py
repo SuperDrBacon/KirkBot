@@ -166,23 +166,27 @@ class Ai(commands.Cog):
             else:
                 await ctx.reply(out)
         
-    @commands.command()
+    @commands.command(name='ai')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def ai(self, ctx, *, message):
-            message = message + '.\n\n'
-            response = openai.Completion.create(
-                engine=textmodel,
-                prompt=message,
-                temperature=1.0,
-                max_tokens=500,
-                n=1,
-                frequency_penalty=0.2,
-                presence_penalty=0.2,
-                # stop=["."]
-            )
-            out = response.choices[0].text[:2000]
-            await ctx.reply(out)
-            # await ctx.reply('Yea uuh another free trial ran out')
+        '''
+        Send a message to OpenAI's GPT-3 engine and receive a response. 
+        The message is used as a prompt for the engine and the response is limited to 2000 characters.
+        '''
+        message = message + '.\n\n'
+        response = openai.Completion.create(
+            engine=textmodel,
+            prompt=message,
+            temperature=1.0,
+            max_tokens=500,
+            n=1,
+            frequency_penalty=0.2,
+            presence_penalty=0.2,
+            # stop=["."]
+        )
+        out = response.choices[0].text[:2000]
+        await ctx.reply(out)
+        # await ctx.reply('Yea uuh another free trial ran out')
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))

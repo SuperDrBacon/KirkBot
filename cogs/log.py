@@ -140,13 +140,13 @@ class Logger(commands.Cog):
                     cur.close()
                     con.close()
     
-    '''
-    Gets all the messages and files in the channel and puts them in a file named the channel name.
-    '''
     @commands.has_permissions(administrator=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(name='archive')
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def archive(self, ctx, number:int=None):
+        '''
+        Gets all the messages and files in the channel and puts them in a file named the channel name.
+        '''
         channel_name = ctx.channel.name
         uuuid = f'-{str(uuid.uuid4())[:3]}-'
         text_content = ""
