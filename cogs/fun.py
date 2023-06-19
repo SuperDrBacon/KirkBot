@@ -128,9 +128,9 @@ class Fun(commands.Cog):
     async def on_message(self, ctx): 
         if ctx.author.bot:
             return
-        if ctx.content.startswith('Kirk') or ctx.content.startswith('kirk') or ctx.content.startswith('KIRK'):
-            lines = loadLines()
-            await ctx.channel.send(random.choice(lines))
+        # if ctx.content.startswith('Kirk') or ctx.content.startswith('kirk') or ctx.content.startswith('KIRK'):
+        #     lines = loadLines()
+        #     await ctx.channel.send(random.choice(lines))
         
         userID = ctx.author.id
         channelID = ctx.channel.id
