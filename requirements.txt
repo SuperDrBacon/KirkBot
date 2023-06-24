@@ -1,6 +1,7 @@
 beautifulsoup4==4.12.2
-discord.py==2.2.3
+discord.py==2.3.0
 Flask==2.3.2
+Flask_Sockets==0.2.1
 GitPython==3.1.31
 numpy==1.23.4
 openai==0.18.1
@@ -8,5 +9,5 @@ Pillow==9.5.0
 pypresence==4.2.1
 python-mpv==1.0.3
 requests==2.31.0
-selenium==4.9.1
+selenium==4.10.0
 webdriver_manager==3.5.4
