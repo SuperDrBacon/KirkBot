@@ -1,9 +1,8 @@
 config.ini
-__pycache__
-
 *.db
 log*
 error.txt
+pipreqs.txt
 *_database-text.txt
 # chromedriver.exe
 images/final_react.png
@@ -15,10 +14,13 @@ cogs/tag.json
 cogs/kirklines.txt
 cogs/flags.json
 cogs/basedList.json
+
 # /emojis/
 /webpage/
 /static/
 /templates/
 
-.vscode/settings.json
+.vscode/
 .history/
+__pycache__
+
