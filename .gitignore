@@ -1,37 +1,24 @@
 config.ini
-messages.txt
-genAI_log.txt
-jsonLogToMessages.txt
-kirkai wordmodel_weights.hdf5
-kirkai wordmodel_vocab.json
-kirkai wordmodel_config.json
 __pycache__
 
 *.db
 log*
 error.txt
-seriouslinks.txt
-seriouschannel.txt
-copypastachannel.txt
 *_database-text.txt
 # chromedriver.exe
 images/final_react.png
 images/final_react.gif
-images/wholechart.png
 images/dl temp.png
 images/dl temp.gif
 
 cogs/tag.json
 cogs/kirklines.txt
-cogs/log.json
-cogs/bannedwords.txt
 cogs/flags.json
 cogs/basedList.json
 # /emojis/
-cogs/OHAI_weights.hdf5
-cogs/OHAI_vocab.json
-cogs/OHAI_config.json
 /webpage/
+/static/
+/templates/
 
 .vscode/settings.json
 .history/
