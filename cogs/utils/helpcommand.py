@@ -96,7 +96,8 @@ class NewHelpCommand(commands.HelpCommand):
         
         if cmd.signature:
             argument_text = "\n< > is a <required> argument.\n[ ] is an [optional] argument."
-            clean_signature = re.sub(r'=\d+', '', cmd.signature)
+            print (cmd.signature)
+            clean_signature = re.sub(r'=[^\]]+(?=\])', '', cmd.signature)
         else:
             no_argument_text = "\nThis command has no extra arguments."
             clean_signature = ""
