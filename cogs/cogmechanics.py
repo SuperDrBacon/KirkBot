@@ -17,44 +17,56 @@ class CogManager(commands.Cog):
     
     @commands.Cog.listener()
     async def on_ready(self):
-            print('Cog loader/unloader/reloader module online')
+        print('Cog loader/unloader/reloader module online')
     
     @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
-    async def load(self, ctx, name: str):
+    async def load(self, ctx, name:str):
         '''Loads a module.'''
         if ctx.author.id == owner_id:
             try:
                 await self.bot.load_extension(f"cogs.{name}")
             except Exception as e:
+                msg = await ctx.reply(f"Error when loading module: {e}")
+                await ctx.message.delete(delay=MSG_DEL_DELAY)
+                await msg.delete(delay=MSG_DEL_DELAY)
                 return print(f"Error when loading module: {e}")
-            msg = await ctx.send(f"Loaded module **{name}**")
+            
+            msg = await ctx.reply(f"Loaded module **{name}**")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
     @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
-    async def un(self, ctx, name: str):
+    async def un(self, ctx, name:str):
         '''Unloads a module.'''
         if ctx.author.id == owner_id:
             try:
                 await self.bot.unload_extension(f"cogs.{name}")
             except Exception as e:
+                msg = await ctx.reply(f"Error when unloading module: {e}")
+                await ctx.message.delete(delay=MSG_DEL_DELAY)
+                await msg.delete(delay=MSG_DEL_DELAY)
                 return print(f"Error when unloading module: {e}")
-            msg = await ctx.send(f"Unloaded module **{name}**")
+            
+            msg = await ctx.reply(f"Unloaded module **{name}**")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
     @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
-    async def re(self, ctx, name: str):
+    async def re(self, ctx, name:str):
         '''Reloads a module.'''
         if ctx.author.id == owner_id:
             try:
                 await self.bot.reload_extension(f"cogs.{name}")
             except Exception as e:
+                msg = await ctx.reply(f"Error when reloading module: {e}")
+                await ctx.message.delete(delay=MSG_DEL_DELAY)
+                await msg.delete(delay=MSG_DEL_DELAY)
                 return print(f"Error when reloading module: {e}")
-            msg = await ctx.send(f"Reloaded module **{name}**")
+            
+            msg = await ctx.reply(f"Reloaded module **{name}**")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
@@ -71,7 +83,11 @@ class CogManager(commands.Cog):
                         await self.bot.reload_extension(f"cogs.{name}")
                         await msg.edit(content=f"Reloaded module **{name}**")
                     except Exception as e:
-                        return print(f"The following module failed...\n\n{e}")
+                        msg = await ctx.reply(f"Error when reloading module: {e}")
+                        await ctx.message.delete(delay=MSG_DEL_DELAY)
+                        await msg.delete(delay=MSG_DEL_DELAY)
+                        return print(f"Error when unloading module: {e}")
+            
             await msg.edit(content="Successfully reloaded all modules")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
@@ -89,7 +105,11 @@ class CogManager(commands.Cog):
                         await self.bot.load_extension(f"cogs.{name}")
                         await msg.edit(content=f"Loaded module **{name}**")
                     except Exception as e:
-                        return print(f"The following module failed...\n\n{e}")
+                        msg = await ctx.reply(f"Error when loading module: {e}")
+                        await ctx.message.delete(delay=MSG_DEL_DELAY)
+                        await msg.delete(delay=MSG_DEL_DELAY)
+                        return print(f"Error when unloading module: {e}")
+            
             await msg.edit(content="Successfully loaded all modules")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
@@ -104,9 +124,13 @@ class CogManager(commands.Cog):
                     name = filename[:-3]
                     try:
                         await self.bot.unload_extension(f"cogs.{name}")
-                        await message.edit(content=f"unloaded module **{name}**")
+                        await message.edit(content=f"Unloaded module **{name}**")
                     except Exception as e:
-                        return print(f"The following module failed...\n\n{e}")
+                        msg = await ctx.reply(f"Error when unloading module: {e}")
+                        await ctx.message.delete(delay=MSG_DEL_DELAY)
+                        await msg.delete(delay=MSG_DEL_DELAY)
+                        print(f"Error when unloading module: {e}")
+            
             await message.edit(content="Going offline, goodbye, finally at rest")
             await self.bot.close()
             sys.exit('Bot stopped manually')
