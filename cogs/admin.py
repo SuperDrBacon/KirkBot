@@ -40,23 +40,21 @@ class AdminCommands(commands.Cog):
             repo.remotes.origin.fetch()
             commits_behind = len(list(repo.iter_commits('master..origin/master')))
             commits_ahead = len(list(repo.iter_commits('origin/master..master')))
-            bot_msg1 = await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead')
+            await ctx.send(f'{commits_behind} commits behind, {commits_ahead} commits ahead', delete_after=MSG_DEL_DELAY)
             
             if commits_behind > 0 and commits_ahead > 0:
                 repo.remotes.origin.push()
                 repo.remotes.origin.pull()
-                bot_msg2 = await ctx.send('KirBot local and remote updated')
+                await ctx.send('KirBot local and remote updated', delete_after=MSG_DEL_DELAY)
             elif commits_behind > 0:
                 repo.remotes.origin.pull()
-                bot_msg2 = await ctx.send('KirBot local updated')	
+                await ctx.send('KirBot local updated', delete_after=MSG_DEL_DELAY)	
             elif commits_ahead > 0:
                 repo.remotes.origin.push()
-                bot_msg2 = await ctx.send('KirBot remote updated')
+                await ctx.send('KirBot remote updated', delete_after=MSG_DEL_DELAY)
             else:
-                bot_msg2 = await ctx.send('KirkBot is already up to date with the remote')
+                await ctx.send('KirkBot is already up to date with the remote', delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
-        await bot_msg1.delete(delay=MSG_DEL_DELAY)
-        await bot_msg2.delete(delay=MSG_DEL_DELAY)
     
     @commands.has_permissions(administrator=True)
     @commands.command(name='webhook', aliases=["wh"], hidden=True)
