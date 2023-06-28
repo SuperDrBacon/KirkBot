@@ -32,6 +32,7 @@ class Error(commands.Cog):
                 embed = discord.Embed(title=f"Error description", description=f"I couldn't send this information to you via direct message. Are your DMs enabled?", color=0xff0000)
                 embed.add_field(name="Error techincal", value=f"{error}", inline=False)
                 embed.set_footer(text=botversion)
+                await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
             
         elif isinstance(error, commands.MissingRequiredArgument):
@@ -41,6 +42,7 @@ class Error(commands.Cog):
                 embed = discord.Embed(title=f"Error description", description=f"You missed the argument `{error.param.name}` for this command!", color=0xff0000)
                 embed.add_field(name="Error techincal", value=f"{error}", inline=False)
                 embed.set_footer(text=botversion)
+                await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
         
         elif isinstance(error, commands.MissingPermissions):
@@ -50,6 +52,7 @@ class Error(commands.Cog):
                 embed = discord.Embed(title=f"Error description", description=f"Missing permissions: {error.missing_permissions}", color=0xff0000)
                 embed.add_field(name="Error techincal", value=f"{error}", inline=False)
                 embed.set_footer(text=botversion)
+                await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
             
         elif isinstance(error, discord.Forbidden):
