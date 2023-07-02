@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import os
 import re
 import discord
@@ -15,7 +15,6 @@ config.read(rf'{path}/config.ini')
 
 prefix = config['BOTCONFIG']['prefix']
 botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
-timestamp = datetime.datetime.now()
 
 class NewHelpCommand(commands.HelpCommand):
     '''
@@ -36,7 +35,7 @@ class NewHelpCommand(commands.HelpCommand):
             None
         '''
         
-        embed = Embed(title="All Commands", color=discord.Colour.gold(), timestamp=timestamp)
+        embed = Embed(title="All Commands", color=discord.Colour.gold(), timestamp=dt.datetime.utcnow())
         
         for cog, commands in mapping.items():
             if cog is None:
@@ -63,14 +62,14 @@ class NewHelpCommand(commands.HelpCommand):
         Returns:
             None
         '''
-        embed = Embed(title=f"Group: {group.name}", description=group.description or "No description available.", color=discord.Colour.gold(), timestamp=timestamp)
+        embed = Embed(title=f"Group: {group.name}", description=group.description or "All commands related to this group", color=discord.Colour.gold(), timestamp=dt.datetime.utcnow())
         
         if group.help:
             embed.add_field(name="Help", value=group.help, inline=False)
         
         for command in group.commands:
             if not command.hidden:
-                embed.add_field(name=command.name, value=command.help or "No description available.", inline=False)
+                embed.add_field(name=f'{prefix}{group.name} {command.name}', value=command.help or "No description available.", inline=False)
         
         embed.set_footer(text=botversion)
         await self.get_destination().send(embed=embed)
@@ -86,7 +85,7 @@ class NewHelpCommand(commands.HelpCommand):
         Returns:
             None
         '''
-        embed = Embed(title=f"Command: {cmd.name}", description=cmd.help or "No description available.", color=discord.Colour.gold(), timestamp=timestamp)
+        embed = Embed(title=f"Command: {cmd.name}", description=cmd.help or "No description available.", color=discord.Colour.gold(), timestamp=dt.datetime.utcnow())
         
         if cmd.usage:
             embed.add_field(name="Usage", value=f"{prefix}{cmd.name} {cmd.usage}", inline=False)
@@ -100,8 +99,7 @@ class NewHelpCommand(commands.HelpCommand):
         else:
             no_argument_text = "\nThis command has no extra arguments."
             clean_signature = ""
-        embed.add_field(name="Usage", value=f"{prefix}{cmd.name} {clean_signature}{argument_text if cmd.signature else no_argument_text}", inline=False)
-        
+        embed.add_field(name="Usage", value=f"{prefix}{' '.join(self.context.message.content.split(' ')[1:]) or cmd.name} {clean_signature}{argument_text if cmd.signature else no_argument_text}", inline=False)
         embed.set_footer(text=botversion)
         await self.get_destination().send(embed=embed)
 
@@ -116,7 +114,7 @@ class NewHelpCommand(commands.HelpCommand):
         Returns:
             None
         '''
-        embed = Embed(title=f"Module: {cog.qualified_name}", description=cog.description or "No description available.", color=discord.Colour.gold(), timestamp=timestamp)
+        embed = Embed(title=f"Module: {cog.qualified_name}", description=cog.description or "No description available.", color=discord.Colour.gold(), timestamp=dt.datetime.utcnow())
         
         for command in cog.get_commands():
             if not command.hidden:
