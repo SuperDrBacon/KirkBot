@@ -19,6 +19,7 @@ command_prefix = config['BOTCONFIG']['prefix']
 botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
 
 MSG_DEL_DELAY = 10
+SECOND_LOOP_DELAY = 5
 
 time_units = {  
     's':        ('second',  'seconds',  1),
@@ -52,13 +53,21 @@ class Autodelete(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.loopcounter = 0
+        self.monitor_expired_messages_task = None
+        # loop = asyncio.get_event_loop()
+        # self.monitor_expired_messages_task = loop.create_task(self.monitor_expired_messages_loop())
+        # loop.run_forever()
+        if not self.monitor_expired_messages_task or self.monitor_expired_messages_task.done():
+            self.monitor_expired_messages_task = asyncio.create_task(self.monitor_expired_messages_loop())
         functions.checkForFile(os.path.dirname(autodelete_database), os.path.basename(autodelete_database), True, 'autodelete')
     
     @commands.Cog.listener()
     async def on_ready(self):
-        if not self.monitor_expired_messages.is_running():
-            self.monitor_expired_messages.start()
-        await self.fetch_missed_messages()
+        # if not self.monitor_expired_messages.is_running():
+        #     self.monitor_expired_messages.start()
+        # await self.fetch_missed_messages()
+        # if not self.monitor_expired_messages_task or self.monitor_expired_messages_task.done():
+        #     self.monitor_expired_messages_task = asyncio.create_task(self.monitor_expired_messages_loop())
         print('Autodelete module online')
     
     def time_seconds(self, numeric_part:int, unit_part:str):
@@ -450,36 +459,74 @@ class Autodelete(commands.Cog):
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY*3)
                 ctx._ignore_ = True
     
+    # async def cog_unload(self):
+    #     print('Autodelete cog_unload stopping monitor_expired_messages loop')
+    #     if self.monitor_expired_messages.is_running():
+    #         self.monitor_expired_messages.stop()
+    
+    # async def cog_load(self):
+    #     print('Autodelete cog_load starting monitor_expired_messages loop')
+    #     if not self.monitor_expired_messages.is_running():
+    #         self.monitor_expired_messages.start()
+    
+    # @commands.Cog.listener()
+    # async def on_disconnect(self):
+    #     if self.monitor_expired_messages.is_running():
+    #         self.monitor_expired_messages.stop()
+    
+    # @commands.Cog.listener()
+    # async def on_resumed(self):
+    #     if not self.monitor_expired_messages.is_running():
+    #         self.monitor_expired_messages.start()
+    
     async def cog_unload(self):
-        print('Autodelete cog_unload stopping monitor_expired_messages loop')
-        if self.monitor_expired_messages.is_running():
-            self.monitor_expired_messages.stop()
+        # print('Autodelete cog_unload stopping monitor_expired_messages loop')
+        if self.monitor_expired_messages_task and not self.monitor_expired_messages_task.done():
+            self.monitor_expired_messages_task.cancel()
     
     async def cog_load(self):
-        print('Autodelete cog_load starting monitor_expired_messages loop')
-        if not self.monitor_expired_messages.is_running():
-            self.monitor_expired_messages.start()
+        await asyncio.sleep(2)
+        # print('Autodelete cog_load starting monitor_expired_messages loop')
+        if self.monitor_expired_messages_task and self.monitor_expired_messages_task.done():
+            loop = asyncio.get_event_loop()
+            self.monitor_expired_messages_task = loop.create_task(self.monitor_expired_messages_loop())
     
     @commands.Cog.listener()
     async def on_disconnect(self):
-        if self.monitor_expired_messages.is_running():
-            self.monitor_expired_messages.stop()
+        if self.monitor_expired_messages_task and not self.monitor_expired_messages_task.done():
+            self.monitor_expired_messages_task.cancel()
     
     @commands.Cog.listener()
     async def on_resumed(self):
-        if not self.monitor_expired_messages.is_running():
-            self.monitor_expired_messages.start()
+        await asyncio.sleep(2)
+        if self.monitor_expired_messages_task and self.monitor_expired_messages_task.done():
+            loop = asyncio.get_event_loop()
+            self.monitor_expired_messages_task = loop.create_task(self.monitor_expired_messages_loop())
+
     
-    @tasks.loop(reconnect=True, seconds=5)
-    async def monitor_expired_messages(self):
-        self.loopcounter += 5
-        await self.get_expired_messages()
+    # @tasks.loop(reconnect=True, seconds=5)
+    # async def monitor_expired_messages(self):
+    #     self.loopcounter += 5
+    #     await self.get_expired_messages()
         
-        #run every 60 seconds as a cleanup and background check
-        if self.loopcounter % 60 == 0:
-            self.loopcounter = 0
-            await self.remove_deleted_items()
-            await self.fetch_missed_messages()
+    #     #run every 60 seconds as a cleanup and background check
+    #     if self.loopcounter % 60 == 0:
+    #         self.loopcounter = 0
+    #         await self.remove_deleted_items()
+    #         await self.fetch_missed_messages()
+    
+    async def monitor_expired_messages_loop(self):
+        while True:
+            # print ('monitor_expired_messages_loop')
+            await asyncio.sleep(SECOND_LOOP_DELAY)
+            self.loopcounter += SECOND_LOOP_DELAY
+            await self.get_expired_messages()
+            
+            #run every 60 seconds as a cleanup and background check
+            if self.loopcounter % 60 == 0:
+                self.loopcounter = 0
+                await self.remove_deleted_items()
+                await self.fetch_missed_messages()
 
 
 async def setup(bot):
