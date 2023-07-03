@@ -6,8 +6,12 @@ from pathlib import Path
 from urllib import request
 
 path = os.path.abspath(os.getcwd())
+log_database = rf'{path}/cogs/log_data.db'
+economy_database = rf'{path}/cogs/economy_data.db'
+autodelete_database = rf'{path}/cogs/autodelete_data.db'
 
-setup_table_log_database = '''CREATE TABLE IF NOT EXISTS log_data(
+setup_table_log_database = '''
+                CREATE TABLE IF NOT EXISTS log_data(
                     ID                      INTEGER     PRIMARY KEY,
                     SERVER_NAME             TEXT,
                     SERVER_ID               INTEGER,
@@ -25,7 +29,8 @@ setup_table_log_database = '''CREATE TABLE IF NOT EXISTS log_data(
                     DATE_TIME               TEXT,
                     UNIX_TIME               FLOAT);'''
 
-setup_table_economy_database = '''CREATE TABLE IF NOT EXISTS economy_data(
+setup_table_economy_database = '''
+                CREATE TABLE IF NOT EXISTS economy_data(
                     ID                      INTEGER     PRIMARY KEY,
                     USER_ID                 INTEGER,
                     USERNAME                TEXT,
@@ -39,19 +44,55 @@ setup_table_economy_database = '''CREATE TABLE IF NOT EXISTS economy_data(
                     BJ_LOSSES               INTEGER,
                     BJ_TIES                 INTEGER,
                     CF_WINS                 INTEGER,
-                    CF_LOSSES               INTEGER
-                    );'''
+                    CF_LOSSES               INTEGER);'''
+
+# setup_table_autodelete_database = '''CREATE TABLE IF NOT EXISTS autodelete_data(
+#                     ID                      INTEGER     PRIMARY KEY,
+#                     SERVER_ID               INTEGER,
+#                     CHANNEL_ID              INTEGER,
+#                     MESSAGE_ID              INTEGER,
+#                     COUNT                   INTEGER,
+#                     TIME_AFTER              FLOAT
+                    
+#                     );'''
+
+setup_table_autodelete_database = '''
+                CREATE TABLE IF NOT EXISTS servers (
+                    SERVER_ID           INTEGER     NOT NULL    PRIMARY KEY);
+                
+                CREATE TABLE IF NOT EXISTS channels (
+                    SERVER_ID           INTEGER         NOT NULL,
+                    CHANNEL_ID          INTEGER         NOT NULL,
+                    DEL_AFTER_TIME      INTEGER,
+                    DEL_AFTER_COUNT     INTEGER,
+                    FOREIGN KEY         (SERVER_ID)
+                        REFERENCES servers(SERVER_ID)
+                        ON DELETE CASCADE,
+                    PRIMARY KEY         (SERVER_ID, CHANNEL_ID));
+                
+                CREATE TABLE IF NOT EXISTS messages (
+                    SERVER_ID           INTEGER     NOT NULL,
+                    CHANNEL_ID          INTEGER     NOT NULL,
+                    MESSAGE_ID          INTEGER     NOT NULL,
+                    MESSAGE_TIME        INTEGER     NOT NULL,
+                    FOREIGN KEY         (CHANNEL_ID, SERVER_ID)
+                        REFERENCES channels(CHANNEL_ID, SERVER_ID)
+                        ON DELETE CASCADE,
+                    PRIMARY KEY         (SERVER_ID, CHANNEL_ID, MESSAGE_ID));'''
 
 def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
     """
-    Checks for the existence of a file and creates it if necessary.
-    If 'database' is True, it creates a SQLite database based on the 'dbtype'.
+    Checks for the existence of a file or database and creates it if necessary.
+    If 'database' is True, it creates a SQLite database based on the 'dbtype' if one does not exist.
     
     Args:
         filepath (str): The path where the file should be located.
         filename (str): The name of the file to be checked or created.
-        database (bool, optional): Flag indicating whether a database should be created. Defaults to False.
-        dbtype (str, optional): The type of the database to be created. Defaults to None.
+        database (bool, optional): Flag indicating whether a database should be checked. Defaults to False.
+        dbtype (str, optional): The type of the database to be checked. Defaults to None.
+    
+    Returns:
+        None
     """
     if os.path.isfile(os.path.join(filepath, filename)):
         # File already exists
@@ -70,7 +111,7 @@ def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
         if dbtype == 'log':
             try:
                 # Create a connection to the log database
-                con = sqlite3.connect(f'{path}/cogs/log_data.db')
+                con = sqlite3.connect(log_database)
                 cur = con.cursor()
                 # Execute setup_table_log_database query to create necessary tables
                 cur.execute(setup_table_log_database)
@@ -87,7 +128,7 @@ def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
         elif dbtype == 'economy':
             try:
                 # Create a connection to the economy database
-                con = sqlite3.connect(f'{path}/cogs/economy_data.db')
+                con = sqlite3.connect(economy_database)
                 cur = con.cursor()
                 # Execute setup_table_economy_database query to create necessary tables
                 cur.execute(setup_table_economy_database)
@@ -101,6 +142,23 @@ def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
                     cur.close()
                     con.close()
                     print("sqlite3 economy database created")
+        elif dbtype == 'autodelete':
+            try:
+                # Create a connection to the autodelete database
+                con = sqlite3.connect(autodelete_database)
+                cur = con.cursor()
+                # Execute setup_table_autodelete_database query to create necessary tables
+                cur.executescript(setup_table_autodelete_database)
+                con.commit()
+            except Exception as error:
+                # Failed to create the log database
+                print("Failed to make sqlite3 autodelete database:", error)
+            finally:
+                if con:
+                    # Close the connection
+                    cur.close()
+                    con.close()
+                    print("sqlite3 autodelete database created")
         else:
             # Invalid database type
             print("Database is True but dbtype is not one of the present options.")
@@ -109,6 +167,15 @@ def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
         print("Something is wrong with the checkForFile function.")
 
 def checkForDir(filepath):
+    """
+    Checks if a directory exists at the given filepath. If it does not exist, creates the directory.
+
+    Args:
+        filepath (str): The path to the directory to check/create.
+
+    Returns:
+        None
+    """
     if os.path.isdir(filepath):
         print (f"{filepath} exists")	
     else:
