@@ -421,7 +421,7 @@ class Autodelete(commands.Cog):
                         elif del_after_time:
                             embed.add_field(name=f"Channel: {channel.mention}", value=f"Autodelete Time: {del_after_time} seconds", inline=False)
                         elif del_after_count:
-                            embed.add_field(name=f"Channel: {channel.mention}", value=f"Autodelete Count: {del_after_count} messages", inline=False)
+                            embed.add_field(name=f"Channel: {channel.mention if channel else 'Channel: No but how?'}", value=f"Autodelete Count: {del_after_count} messages", inline=False)
                     except Exception:
                         if del_after_time and del_after_count:
                             embed.add_field(name=f"Channel: No channel found but how?", value=f"Autodelete Time: {del_after_time} seconds\nAutodelete Count: {del_after_count} messages", inline=False)
