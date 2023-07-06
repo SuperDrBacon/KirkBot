@@ -416,11 +416,11 @@ class Autodelete(commands.Cog):
                 for channel_id, del_after_time, del_after_count in channel_data:
                     channel = discord.utils.get(ctx.guild.channels, id=channel_id)
                     if del_after_time and del_after_count:
-                        embed.add_field(name=f"Channel: {channel.mention or 'Somehow channel isnt found'}", value=f"Autodelete Time: {del_after_time} seconds\nAutodelete Count: {del_after_count} messages", inline=False)
+                        embed.add_field(name=f"Channel: {channel.mention if channel.mention else 'Somehow channel isnt found'}", value=f"Autodelete Time: {del_after_time} seconds\nAutodelete Count: {del_after_count} messages", inline=False)
                     elif del_after_time:
-                        embed.add_field(name=f"Channel: {channel.mention or 'Somehow channel isnt found'}", value=f"Autodelete Time: {del_after_time} seconds", inline=False)
+                        embed.add_field(name=f"Channel: {channel.mention if channel.mention else 'Somehow channel isnt found'}", value=f"Autodelete Time: {del_after_time} seconds", inline=False)
                     elif del_after_count:
-                        embed.add_field(name=f"Channel: {channel.mention or 'Somehow channel isnt found'}", value=f"Autodelete Count: {del_after_count} messages", inline=False)
+                        embed.add_field(name=f"Channel: {channel.mention if channel.mention else 'Somehow channel isnt found'}", value=f"Autodelete Count: {del_after_count} messages", inline=False)
             else:
                 embed.add_field(name=f"No channels with autodelete activated in this server.", value=f"Use {command_prefix}help autodelete to get more info on how to start autodelete", inline=False)
             embed.set_footer(text=botversion)
