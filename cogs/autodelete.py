@@ -54,20 +54,13 @@ class Autodelete(commands.Cog):
         self.bot = bot
         self.loopcounter = 0
         self.monitor_expired_messages_task = None
-        # loop = asyncio.get_event_loop()
-        # self.monitor_expired_messages_task = loop.create_task(self.monitor_expired_messages_loop())
-        # loop.run_forever()
         if not self.monitor_expired_messages_task or self.monitor_expired_messages_task.done():
             self.monitor_expired_messages_task = asyncio.create_task(self.monitor_expired_messages_loop())
         functions.checkForFile(os.path.dirname(autodelete_database), os.path.basename(autodelete_database), True, 'autodelete')
     
     @commands.Cog.listener()
     async def on_ready(self):
-        # if not self.monitor_expired_messages.is_running():
-        #     self.monitor_expired_messages.start()
-        # await self.fetch_missed_messages()
-        # if not self.monitor_expired_messages_task or self.monitor_expired_messages_task.done():
-        #     self.monitor_expired_messages_task = asyncio.create_task(self.monitor_expired_messages_loop())
+        await self.fetch_missed_messages()
         print('Autodelete module online')
     
     def time_seconds(self, numeric_part:int, unit_part:str):
@@ -75,52 +68,59 @@ class Autodelete(commands.Cog):
         return int(seconds)
     
     async def fetch_missed_messages(self):
-        for guild in self.bot.guilds:
-            for channel in guild.channels:
-                async with aiosqlite.connect(autodelete_database) as con:
-                    async with con.execute("SELECT channel_id FROM channels WHERE channel_id = ?", (channel.id,)) as cursor:
-                        channel_in_database = await cursor.fetchone()
-                    if channel_in_database:
-                        async with con.execute("SELECT message_id, message_time FROM messages WHERE channel_id = ? ORDER BY message_time DESC", (channel.id,)) as cursor:
-                            last_message = await cursor.fetchone()
-                        if last_message:
-                            try:
+        async with aiosqlite.connect(autodelete_database) as con:
+            async with con.execute("SELECT server_id, channel_id FROM channels") as cursor:
+                server_channels = await cursor.fetchall()
+            
+            for server_id, channel_id in server_channels:
+                guild = self.bot.get_guild(server_id)
+                if guild:
+                    channel = guild.get_channel(channel_id)
+                    if channel:
+                        try:
+                            async with con.execute("SELECT message_id, message_time FROM messages WHERE channel_id = ? ORDER BY message_time DESC", (channel_id,)) as cursor:
+                                last_message = await cursor.fetchone()
+                            if last_message:
                                 async for message in channel.history(after=discord.Object(id=last_message[0]), oldest_first=True):
                                     if not message.pinned:
-                                        current_time = functions.get_unix_time()
-                                        await con.execute("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", (guild.id, channel.id, message.id, current_time))
+                                        await con.execute("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", (guild.id, channel.id, message.id, functions.get_unix_time()))
                                         await con.commit()
-                            except discord.Forbidden:
-                                await self.remove_deleted_items()
-                                await channel.send(f"Permission denied for deleting messages. Please give me the permission to delete messages in this channel.{channel.mention}")
-                            except aiosqlite.Error:
-                                await self.remove_deleted_items()
-                                await channel.send(f"Something went wrong with the database. Please try again later.")
+                        except discord.Forbidden:
+                            await self.remove_deleted_items()
+                            await channel.send(f"Permission denied for deleting messages. Please give me the permission to delete messages in this channel.{channel.mention}")
+                        except (aiosqlite.DatabaseError, aiosqlite.IntegrityError, aiosqlite.ProgrammingError, aiosqlite.OperationalError, aiosqlite.NotSupportedError) as e:
+                            await self.remove_deleted_items()
+                            print(f"Something went wrong with the database. Please try again later. Error: {type(e).__name__} - {e}")
     
-    async def delete_before_command_start(self, ctx):
+    async def delete_before_command_start(self, ctx, time:int=None, count:int=None):
         time_limit = discord.utils.utcnow() - dt.timedelta(days=13.9)  # 14 days, plus margin of error
-        messages = [message async for message in ctx.channel.history(limit=None, before=ctx.message, oldest_first=True) if not message.pinned]
-        bulk_deletable = [msg for msg in messages if msg.created_at > time_limit]
-        non_bulk_deletable = [msg for msg in messages if msg.created_at <= time_limit]
-        deletions = []
-        deletion_reason = "David Marcus II Autodelete"
+        full_message_list = [message async for message in ctx.channel.history(limit=None, before=ctx.message.created_at, oldest_first=True) if not message.pinned]
+        messages_to_delete = []
+        messages_to_database = []
+        if time and count:
+            messages_to_delete = full_message_list[:count]
+            messages_to_database = full_message_list[count:]
+        elif time:
+            for message in full_message_list:
+                if message.created_at < ctx.message.created_at - dt.timedelta(seconds=time):
+                    messages_to_delete.append(message)
+                else:
+                    messages_to_database.append(message)
+        elif count:
+            messages_to_delete = full_message_list[:count]
+            messages_to_database = full_message_list[count:]
         
-        if len(bulk_deletable) == 1:
-            #1 message to delete
-            deletions.append(bulk_deletable[0].delete())
+        if any(messages_to_database):
+            async with aiosqlite.connect(autodelete_database) as con:
+                for message in messages_to_database:
+                    await con.execute("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", (ctx.guild.id, ctx.channel.id, message.id, functions.get_unix_time()))
+                await con.commit()
         
-        elif bulk_deletable:
-            #2 or more messages to delete
-            for start in range(0, len(bulk_deletable), 100):
-                end = start + 100
-                chunk = bulk_deletable[start:end]
-                deletions.append(ctx.channel.delete_messages(chunk, reason=deletion_reason))
-        
-        for message in non_bulk_deletable:
-            #messages older than 14 days
-            deletions.append(message.delete())
-        
-        await asyncio.gather(*deletions)
+        if any(messages_to_delete):
+            bulk_deletable = [msg for msg in messages_to_delete if msg.created_at > time_limit]
+            non_bulk_deletable = [msg for msg in messages_to_delete if msg.created_at <= time_limit]
+            await ctx.channel.purge(limit=None, bulk=True, check=lambda message: message in bulk_deletable, reason="David Marcus II Autodelete")
+            await ctx.channel.purge(limit=None, bulk=False, check=lambda message: message in non_bulk_deletable, reason="David Marcus II Autodelete")
     
     async def remove_deleted_items(self):
         async with aiosqlite.connect(autodelete_database) as con:
@@ -129,23 +129,31 @@ class Autodelete(commands.Cog):
                 db_servers = await cursor.fetchall()
             
             existing_server_ids = [server[0] for server in db_servers]
-            for guild in self.bot.guilds:
-                if guild.id not in existing_server_ids:
+            for server_id in existing_server_ids:
+                check_server = self.bot.get_guild(server_id)
+                if not check_server:
                     await con.execute("PRAGMA foreign_keys = ON")
-                    await con.execute("DELETE FROM servers WHERE server_id = ?", (guild.id,))
+                    await con.execute("DELETE FROM servers WHERE server_id = ?", (server_id,))
                     await con.commit()
+                else:
+                    async with con.execute("SELECT channel_id FROM channels WHERE server_id = ?", (server_id,)) as cursor:
+                        db_server_active_channels = await cursor.fetchall()
+                        if not any(db_server_active_channels):
+                            await con.execute("PRAGMA foreign_keys = ON")
+                            await con.execute("DELETE FROM servers WHERE server_id = ?", (server_id,))
+                            await con.commit()
             
             #channels
             async with con.execute("SELECT channel_id FROM channels") as cursor:
                 db_channels = await cursor.fetchall()
             
-            existing_channel_ids = [channel[0] for channel in db_channels]
-            for guild in self.bot.guilds:
-                for channel in guild.channels:
-                    if channel.id not in existing_channel_ids:
-                        await con.execute("PRAGMA foreign_keys = ON")
-                        await con.execute("DELETE FROM channels WHERE channel_id = ?", (channel.id,))
-                        await con.commit()
+            existing_channel_ids = [channel[0] for channel in db_channels]            
+            for channel_id in existing_channel_ids:
+                check_channel = self.bot.get_channel(channel_id)
+                if not check_channel:            
+                    await con.execute("PRAGMA foreign_keys = ON")
+                    await con.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
+                    await con.commit()
             
             #massages
             async with con.execute("SELECT channel_id, message_id FROM messages") as cursor:
@@ -223,7 +231,7 @@ class Autodelete(commands.Cog):
             channel_id = ctx.channel.id
             message_id = ctx.id
             current_time = functions.get_unix_time()
-
+            
             async with aiosqlite.connect(autodelete_database) as con:
                 async with con.execute("SELECT channel_id FROM channels WHERE channel_id = ?", (channel_id,)) as cursor:
                     channel_in_database = await cursor.fetchone()
@@ -310,20 +318,22 @@ class Autodelete(commands.Cog):
                 
                 embed = discord.Embed(title='Autodelete preparing channel', description=f'Autodelete has been started in {ctx.channel.mention} and will delete all previous messages.', color=0xFF7518, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
-                msg = await ctx.reply(embed=embed, mention_author=False)
+                msg = await ctx.send(embed=embed)
                 await msg.add_reaction("🔄")
-                await self.delete_before_command_start(ctx)
                 
-                done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {ctx.channel.mention} and will delete messages after {count} messages.', color=0x00ff00, timestamp=dt.datetime.utcnow())
+                #This can take a while
+                await self.delete_before_command_start(ctx, time=None, count=count)
+                
+                get_channel = self.bot.get_channel(channel_id)
+                done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {count} messages.', color=0x00ff00, timestamp=dt.datetime.utcnow())
                 done_embed.set_footer(text=botversion)
-                await msg.remove_reaction('🔄', self.bot.user)
-                await msg.edit(embed=done_embed, delete_after=MSG_DEL_DELAY)
-                await msg.add_reaction("✅")
+                msg1 = await get_channel.send(embed=done_embed)
+                await msg1.add_reaction("✅")
             
             except aiosqlite.Error:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
-                await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
+                await ctx.send(embed=embed, mention_author=False)
         
         elif index_time == 1 and index_count == 0:
             try:
@@ -340,20 +350,22 @@ class Autodelete(commands.Cog):
                 
                 embed = discord.Embed(title='Autodelete preparing channel', description=f'Autodelete has been started in {ctx.channel.mention} and will delete all previous messages.', color=0xFF7518, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
-                msg = await ctx.reply(embed=embed, mention_author=False)
+                msg = await ctx.send(embed=embed)
                 await msg.add_reaction("🔄")
-                await self.delete_before_command_start(ctx)
                 
-                done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {ctx.channel.mention} and will delete messages after {numeric_part} {unit_name}.', color=0x00ff00, timestamp=dt.datetime.utcnow())
+                #This can take a while
+                await self.delete_before_command_start(ctx, time=seconds, count=None)
+                
+                get_channel = self.bot.get_channel(channel_id)
+                done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {numeric_part} {unit_name}.', color=0x00ff00, timestamp=dt.datetime.utcnow())
                 done_embed.set_footer(text=botversion)
-                await msg.remove_reaction('🔄', self.bot.user)
-                await msg.edit(embed=done_embed, delete_after=MSG_DEL_DELAY)
-                await msg.add_reaction("✅")
+                msg1 = await get_channel.send(embed=done_embed)
+                await msg1.add_reaction("✅")
             
             except aiosqlite.Error:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
-                await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
+                await ctx.send(embed=embed)
         
         elif index_time == 1 and index_count == 1:
             try:
@@ -370,20 +382,22 @@ class Autodelete(commands.Cog):
                 
                 embed = discord.Embed(title='Autodelete preparing channel', description=f'Autodelete has been started in {ctx.channel.mention} and will delete all previous messages.', color=0xFF7518, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
-                msg = await ctx.reply(embed=embed, mention_author=False)
+                msg = await ctx.send(embed=embed)
                 await msg.add_reaction("🔄")
-                await self.delete_before_command_start(ctx)
                 
-                done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {ctx.channel.mention} and will delete messages after {count} messages or {numeric_part} {unit_name} which ever comes first.', color=0x00ff00, timestamp=dt.datetime.utcnow())
+                #This can take a while
+                await self.delete_before_command_start(ctx, time=seconds, count=count)
+                
+                get_channel = self.bot.get_channel(channel_id)
+                done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {count} messages or {numeric_part} {unit_name} which ever comes first.', color=0x00ff00, timestamp=dt.datetime.utcnow())
                 done_embed.set_footer(text=botversion)
-                await msg.remove_reaction('🔄', self.bot.user)
-                await msg.edit(embed=done_embed, delete_after=MSG_DEL_DELAY)
-                await msg.add_reaction("✅")
+                msg1 = await get_channel.send(embed=done_embed)
+                await msg1.add_reaction("✅")
             
             except aiosqlite.Error:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
-                await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
+                await ctx.send(embed=embed)
         
         else:
             #arguments do not match any of the above so its not valid
@@ -434,11 +448,21 @@ class Autodelete(commands.Cog):
         Stop autodelete feature for the current channel.
         '''
         channel_id = ctx.channel.id
+        #wait for on_message to add the stop command to the database otherwise it will remain in the database
+        await asyncio.sleep(1)
+        
         async with aiosqlite.connect(autodelete_database) as con:
-            await con.execute("PRAGMA foreign_keys = ON")
-            await con.execute("DELETE FROM channels WHERE CHANNEL_ID = ?", (channel_id,))
-            await con.commit()
-        await ctx.reply("Autodelete feature has been stopped for this channel.", mention_author=False)
+                async with con.execute("SELECT channel_id FROM channels WHERE channel_id = ?", (channel_id,)) as cursor:
+                    channel_in_database = await cursor.fetchone()
+                
+                if channel_in_database:
+                    await con.execute("PRAGMA foreign_keys = ON")
+                    await con.execute("DELETE FROM messages WHERE CHANNEL_ID = ?", (channel_id,))
+                    await con.execute("DELETE FROM channels WHERE CHANNEL_ID = ?", (channel_id,))
+                    await con.commit()
+                    await ctx.reply("Autodelete feature has been stopped for this channel.", mention_author=False)
+                else:
+                    await ctx.reply("Autodelete feature is not active in this channel.", mention_author=False)
     
     @autodelete_start.error
     async def autodelete_start_error(self, ctx, error):
@@ -459,26 +483,6 @@ class Autodelete(commands.Cog):
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY*3)
                 ctx._ignore_ = True
     
-    # async def cog_unload(self):
-    #     print('Autodelete cog_unload stopping monitor_expired_messages loop')
-    #     if self.monitor_expired_messages.is_running():
-    #         self.monitor_expired_messages.stop()
-    
-    # async def cog_load(self):
-    #     print('Autodelete cog_load starting monitor_expired_messages loop')
-    #     if not self.monitor_expired_messages.is_running():
-    #         self.monitor_expired_messages.start()
-    
-    # @commands.Cog.listener()
-    # async def on_disconnect(self):
-    #     if self.monitor_expired_messages.is_running():
-    #         self.monitor_expired_messages.stop()
-    
-    # @commands.Cog.listener()
-    # async def on_resumed(self):
-    #     if not self.monitor_expired_messages.is_running():
-    #         self.monitor_expired_messages.start()
-    
     async def cog_unload(self):
         # print('Autodelete cog_unload stopping monitor_expired_messages loop')
         if self.monitor_expired_messages_task and not self.monitor_expired_messages_task.done():
@@ -490,6 +494,7 @@ class Autodelete(commands.Cog):
         if self.monitor_expired_messages_task and self.monitor_expired_messages_task.done():
             loop = asyncio.get_event_loop()
             self.monitor_expired_messages_task = loop.create_task(self.monitor_expired_messages_loop())
+            await self.fetch_missed_messages()
     
     @commands.Cog.listener()
     async def on_disconnect(self):
@@ -502,18 +507,7 @@ class Autodelete(commands.Cog):
         if self.monitor_expired_messages_task and self.monitor_expired_messages_task.done():
             loop = asyncio.get_event_loop()
             self.monitor_expired_messages_task = loop.create_task(self.monitor_expired_messages_loop())
-
-    
-    # @tasks.loop(reconnect=True, seconds=5)
-    # async def monitor_expired_messages(self):
-    #     self.loopcounter += 5
-    #     await self.get_expired_messages()
-        
-    #     #run every 60 seconds as a cleanup and background check
-    #     if self.loopcounter % 60 == 0:
-    #         self.loopcounter = 0
-    #         await self.remove_deleted_items()
-    #         await self.fetch_missed_messages()
+            await self.fetch_missed_messages()
     
     async def monitor_expired_messages_loop(self):
         while True:
@@ -527,7 +521,6 @@ class Autodelete(commands.Cog):
                 self.loopcounter = 0
                 await self.remove_deleted_items()
                 await self.fetch_missed_messages()
-
 
 async def setup(bot):
     await bot.add_cog(Autodelete(bot))
