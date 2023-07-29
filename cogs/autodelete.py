@@ -21,7 +21,7 @@ botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
 MSG_DEL_DELAY = 10
 SECOND_LOOP_DELAY = 5
 
-time_units = {  
+TIME_UNITS = {  
     's':        ('second',  'seconds',  1),
     'sec':      ('second',  'seconds',  1),
     'secs':     ('second',  'seconds',  1),
@@ -64,7 +64,7 @@ class Autodelete(commands.Cog):
         print('Autodelete module online')
     
     def time_seconds(self, numeric_part:int, unit_part:str):
-        seconds = numeric_part * time_units[unit_part][2]
+        seconds = numeric_part * TIME_UNITS[unit_part][2]
         return int(seconds)
     
     async def fetch_missed_messages(self):
@@ -296,7 +296,7 @@ class Autodelete(commands.Cog):
                 numeric_part = int(match.group(1))
                 unit_part = str(match.group(2))
                 seconds = self.time_seconds(numeric_part, unit_part)
-                singular_unit_name, plural_unit_name, _ = time_units[unit_part]
+                singular_unit_name, plural_unit_name, _ = TIME_UNITS[unit_part]
                 unit_name = singular_unit_name if numeric_part == 1 else plural_unit_name
             else:
                 ctx._wrong_start_format_ = True
