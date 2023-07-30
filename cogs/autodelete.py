@@ -78,7 +78,7 @@ class Autodelete(commands.Cog):
                     channel = guild.get_channel(channel_id)
                     if channel:
                         try:
-                            async with con.execute("SELECT message_id, message_time FROM messages WHERE channel_id = ? ORDER BY message_time DESC", (channel_id,)) as cursor:
+                            async with con.execute("SELECT message_id, message_time FROM messages WHERE channel_id = ? ORDER BY message_time DESC", (channel.id, )) as cursor:
                                 message_data = await cursor.fetchall()
                             
                             message_ids = [message[0] for message in message_data]
