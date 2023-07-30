@@ -213,6 +213,7 @@ class Logger(commands.Cog):
         '''
         messages = [message async for message in ctx.channel.history(limit=number, oldest_first=True)]
         await ctx.send(f'There are {len(messages)} messages in {ctx.channel.name}', delete_after=5)
+        await ctx.message.delete(delay=5)
 
 
 async def setup(bot):
