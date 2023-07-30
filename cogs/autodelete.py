@@ -63,7 +63,7 @@ class Autodelete(commands.Cog):
         await self.fetch_missed_messages()
         print('Autodelete module online')
     
-    def time_seconds(self, numeric_part:int, unit_part:str):
+    async def time_seconds(self, numeric_part:int, unit_part:str):
         seconds = numeric_part * TIME_UNITS[unit_part][2]
         return int(seconds)
     
@@ -79,12 +79,16 @@ class Autodelete(commands.Cog):
                     if channel:
                         try:
                             async with con.execute("SELECT message_id, message_time FROM messages WHERE channel_id = ? ORDER BY message_time DESC", (channel_id,)) as cursor:
-                                last_message = await cursor.fetchone()
-                            if last_message:
-                                async for message in channel.history(after=discord.Object(id=last_message[0]), oldest_first=True):
+                                message_data = await cursor.fetchall()
+                            
+                            message_ids = [message[0] for message in message_data]
+                            
+                            async for message in channel.history(limit=None, oldest_first=True):
+                                if message.id not in message_ids:
                                     if not message.pinned:
                                         await con.execute("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", (guild.id, channel.id, message.id, functions.get_unix_time()))
                                         await con.commit()
+                        
                         except discord.Forbidden:
                             await self.remove_deleted_items()
                             await channel.send(f"Permission denied for deleting messages. Please give me the permission to delete messages in this channel.{channel.mention}")
@@ -295,7 +299,7 @@ class Autodelete(commands.Cog):
                 index_time += 1
                 numeric_part = int(match.group(1))
                 unit_part = str(match.group(2))
-                seconds = self.time_seconds(numeric_part, unit_part)
+                seconds = await self.time_seconds(numeric_part, unit_part)
                 singular_unit_name, plural_unit_name, _ = TIME_UNITS[unit_part]
                 unit_name = singular_unit_name if numeric_part == 1 else plural_unit_name
             else:
