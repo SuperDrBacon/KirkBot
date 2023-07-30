@@ -240,7 +240,7 @@ class Autodelete(commands.Cog):
                     await con.execute("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", (server_id, channel_id, message_id, current_time))
                     await con.commit()
     
-    @commands.group(name='autodelete', aliases=['ad'], description='All commands related to autodelete' ,invoke_without_command=True)
+    @commands.group(name='autodelete', aliases=['ad'], description='All commands related to autodelete', invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def autodelete_base(self, ctx):
         '''
