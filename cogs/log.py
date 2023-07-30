@@ -203,6 +203,17 @@ class Logger(commands.Cog):
             except discord.errors.HTTPException:
                 await ctx.send(f"Part {i+1} of the ZIP file did not send for some reason.")
                 await asyncio.sleep(1)
+    
+    @commands.command(name='count', hidden=True)
+    @commands.has_permissions(administrator=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def count(self, ctx, number:int=None):
+        '''
+        Counts the number of messages in the channel.
+        '''
+        messages = [message async for message in ctx.channel.history(limit=number, oldest_first=True)]
+        await ctx.send(f'There are {len(messages)} messages in {ctx.channel.name}', delete_after=5)
+
 
 async def setup(bot):
     await bot.add_cog(Logger(bot))
