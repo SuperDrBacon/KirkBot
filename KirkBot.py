@@ -9,15 +9,15 @@ from discord.ext import commands
 from configparser import ConfigParser
 from cogs.utils.helpcommand import NewHelpCommand
 
-path = os.path.abspath(os.getcwd())
+ospath = os.path.abspath(os.getcwd())
 
 def mainProgram():
     print('Logging in...')
     info, config = ConfigParser(), ConfigParser()
-    functions.checkForFile(path, 'info.ini') 
-    functions.checkForFile(path, 'config.ini') 
-    info.read(rf'{path}/info.ini')
-    config.read(rf'{path}/config.ini')
+    functions.checkForFile(ospath, 'info.ini') 
+    functions.checkForFile(ospath, 'config.ini') 
+    info.read(rf'{ospath}/info.ini')
+    config.read(rf'{ospath}/config.ini')
     title = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
     intents = discord.Intents().all()
     
@@ -42,11 +42,11 @@ def mainProgram():
     # @bot.event
     # async def on_error(event, *args, **kwargs):
     #     print(f'{title}, {event} error: {args}, {kwargs}')
-    #     with open(rf'{path}/error.txt', 'a') as f:
+    #     with open(rf'{ospath}/error.txt', 'a') as f:
     #         f.write(f'ERROR EVENT-> {event}. ARGS -> {args}. KWARGS -> {kwargs}\n')
     
     async def loadCogs():
-        for filename in os.listdir(rf'{path}/cogs'):
+        for filename in os.listdir(rf'{ospath}/cogs'):
             if filename.endswith('.py'):
                 name = filename[:-3]
                 try:
