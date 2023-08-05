@@ -80,7 +80,7 @@ setup_table_autodelete_database = '''
                         ON DELETE CASCADE,
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID, MESSAGE_ID));'''
 
-def checkForFile(filepath, filename, database:bool=False, dbtype:str=None):
+def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
     """
     Checks for the existence of a file or database and creates it if necessary.
     If 'database' is True, it creates a SQLite database based on the 'dbtype' if one does not exist.
