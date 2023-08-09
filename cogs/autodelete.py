@@ -245,6 +245,7 @@ class Autodelete(commands.Cog):
                     await con.commit()
     
     @commands.group(name='autodelete', aliases=['ad'], description='All commands related to autodelete', invoke_without_command=True)
+    @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def autodelete_base(self, ctx):
         '''
