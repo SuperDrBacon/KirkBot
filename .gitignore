@@ -5,20 +5,18 @@ error.txt
 pipreqs.txt
 *_database-text.txt
 # chromedriver.exe
-images/final_react.png
-images/final_react.gif
-images/dl temp.png
-images/dl temp.gif
+/images/final_react.png
+/images/final_react.gif
+/images/dl temp.png
+/images/dl temp.gif
 
-cogs/tag.json
-cogs/kirklines.txt
-cogs/flags.json
-cogs/basedList.json
+/cogs/tag.json
+/cogs/kirklines.txt
+/cogs/flags.json
+/cogs/basedList.json
 
 # /emojis/
-/webpage/
-/static/
-/templates/
+/botinterface/
 
 .vscode/
 .history/
