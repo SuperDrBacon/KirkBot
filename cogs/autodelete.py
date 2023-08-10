@@ -191,6 +191,7 @@ class Autodelete(commands.Cog):
                             await con.commit()
                         else:
                             await message.delete()
+                            await con.execute("PRAGMA foreign_keys = ON")
                             await con.execute("DELETE FROM messages WHERE MESSAGE_ID = ?", (message_id,))
                             await con.commit()
                     
