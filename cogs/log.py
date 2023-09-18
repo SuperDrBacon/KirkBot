@@ -229,6 +229,7 @@ class Logger(commands.Cog):
         
         for user in userdata:
             userid, username = user
+            print(userid, username)
             if userid in previous_usernames:
                 previous_names = previous_usernames[userid]
             else:
@@ -244,7 +245,9 @@ class Logger(commands.Cog):
             
             file_data.write(user_info.encode('utf-8'))
         file_data.seek(0)
+        print('done making file')
         await ctx.send(file=discord.File(file_data, filename="userlist.txt"))
+        print ('done sending file')
 
 
 
