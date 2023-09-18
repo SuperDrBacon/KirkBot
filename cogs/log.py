@@ -214,6 +214,38 @@ class Logger(commands.Cog):
         messages = [message async for message in ctx.channel.history(limit=number, oldest_first=True)]
         await ctx.send(f'There are {len(messages)} messages in {ctx.channel.name}', delete_after=5)
         await ctx.message.delete(delay=5)
+    
+    @commands.command(name='getuserlist', hidden=True)
+    @commands.has_permissions(administrator=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def getuserlist(self, ctx, serverid:int):
+        con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+        cur = con.cursor()
+        
+        cur.execute(f"SELECT USER_ID, USERNAME FROM log_data WHERE SERVER_ID = {serverid}")
+        userdata = cur.fetchall()
+        previous_usernames = {}
+        file_data = BytesIO()
+        
+        for user in userdata:
+            userid, username = user
+            if userid in previous_usernames:
+                previous_names = previous_usernames[userid]
+            else:
+                previous_names = []
+            getuser = await self.bot.fetch_user(userid)
+            
+            if getuser is not None:
+                user_info = f'{userid} - {getuser.name}#{getuser.discriminator} - previous names: {", ".join(previous_names)}'
+                previous_names.append(getuser.name)  # Add the current name to previous names
+                previous_usernames[userid] = previous_names
+            else:
+                user_info = f'{userid} - {username} - previous names: {", ".join(previous_names)}'
+            
+            file_data.write(user_info.encode('utf-8'))
+        file_data.seek(0)
+        await ctx.send(file=discord.File(file_data, filename="userlist.txt"))
+
 
 
 async def setup(bot):
