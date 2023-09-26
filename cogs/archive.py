@@ -22,11 +22,6 @@ class Archiver(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
         functions.checkForFile(os.path.dirname(archive_database), os.path.basename(archive_database), True, 'archive')
-        con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
-        cur = con.cursor()
-        cur.execute('''ALTER TABLE log_data RENAME TO archive_data;''')
-        con.commit()
-        con.close()
     
     @commands.Cog.listener()
     async def on_ready(self):
