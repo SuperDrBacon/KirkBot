@@ -1,17 +1,20 @@
-import time
-import numpy, re
 import os
+import re
 import sqlite3
+import time
 from pathlib import Path
 from urllib import request
 
-path = os.path.abspath(os.getcwd())
-log_database = rf'{path}/cogs/log_data.db'
-economy_database = rf'{path}/cogs/economy_data.db'
-autodelete_database = rf'{path}/cogs/autodelete_data.db'
+import numpy
+
+ospath = os.path.abspath(os.getcwd())
+archive_database = rf'{ospath}/cogs/archive_data.db'
+economy_database = rf'{ospath}/cogs/economy_data.db'
+autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
+autorole_database = rf'{ospath}/cogs/autorole_data.db'
 
 setup_table_log_database = '''
-                CREATE TABLE IF NOT EXISTS log_data(
+                CREATE TABLE IF NOT EXISTS archive_data(
                     ID                      INTEGER     PRIMARY KEY,
                     SERVER_NAME             TEXT,
                     SERVER_ID               INTEGER,
@@ -27,7 +30,7 @@ setup_table_log_database = '''
                     ORIGINAL_MESSAGE        TEXT,
                     ORIGINAL_MESSAGE_ID     INTEGER,
                     DATE_TIME               TEXT,
-                    UNIX_TIME               FLOAT);'''
+                    UNIX_TIME               REAL);'''
 
 setup_table_economy_database = '''
                 CREATE TABLE IF NOT EXISTS economy_data(
@@ -35,9 +38,9 @@ setup_table_economy_database = '''
                     USER_ID                 INTEGER,
                     USERNAME                TEXT,
                     SERVER_ID               INTEGER,
-                    UNIX_TIME               FLOAT,
-                    BALANCE                 FLOAT,
-                    BANK                    FLOAT,
+                    UNIX_TIME               REAL,
+                    BALANCE                 REAL,
+                    BANK                    REAL,
                     SLOTS_WINS              INTEGER,
                     SLOTS_LOSSES            INTEGER,
                     BJ_WINS                 INTEGER,
@@ -46,15 +49,13 @@ setup_table_economy_database = '''
                     CF_WINS                 INTEGER,
                     CF_LOSSES               INTEGER);'''
 
-# setup_table_autodelete_database = '''CREATE TABLE IF NOT EXISTS autodelete_data(
-#                     ID                      INTEGER     PRIMARY KEY,
-#                     SERVER_ID               INTEGER,
-#                     CHANNEL_ID              INTEGER,
-#                     MESSAGE_ID              INTEGER,
-#                     COUNT                   INTEGER,
-#                     TIME_AFTER              FLOAT
-                    
-#                     );'''
+setup_table_autorole_database = '''
+                CREATE TABLE IF NOT EXISTS autorole_data (
+                    SERVER_ID               INTEGER     PRIMARY KEY,
+                    USER_ID                 INTEGER,
+                    JOIN_ROLE               TEXT,
+                    BASE_ROLE               TEXT,
+                    ROLES                   TEXT);'''
 
 setup_table_autodelete_database = '''
                 CREATE TABLE IF NOT EXISTS servers (
@@ -108,23 +109,23 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
             print(f"{filename} created")
     elif database:
         # Create a database
-        if dbtype == 'log':
+        if dbtype == 'archive':
             try:
-                # Create a connection to the log database
-                con = sqlite3.connect(log_database)
+                # Create a connection to the archive database
+                con = sqlite3.connect(archive_database)
                 cur = con.cursor()
                 # Execute setup_table_log_database query to create necessary tables
                 cur.execute(setup_table_log_database)
                 con.commit()
             except Exception as error:
-                # Failed to create the log database
-                print("Failed to make sqlite3 log database:", error)
+                # Failed to create the archive database
+                print("Failed to make sqlite3 archive database:", error)
             finally:
                 if con:
                     # Close the connection
                     cur.close()
                     con.close()
-                    print("sqlite3 log database created")
+                    print("sqlite3 archive database created")
         elif dbtype == 'economy':
             try:
                 # Create a connection to the economy database
@@ -151,7 +152,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                 cur.executescript(setup_table_autodelete_database)
                 con.commit()
             except Exception as error:
-                # Failed to create the log database
+                # Failed to create the archive database
                 print("Failed to make sqlite3 autodelete database:", error)
             finally:
                 if con:
@@ -159,6 +160,23 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                     cur.close()
                     con.close()
                     print("sqlite3 autodelete database created")
+        elif dbtype == 'autorole':
+            try:
+                # Create a connection to the autorole database
+                con = sqlite3.connect(autorole_database)
+                cur = con.cursor()
+                # Execute setup_table_autorole_database query to create necessary tables
+                cur.execute(setup_table_autorole_database)
+                con.commit()
+            except Exception as error:
+                # Failed to create the autorole database
+                print("Failed to make sqlite3 autorole database:", error)
+            finally:
+                if con:
+                    # Close the connection
+                    cur.close()
+                    con.close()
+                    print("sqlite3 autorole database created")
         else:
             # Invalid database type
             print("Database is True but dbtype is not one of the present options.")

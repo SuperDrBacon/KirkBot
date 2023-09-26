@@ -1,43 +1,46 @@
+import asyncio
 import base64
+import datetime as dt
 import json
 import math
-import mpv
-import sqlite3
-import discord
+import os
 import random
+import re
+import sqlite3
 import time
 import typing
-import asyncio
-import os
-import re
-import urllib.parse, urllib.request
-import cogs.utils.functions as functions
-import datetime as dt
-from multiprocessing import Pool, cpu_count
-from io import BytesIO, StringIO
+import urllib.parse
+import urllib.request
+from collections import Counter, defaultdict
 from configparser import ConfigParser
+from datetime import date, datetime, timedelta
+from io import BytesIO, StringIO
+from multiprocessing import Pool, cpu_count
+from typing import Union
+
+import discord
+import mpv
 # from wordcloud import WordCloud
 from discord.ext import commands
+from numpy import interp
+from PIL import Image, ImageColor, ImageDraw
 from selenium import webdriver
-from datetime import datetime, timedelta, date
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
+from selenium.common.exceptions import (InvalidSessionIdException,
+                                        TimeoutException)
 from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import InvalidSessionIdException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
-from collections import Counter, defaultdict
-from numpy import interp
-from typing import Union
-from PIL import Image, ImageDraw, ImageColor
+from webdriver_manager.chrome import ChromeDriverManager
+
+import cogs.utils.functions as functions
 
 ospath = os.path.abspath(os.getcwd())
 kirklinePath = rf'{ospath}/cogs/kirklines.txt'
 tagpath = rf'{ospath}/cogs/tag.json'
 emojipath = rf'{ospath}/emojis/'
 flagpath = rf'{ospath}/cogs/flags.json'
-log_database = rf'{ospath}/cogs/log_data.db'
+archive_database = rf'{ospath}/cogs/archive_data.db'
 config, info = ConfigParser(), ConfigParser()
 config.read(rf'{ospath}/config.ini')
 info.read(rf'{ospath}/info.ini')
@@ -87,9 +90,9 @@ class Fun(commands.Cog):
                 f.write("Kirk is a based god")
     
     def daysago(self):
-        con = sqlite3.connect(log_database)
+        con = sqlite3.connect(archive_database)
         cur = con.cursor()
-        cur.execute('SELECT unix_time FROM log_data ORDER BY id ASC LIMIT 1', ())
+        cur.execute('SELECT unix_time FROM archive_data ORDER BY id ASC LIMIT 1', ())
         unix_time = cur.fetchone()
         timestamp = datetime.fromtimestamp(unix_time[0])
         current_time = datetime.now()
@@ -733,9 +736,9 @@ class Fun(commands.Cog):
         if input_word is not None:
             input_word = input_word.lower()
         
-        con = sqlite3.connect(log_database)
+        con = sqlite3.connect(archive_database)
         cur = con.cursor()
-        cur.execute('SELECT user_id, message FROM log_data WHERE server_id = ?', (ctx.guild.id,))
+        cur.execute('SELECT user_id, message FROM archive_data WHERE server_id = ?', (ctx.guild.id,))
         userid_messages = cur.fetchall()
         
         grouped = defaultdict(lambda: {'id': None, 'words': [], 'word_counts': Counter()})
@@ -751,7 +754,7 @@ class Fun(commands.Cog):
             try:
                 display_name = ctx.guild.get_member(user_id).display_name
             except Exception:
-                cur.execute('SELECT username FROM log_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, user_id))
+                cur.execute('SELECT username FROM archive_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, user_id))
                 result = cur.fetchone()
                 if result:
                     display_name = result[0]
@@ -794,13 +797,13 @@ class Fun(commands.Cog):
         Get the word count statistics for the server. 
         The command takes an optional input word as an argument and returns the top used words and their occurrence count for the server.
         '''
-        con = sqlite3.connect(log_database)
+        con = sqlite3.connect(archive_database)
         cur = con.cursor()
-        cur.execute('SELECT user_id, message FROM log_data WHERE server_id = ?', (ctx.guild.id,))
+        cur.execute('SELECT user_id, message FROM archive_data WHERE server_id = ?', (ctx.guild.id,))
         userid_messages = cur.fetchall()
         
         def getusername(userid):
-            cur.execute('SELECT username FROM log_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, userid))
+            cur.execute('SELECT username FROM archive_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, userid))
             display_name = cur.fetchone()
             return display_name[0]
         
@@ -853,13 +856,13 @@ class Fun(commands.Cog):
         Get the word count statistics for the channel. 
         The command takes an optional input word as an argument and returns the top used words and their occurrence count for the channel.
         '''
-        con = sqlite3.connect(log_database)
+        con = sqlite3.connect(archive_database)
         cur = con.cursor()
-        cur.execute('SELECT user_id, message FROM log_data WHERE channel_id = ?', (ctx.channel.id,))
+        cur.execute('SELECT user_id, message FROM archive_data WHERE channel_id = ?', (ctx.channel.id,))
         userid_messages = cur.fetchall()
         
         def getusername(userid):
-            cur.execute('SELECT username FROM log_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, userid))
+            cur.execute('SELECT username FROM archive_data WHERE server_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1', (ctx.guild.id, userid))
             display_name = cur.fetchone()
             return display_name[0]
         
@@ -926,9 +929,9 @@ async def setup(bot):
     await bot.add_cog(Fun(bot))
 
 # def daysago():
-#     con = sqlite3.connect(log_database)
+#     con = sqlite3.connect(archive_database)
 #     cur = con.cursor()
-#     cur.execute('SELECT unix_time FROM log_data ORDER BY id ASC LIMIT 1', ())
+#     cur.execute('SELECT unix_time FROM archive_data ORDER BY id ASC LIMIT 1', ())
 #     unix_time = cur.fetchone()
 #     timestamp = datetime.fromtimestamp(unix_time[0])
 #     current_time = datetime.now()

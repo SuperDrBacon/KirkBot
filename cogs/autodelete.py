@@ -1,16 +1,18 @@
 import asyncio
-import re
-import discord
+import datetime as dt
 import os
+import re
+from configparser import ConfigParser
+
 # import sqlite3
 import aiosqlite
-import datetime as dt
-import cogs.utils.functions as functions
-from configparser import ConfigParser
+import discord
 from discord.ext import commands, tasks
 
+import cogs.utils.functions as functions
+
 ospath = os.path.abspath(os.getcwd())
-log_database = rf'{ospath}/cogs/log_data.db'
+archive_database = rf'{ospath}/cogs/archive_data.db'
 autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
 config, info = ConfigParser(), ConfigParser()
 info.read(rf'{ospath}/info.ini')
