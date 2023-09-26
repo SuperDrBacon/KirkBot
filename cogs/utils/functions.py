@@ -13,7 +13,7 @@ economy_database = rf'{ospath}/cogs/economy_data.db'
 autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
 autorole_database = rf'{ospath}/cogs/autorole_data.db'
 
-setup_table_log_database = '''
+setup_table_archive_database = '''
                 CREATE TABLE IF NOT EXISTS archive_data(
                     ID                      INTEGER     PRIMARY KEY,
                     SERVER_NAME             TEXT,
@@ -114,8 +114,8 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                 # Create a connection to the archive database
                 con = sqlite3.connect(archive_database)
                 cur = con.cursor()
-                # Execute setup_table_log_database query to create necessary tables
-                cur.execute(setup_table_log_database)
+                # Execute setup_table_archive_database query to create necessary tables
+                cur.execute(setup_table_archive_database)
                 con.commit()
             except Exception as error:
                 # Failed to create the archive database
