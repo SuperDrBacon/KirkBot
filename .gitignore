@@ -1,6 +1,5 @@
 config.ini
 *.db
-archive*
 error.txt
 pipreqs.txt
 *_database-text.txt
