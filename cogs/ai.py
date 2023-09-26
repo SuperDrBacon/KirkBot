@@ -1,13 +1,14 @@
 # import datetime
+import os
 import random
 import re
+import sqlite3
+from collections import defaultdict
+from configparser import ConfigParser
+
 import discord
 import openai
-import sqlite3
-import os
-from collections import defaultdict
 from discord.ext import commands
-from configparser import ConfigParser
 
 ospath = os.path.abspath(os.getcwd())
 config = ConfigParser()
@@ -92,13 +93,13 @@ class Ai(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        if ctx.author.id == 974297735559806986 and random.randint(0,10) == 1: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
+        if ctx.author.id == 974297735559806986 and random.randint(0,20) == 1: #GenAI schizo rambling bot. it will reply to this bot by rambling its own schizo ramblings
             guild_id = ctx.guild.id	
             channel_id = ctx.channel.id
-            con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+            con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
             con.row_factory = lambda cursor, row: row[0]
             cur = con.cursor()
-            text = cur.execute('SELECT message FROM log_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
+            text = cur.execute('SELECT message FROM archive_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
             
             # Filter out messages containing links
             filtered_text = [line for line in text if not re.search(r'(https?://\S+)', line)]
@@ -116,10 +117,10 @@ class Ai(commands.Cog):
         if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
             guild_id = ctx.guild.id	
             channel_id = ctx.channel.id
-            con = sqlite3.connect(f'{ospath}/cogs/log_data.db')
+            con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
             con.row_factory = lambda cursor, row: row[0]
             cur = con.cursor()
-            text = cur.execute('SELECT message FROM log_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
+            text = cur.execute('SELECT message FROM archive_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
             
             # Filter out messages containing links
             filtered_text = [line for line in text if not re.search(r'(https?://\S+)', line)]
