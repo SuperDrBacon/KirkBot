@@ -354,13 +354,13 @@ class Fun(commands.Cog):
         async with ctx.typing():
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
-            # options.headless = True
+            
             options.add_argument("--headless=new")
             options.add_argument("--window-size=1500,750")
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
+            
             driver = webdriver.Chrome(options=options)
-            # driver.set_window_size(1500,750)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
@@ -393,7 +393,7 @@ class Fun(commands.Cog):
                         (0.95, 0.99): ('#0000FF', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is between 95% and 99%', 'blue'),
                         (0.99, 1.00): ('#4B0082', 'Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 99%', 'indigo')
                     }
-
+                    
                     for interval, (interval_color, interval_status, interval_colorname) in intervals.items():
                         if interval[0] <= high < interval[1]:
                             color = interval_color
@@ -438,13 +438,13 @@ class Fun(commands.Cog):
         async with ctx.typing():
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
-            # options.headless = True
+            
             options.add_argument("--headless=new")
             options.add_argument("--window-size=1500,750")
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
+            
             driver = webdriver.Chrome(options=options)
-            # driver.set_window_size(1000,500)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
