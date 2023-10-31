@@ -356,8 +356,11 @@ class Fun(commands.Cog):
             options = webdriver.ChromeOptions()
             # options.headless = True
             options.add_argument("--headless=new")
+            options.add_argument("--window-size=1500,750")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--disable-extensions")
             driver = webdriver.Chrome(options=options)
-            driver.set_window_size(1500,750)
+            # driver.set_window_size(1500,750)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
@@ -435,9 +438,13 @@ class Fun(commands.Cog):
         async with ctx.typing():
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
-            options.headless = True
+            # options.headless = True
+            options.add_argument("--headless=new")
+            options.add_argument("--window-size=1500,750")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--disable-extensions")
             driver = webdriver.Chrome(options=options)
-            driver.set_window_size(1000,500)
+            # driver.set_window_size(1000,500)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
