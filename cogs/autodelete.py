@@ -123,10 +123,22 @@ class Autodelete(commands.Cog):
         #         await con.commit()
         
         if any(messages_to_database):
-            async with aiosqlite.connect(autodelete_database) as con:
-                data_to_insert = [(ctx.guild.id, ctx.channel.id, message.id, functions.get_unix_time()) for message in messages_to_database]
-                await con.executemany("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", data_to_insert)
-                await con.commit()
+            print('Inserting messages to database in delete_before_command_start function')
+            try:
+                async with aiosqlite.connect(autodelete_database) as con:
+                    data_to_insert = [(ctx.guild.id, ctx.channel.id, message.id, functions.get_unix_time()) for message in messages_to_database]
+                    print(f'Length of data_to_insert: {len(data_to_insert)}')
+                    
+                    # Split data_to_insert into chunks of size 500
+                    chunks = [data_to_insert[i:i + 500] for i in range(0, len(data_to_insert), 500)]
+                    print(f'Length of chunks: {len(chunks)}')
+                    
+                    for chunk in chunks:
+                        await con.executemany("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", chunk)
+                    
+                    await con.commit()
+            except Exception as e:
+                print(f'Error in delete_before_command_start, inserting messages to database: \n\n {e} \n\n')
         
         if any(messages_to_delete):
             bulk_deletable = [msg for msg in messages_to_delete if msg.created_at > time_limit]
@@ -336,7 +348,10 @@ class Autodelete(commands.Cog):
                 await msg.add_reaction("🔄")
                 
                 #This can take a while
-                await self.delete_before_command_start(ctx, time=None, count=count)
+                try:
+                    await self.delete_before_command_start(ctx, time=None, count=count)
+                except Exception as e:
+                    print(f'Error in delete_before_command_start, count: \n\n {e} \n\n')
                 
                 get_channel = self.bot.get_channel(channel_id)
                 done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {count} messages.', color=0x00ff00, timestamp=dt.datetime.utcnow())
@@ -344,10 +359,11 @@ class Autodelete(commands.Cog):
                 msg1 = await get_channel.send(embed=done_embed)
                 await msg1.add_reaction("✅")
             
-            except aiosqlite.Error:
+            except aiosqlite.Error as e:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
                 await ctx.send(embed=embed, mention_author=False)
+                print(f'Error in autodelete startup count: \n\n {e} \n\n')
         
         elif index_time == 1 and index_count == 0:
             try:
@@ -368,7 +384,10 @@ class Autodelete(commands.Cog):
                 await msg.add_reaction("🔄")
                 
                 #This can take a while
-                await self.delete_before_command_start(ctx, time=seconds, count=None)
+                try:
+                    await self.delete_before_command_start(ctx, time=seconds, count=None)
+                except Exception as e:
+                    print(f'Error in delete_before_command_start, time: \n\n {e} \n\n')
                 
                 get_channel = self.bot.get_channel(channel_id)
                 done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {numeric_part} {unit_name}.', color=0x00ff00, timestamp=dt.datetime.utcnow())
@@ -376,10 +395,11 @@ class Autodelete(commands.Cog):
                 msg1 = await get_channel.send(embed=done_embed)
                 await msg1.add_reaction("✅")
             
-            except aiosqlite.Error:
+            except aiosqlite.Error as e:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
                 await ctx.send(embed=embed)
+                print(f'Error in autodelete startup time: \n\n {e} \n\n')
         
         elif index_time == 1 and index_count == 1:
             try:
@@ -400,7 +420,10 @@ class Autodelete(commands.Cog):
                 await msg.add_reaction("🔄")
                 
                 #This can take a while
-                await self.delete_before_command_start(ctx, time=seconds, count=count)
+                try:
+                    await self.delete_before_command_start(ctx, time=seconds, count=count)
+                except Exception as e:
+                    print(f'Error in delete_before_command_start, time and count: \n\n {e} \n\n')
                 
                 get_channel = self.bot.get_channel(channel_id)
                 done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {count} messages or {numeric_part} {unit_name} which ever comes first.', color=0x00ff00, timestamp=dt.datetime.utcnow())
@@ -408,10 +431,11 @@ class Autodelete(commands.Cog):
                 msg1 = await get_channel.send(embed=done_embed)
                 await msg1.add_reaction("✅")
             
-            except aiosqlite.Error:
+            except aiosqlite.Error as e:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=dt.datetime.utcnow())
                 embed.set_footer(text=botversion)
                 await ctx.send(embed=embed)
+                print(f'Error in autodelete startup time and count: \n\n {e} \n\n')
         
         else:
             #arguments do not match any of the above so its not valid
