@@ -116,10 +116,16 @@ class Autodelete(commands.Cog):
             messages_to_delete = full_message_list[:count]
             messages_to_database = full_message_list[count:]
         
+        # if any(messages_to_database):
+        #     async with aiosqlite.connect(autodelete_database) as con:
+        #         for message in messages_to_database:
+        #             await con.execute("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", (ctx.guild.id, ctx.channel.id, message.id, functions.get_unix_time()))
+        #         await con.commit()
+        
         if any(messages_to_database):
             async with aiosqlite.connect(autodelete_database) as con:
-                for message in messages_to_database:
-                    await con.execute("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", (ctx.guild.id, ctx.channel.id, message.id, functions.get_unix_time()))
+                data_to_insert = [(ctx.guild.id, ctx.channel.id, message.id, functions.get_unix_time()) for message in messages_to_database]
+                await con.executemany("INSERT INTO messages (SERVER_ID, CHANNEL_ID, MESSAGE_ID, MESSAGE_TIME) VALUES (?, ?, ?, ?);", data_to_insert)
                 await con.commit()
         
         if any(messages_to_delete):
