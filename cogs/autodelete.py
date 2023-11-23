@@ -481,11 +481,15 @@ class Autodelete(commands.Cog):
     @autodelete_base.command(name='stop', invoke_without_command=True)
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def autodelete_stop(self, ctx):
+    async def autodelete_stop(self, ctx, channel:discord.TextChannel=None):
         '''
         Stop autodelete feature for the current channel.
         '''
-        channel_id = ctx.channel.id
+        if channel is None:
+            channel_id = ctx.channel
+        else:
+            channel_id = channel.id        
+        
         #wait for on_message to add the stop command to the database otherwise it will remain in the database
         await asyncio.sleep(1)
         
@@ -493,14 +497,15 @@ class Autodelete(commands.Cog):
                 async with con.execute("SELECT channel_id FROM channels WHERE channel_id = ?", (channel_id,)) as cursor:
                     channel_in_database = await cursor.fetchone()
                 
+                channel_object = discord.utils.get(ctx.guild.channels, id=channel_id)
                 if channel_in_database:
                     await con.execute("PRAGMA foreign_keys = ON")
                     await con.execute("DELETE FROM messages WHERE CHANNEL_ID = ?", (channel_id,))
                     await con.execute("DELETE FROM channels WHERE CHANNEL_ID = ?", (channel_id,))
                     await con.commit()
-                    await ctx.reply("Autodelete feature has been stopped for this channel.", mention_author=False)
+                    await ctx.reply(f"Autodelete feature has been stopped for {channel_object.mention}.", mention_author=False)
                 else:
-                    await ctx.reply("Autodelete feature is not active in this channel.", mention_author=False)
+                    await ctx.reply(f"Autodelete feature is not active in {channel_object.mention}.", mention_author=False)
     
     @autodelete_start.error
     async def autodelete_start_error(self, ctx, error):
