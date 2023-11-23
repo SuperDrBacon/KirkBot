@@ -130,36 +130,36 @@ class Autodelete(commands.Cog):
     
     async def remove_deleted_items(self):
         async with aiosqlite.connect(autodelete_database) as con:
-            #servers
-            async with con.execute("SELECT server_id FROM servers") as cursor:
-                db_servers = await cursor.fetchall()
+            # #servers
+            # async with con.execute("SELECT server_id FROM servers") as cursor:
+            #     db_servers = await cursor.fetchall()
             
-            existing_server_ids = [server[0] for server in db_servers]
-            for server_id in existing_server_ids:
-                check_server = self.bot.get_guild(server_id)
-                if not check_server:
-                    await con.execute("PRAGMA foreign_keys = ON")
-                    await con.execute("DELETE FROM servers WHERE server_id = ?", (server_id,))
-                    await con.commit()
-                else:
-                    async with con.execute("SELECT channel_id FROM channels WHERE server_id = ?", (server_id,)) as cursor:
-                        db_server_active_channels = await cursor.fetchall()
-                        if not any(db_server_active_channels):
-                            await con.execute("PRAGMA foreign_keys = ON")
-                            await con.execute("DELETE FROM servers WHERE server_id = ?", (server_id,))
-                            await con.commit()
+            # existing_server_ids = [server[0] for server in db_servers]
+            # for server_id in existing_server_ids:
+            #     check_server = self.bot.get_guild(server_id)
+            #     if not check_server:
+            #         await con.execute("PRAGMA foreign_keys = ON")
+            #         await con.execute("DELETE FROM servers WHERE server_id = ?", (server_id,))
+            #         await con.commit()
+            #     else:
+            #         async with con.execute("SELECT channel_id FROM channels WHERE server_id = ?", (server_id,)) as cursor:
+            #             db_server_active_channels = await cursor.fetchall()
+            #             if not any(db_server_active_channels):
+            #                 await con.execute("PRAGMA foreign_keys = ON")
+            #                 await con.execute("DELETE FROM servers WHERE server_id = ?", (server_id,))
+            #                 await con.commit()
             
-            #channels
-            async with con.execute("SELECT channel_id FROM channels") as cursor:
-                db_channels = await cursor.fetchall()
+            # #channels
+            # async with con.execute("SELECT channel_id FROM channels") as cursor:
+            #     db_channels = await cursor.fetchall()
             
-            existing_channel_ids = [channel[0] for channel in db_channels]            
-            for channel_id in existing_channel_ids:
-                check_channel = self.bot.get_channel(channel_id)
-                if not check_channel:            
-                    await con.execute("PRAGMA foreign_keys = ON")
-                    await con.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
-                    await con.commit()
+            # existing_channel_ids = [channel[0] for channel in db_channels]            
+            # for channel_id in existing_channel_ids:
+            #     check_channel = self.bot.get_channel(channel_id)
+            #     if not check_channel:            
+            #         await con.execute("PRAGMA foreign_keys = ON")
+            #         await con.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
+            #         await con.commit()
             
             #massages
             async with con.execute("SELECT channel_id, message_id FROM messages") as cursor:
