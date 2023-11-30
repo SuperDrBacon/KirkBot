@@ -276,9 +276,11 @@ class Autodelete(commands.Cog):
         If `[time]` is set, messages are deleted after this amount of time.
         If both `[count]` and `[time]` are set, messages are deleted after which ever one comes first.
         At least one of `[count]` or `[time]` must be set.
+        The order of `[count]` and `[time]` does not matter.
         
         Examples:
         `autodelete start 1000 3h`
+        `autodelete start 3h 1000`
         `autodelete start 1000`
         `autodelete start 3h`
         
@@ -297,8 +299,9 @@ class Autodelete(commands.Cog):
         server_id = ctx.guild.id
         channel_id = ctx.channel.id
         await ctx.message.delete(delay=MSG_DEL_DELAY)
+        time_formats = '|'.join(TIME_UNITS.keys())
         for arg in count_and_or_time:
-            match = re.match(r'(^\d+)(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|month|months)$', arg, re.IGNORECASE)
+            match = re.match(rf'(^\d+)({time_formats})$', arg, re.IGNORECASE)
             if arg.isdigit():
                 index_count += 1
                 count = int(arg)
