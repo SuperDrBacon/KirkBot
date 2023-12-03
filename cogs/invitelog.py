@@ -45,7 +45,8 @@ class InviteLog(commands.Cog):
         log_channel_id = 1153340486661185580  # Replace with your channel ID.
         log_channel = self.bot.get_channel(log_channel_id)
         # await log_channel.send(f"{member.mention} joined using invite code {used_invite.code} from {inviter.mention}. The invite was created for {invite_channel.mention}.")
-        await log_channel.send(f"{member.mention} (ID: {member.id}, account created at: {member.created_at}) joined using invite code {used_invite.code} from {inviter.mention}. The invite was created for {invite_channel.mention}.")
+        await log_channel.send(f"{member.mention} (ID: {member.id}, account created at: {member.created_at}) \
+            joined using invite code {used_invite.code} from {inviter.name}. The invite was created for {invite_channel.mention}.")
 
 async def setup(bot):
     await bot.add_cog(InviteLog(bot))
