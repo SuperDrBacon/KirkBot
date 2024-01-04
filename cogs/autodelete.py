@@ -12,7 +12,7 @@ from discord.ext import commands, tasks
 import cogs.utils.functions as functions
 
 ospath = os.path.abspath(os.getcwd())
-archive_database = rf'{ospath}/cogs/archive_data.db'
+# archive_database = rf'{ospath}/cogs/archive_data.db'
 autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
 config, info = ConfigParser(), ConfigParser()
 info.read(rf'{ospath}/info.ini')
@@ -54,11 +54,11 @@ class Autodelete(commands.Cog):
     '''
     def __init__(self, bot):
         self.bot = bot
+        functions.checkForFile(filepath=os.path.dirname(autodelete_database), filename=os.path.basename(autodelete_database), database=True, dbtype='autodelete')
         self.loopcounter = 0
         self.monitor_expired_messages_task = None
         if not self.monitor_expired_messages_task or self.monitor_expired_messages_task.done():
             self.monitor_expired_messages_task = asyncio.create_task(self.monitor_expired_messages_loop())
-        functions.checkForFile(filepath=os.path.dirname(autodelete_database), filename=os.path.basename(autodelete_database), database=True, dbtype='autodelete')
     
     @commands.Cog.listener()
     async def on_ready(self):

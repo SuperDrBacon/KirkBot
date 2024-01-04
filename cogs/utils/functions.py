@@ -1,17 +1,34 @@
 import os
 import re
 import sqlite3
+import psycopg2 as psql
 import time
-from pathlib import Path
-from urllib import request
-
 import numpy
 
+from pathlib import Path
+from urllib import request
+from configparser import ConfigParser
+
+
 ospath = os.path.abspath(os.getcwd())
-archive_database = rf'{ospath}/cogs/archive_data.db'
-economy_database = rf'{ospath}/cogs/economy_data.db'
-autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
-autorole_database = rf'{ospath}/cogs/autorole_data.db'
+# archive_database = rf'{ospath}/cogs/archive_data.db'
+# economy_database = rf'{ospath}/cogs/economy_data.db'
+# autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
+# autorole_database = rf'{ospath}/cogs/autorole_data.db'
+config = ConfigParser()
+config.read(rf'{ospath}/config.ini')
+HOST = config['DATABASE']['host']
+PORT = config['DATABASE']['port']
+USER = config['DATABASE']['user']
+PASSWORD = config['DATABASE']['password']
+DATABASE = config['DATABASE']['database']
+
+# connection = psycopg2.connect(
+#     host="your_host",
+#     user="your_user",
+#     password="your_password",
+#     database="your_database_name"
+# )
 
 setup_table_archive_database = '''
                 CREATE TABLE IF NOT EXISTS archive_data(
@@ -58,26 +75,26 @@ setup_table_autorole_database = '''
                     ROLES                   TEXT);'''
 
 setup_table_autodelete_database = '''
-                CREATE TABLE IF NOT EXISTS servers (
+                CREATE TABLE IF NOT EXISTS autodelete_servers (
                     SERVER_ID           INTEGER     NOT NULL    PRIMARY KEY);
                 
-                CREATE TABLE IF NOT EXISTS channels (
+                CREATE TABLE IF NOT EXISTS autodelete_channels (
                     SERVER_ID           INTEGER         NOT NULL,
                     CHANNEL_ID          INTEGER         NOT NULL,
                     DEL_AFTER_TIME      INTEGER,
                     DEL_AFTER_COUNT     INTEGER,
                     FOREIGN KEY         (SERVER_ID)
-                        REFERENCES servers(SERVER_ID)
+                        REFERENCES autodelete_servers(SERVER_ID)
                         ON DELETE CASCADE,
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID));
                 
-                CREATE TABLE IF NOT EXISTS messages (
+                CREATE TABLE IF NOT EXISTS autodelete_messages (
                     SERVER_ID           INTEGER     NOT NULL,
                     CHANNEL_ID          INTEGER     NOT NULL,
                     MESSAGE_ID          INTEGER     NOT NULL,
                     MESSAGE_TIME        INTEGER     NOT NULL,
                     FOREIGN KEY         (CHANNEL_ID, SERVER_ID)
-                        REFERENCES channels(CHANNEL_ID, SERVER_ID)
+                        REFERENCES autodelete_channels(CHANNEL_ID, SERVER_ID)
                         ON DELETE CASCADE,
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID, MESSAGE_ID));'''
 
@@ -95,6 +112,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
     Returns:
         None
     """
+    con = psql.connect(host=HOST, port=PORT, user=USER, password=PASSWORD, database=DATABASE)
     if os.path.isfile(os.path.join(filepath, filename)):
         # File already exists
         print(f"{filename} exists")
@@ -111,12 +129,17 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         # Create a database
         if dbtype == 'archive':
             try:
-                # Create a connection to the archive database
-                con = sqlite3.connect(archive_database)
+                # # Create a connection to the archive database
+                # con = sqlite3.connect(archive_database)
+                # cur = con.cursor()
+                # # Execute setup_table_archive_database query to create necessary tables
+                # cur.execute(setup_table_archive_database)
+                # con.commit()
+                con = psql.connect(host=HOST, port=PORT, user=USER, password=PASSWORD, database=DATABASE)
                 cur = con.cursor()
-                # Execute setup_table_archive_database query to create necessary tables
                 cur.execute(setup_table_archive_database)
                 con.commit()
+                
             except Exception as error:
                 # Failed to create the archive database
                 print("Failed to make sqlite3 archive database:", error)
@@ -128,10 +151,14 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                     print("sqlite3 archive database created")
         elif dbtype == 'economy':
             try:
-                # Create a connection to the economy database
-                con = sqlite3.connect(economy_database)
+                # # Create a connection to the economy database
+                # con = sqlite3.connect(economy_database)
+                # cur = con.cursor()
+                # # Execute setup_table_economy_database query to create necessary tables
+                # cur.execute(setup_table_economy_database)
+                # con.commit()
+                con = psql.connect(host=HOST, port=PORT, user=USER, password=PASSWORD, database=DATABASE)
                 cur = con.cursor()
-                # Execute setup_table_economy_database query to create necessary tables
                 cur.execute(setup_table_economy_database)
                 con.commit()
             except Exception as error:
@@ -145,11 +172,15 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                     print("sqlite3 economy database created")
         elif dbtype == 'autodelete':
             try:
-                # Create a connection to the autodelete database
-                con = sqlite3.connect(autodelete_database)
+                # # Create a connection to the autodelete database
+                # con = sqlite3.connect(autodelete_database)
+                # cur = con.cursor()
+                # # Execute setup_table_autodelete_database query to create necessary tables
+                # cur.executescript(setup_table_autodelete_database)
+                # con.commit()
+                con = psql.connect(host=HOST, port=PORT, user=USER, password=PASSWORD, database=DATABASE)
                 cur = con.cursor()
-                # Execute setup_table_autodelete_database query to create necessary tables
-                cur.executescript(setup_table_autodelete_database)
+                cur.execute(setup_table_autodelete_database)
                 con.commit()
             except Exception as error:
                 # Failed to create the archive database
@@ -162,10 +193,14 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                     print("sqlite3 autodelete database created")
         elif dbtype == 'autorole':
             try:
-                # Create a connection to the autorole database
-                con = sqlite3.connect(autorole_database)
+                # # Create a connection to the autorole database
+                # con = sqlite3.connect(autorole_database)
+                # cur = con.cursor()
+                # # Execute setup_table_autorole_database query to create necessary tables
+                # cur.execute(setup_table_autorole_database)
+                # con.commit()
+                con = psql.connect(host=HOST, port=PORT, user=USER, password=PASSWORD, database=DATABASE)
                 cur = con.cursor()
-                # Execute setup_table_autorole_database query to create necessary tables
                 cur.execute(setup_table_autorole_database)
                 con.commit()
             except Exception as error:
@@ -195,14 +230,14 @@ def checkForDir(filepath):
         None
     """
     if os.path.isdir(filepath):
-        print (f"{filepath} exists")	
+        print(f"{filepath} exists")	
     else:
         try:
             Path(filepath).mkdir(parents=True, exist_ok=False)
         except FileExistsError:
-            print ("Somehow tried to create a file that already exists whilst failing os.path.isdir. Something is definitely brokey.")
+            print("Somehow tried to create a file that already exists whilst failing os.path.isdir. Something is definitely brokey.")
         else:
-            print (f"{filepath} created")
+            print(f"{filepath} created")
 
 def get_unix_time():
     return float(time.time())
