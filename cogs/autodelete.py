@@ -190,7 +190,8 @@ class Autodelete(commands.Cog):
             
             try:
                 message = await channel.fetch_message(message_id)
-                await message.delete()
+                if not message.pinned:
+                    await message.delete()
                 await self.remove_deleted_item(server=False, channel=False, message=True, server_id=None, channel_id=None, message_id=message_id)
             
             except (discord.NotFound, discord.Forbidden) as e:
@@ -203,7 +204,8 @@ class Autodelete(commands.Cog):
                 if e.response.status == 429:
                     print(f'Rate limit error in delete_expired_messages: \n\n {e} \n\n')
                     await asyncio.sleep(0.2)
-                    await message.delete()
+                    if not message.pinned:
+                        await message.delete()
                     await self.remove_deleted_item(server=False, channel=False, message=True, server_id=None, channel_id=None, message_id=message_id)
                 else:
                     print(f'HTTP error in delete_expired_messages: \n\n {e} \n\n')
