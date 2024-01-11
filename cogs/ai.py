@@ -4,7 +4,8 @@ import random
 import re
 import sqlite3
 import discord
-import openai
+# import openai
+from openai import OpenAI, openai
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from discord.ext import commands
@@ -180,8 +181,9 @@ class Ai(commands.Cog):
         Send a message to OpenAI's GPT-3 engine and receive a response. 
         The message is used as a prompt for the engine and the response is limited to 2000 characters.
         '''
+        client = OpenAI()
         message = message + '.\n\n'
-        response = openai.completions.create(
+        response = client.chat.completions.create(
             engine=textmodel,
             prompt=message,
             temperature=1.0,
