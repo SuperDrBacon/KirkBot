@@ -199,6 +199,7 @@ class Ai(commands.Cog):
         # out = response.choices[0]['message']['content'][:2000]
         # await ctx.reply(out)
         msg = await ctx.reply("Yea uuh it's dead")
+        await ctx.message.delete(delay=2)
         await msg.delete(delay=2)
     
     @commands.command(name='meme')
