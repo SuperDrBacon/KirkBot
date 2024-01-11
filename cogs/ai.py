@@ -181,7 +181,7 @@ class Ai(commands.Cog):
         The message is used as a prompt for the engine and the response is limited to 2000 characters.
         '''
         message = message + '.\n\n'
-        response = openai.Completion.create(
+        response = openai.chat.completions.create(
             engine=textmodel,
             prompt=message,
             temperature=1.0,
@@ -191,7 +191,7 @@ class Ai(commands.Cog):
             presence_penalty=0.2,
             # stop=["."]
         )
-        out = response.choices[0].text[:2000]
+        out = response.choices[0]['message']['content'][:2000]
         await ctx.reply(out)
         # await ctx.reply('Yea uuh another free trial ran out')
     
