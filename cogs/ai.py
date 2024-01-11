@@ -3,26 +3,29 @@ import os
 import random
 import re
 import sqlite3
-from collections import defaultdict
-from configparser import ConfigParser
-
 import discord
 import openai
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 from discord.ext import commands
+from configparser import ConfigParser
+from collections import defaultdict
 
 ospath = os.path.abspath(os.getcwd())
 config = ConfigParser()
 config.read(rf'{ospath}/config.ini')
+imagepath = rf'{ospath}/images/'
 
 key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
 prefix = config['BOTCONFIG']['prefix']
 openai.api_key = key
-textmodel = 'text-curie-001'
-# textmodel = 'text-davinci-003'
+# textmodel = 'text-curie-001'
+textmodel = 'text-davinci-003'
 
 ORDER = 4
 TEXT_WORD_COUNT = ORDER * 15 
+MEME_WORD_COUNT = ORDER * 5
 
 class MarkovChain:
     def __init__(self, order:int):
@@ -191,6 +194,83 @@ class Ai(commands.Cog):
         out = response.choices[0].text[:2000]
         await ctx.reply(out)
         # await ctx.reply('Yea uuh another free trial ran out')
+    
+    @commands.command(name='meme')
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def meme(self, ctx, member: discord.Member = None):
+        imagefile = BytesIO()
+        guild_id = ctx.guild.id	
+        channel_id = ctx.channel.id
+        
+        #pull a random user profile picture
+        guild = self.bot.get_guild(ctx.guild.id)
+        if member is None:
+            while member is None:
+                potential_member = random.choice(guild.members)
+                try:
+                    avatar_bytes = await potential_member.avatar.read()
+                    member = potential_member
+                except AttributeError:
+                    pass
+        else:
+            try:
+                avatar_bytes = await member.avatar.read()
+            except AttributeError:
+                await ctx.reply('**This user has no avatar.**', delete_after=5)
+                await ctx.message.delete(delay=5)
+                return
+        avatar = Image.open(BytesIO(avatar_bytes))
+        avatar = avatar.resize((1024, 1024))
+        # avatar.save(imagefile, format='PNG')
+        # imagefile.seek(0)
+        # await ctx.send(file=discord.File(imagefile, filename='meme.png'))
+        
+        con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
+        con.row_factory = lambda _, row: row[0]
+        cur = con.cursor()
+        # text = cur.execute('SELECT message FROM archive_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
+        text = cur.execute('SELECT message FROM archive_data').fetchall()
+        
+        # Filter out messages containing links
+        filtered_text = [line for line in text if not re.search(r'(https?://\S+)', line)]
+        corpus = ' '.join(' '.join(line.split()) for line in filtered_text)
+        
+        chain = MarkovChain(order=ORDER)
+        chain.add_text(corpus)
+        chain.calculate_word_weights()
+        
+        def get_text():
+            # Generating text using the generator function
+            generated_text_generator = chain.generate_text_incremental(text_word_count=MEME_WORD_COUNT)
+            generated_text = ' '.join(word for word in generated_text_generator)
+            return generated_text
+        
+        top_text = get_text()
+        bottom_text = get_text()
+        
+        font = ImageFont.truetype(imagepath+'impact.ttf', 60)
+        draw = ImageDraw.Draw(avatar)
+        
+        text_color = (237, 230, 211)
+        # Draw top text
+        text_bounding_box = font.getbbox(top_text)
+        text_width = text_bounding_box[2] - text_bounding_box[0]
+        text_height = text_bounding_box[3] - text_bounding_box[1]
+        text_position = ((avatar.width - text_width) / 2, 0)
+        draw.text(text_position, top_text, font=font, fill=text_color)
+        
+        # Draw bottom text
+        text_bounding_box = font.getbbox(bottom_text)
+        text_width = text_bounding_box[2] - text_bounding_box[0]
+        text_height = text_bounding_box[3] - text_bounding_box[1]
+        text_position = ((avatar.width - text_width) / 2, avatar.height - text_height)
+        draw.text(text_position, bottom_text, font=font, fill=text_color)
+        
+        # save to send
+        avatar.save(imagefile, format='PNG')
+        imagefile.seek(0)
+
+        await ctx.send(file=discord.File(imagefile, filename='meme.png'))
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))
