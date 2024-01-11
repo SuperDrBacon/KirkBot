@@ -4,8 +4,8 @@ import random
 import re
 import sqlite3
 import discord
-# import openai
-from openai import OpenAI, openai
+import openai
+# from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from discord.ext import commands
@@ -22,7 +22,7 @@ botID = config['BOTCONFIG']['botID']
 prefix = config['BOTCONFIG']['prefix']
 openai.api_key = key
 # textmodel = 'text-curie-001'
-textmodel = 'gpt-3.5-turbo-1106'
+textmodel = 'gpt-3.5-turbo'
 
 ORDER = 4
 TEXT_WORD_COUNT = ORDER * 15 
@@ -181,17 +181,18 @@ class Ai(commands.Cog):
         Send a message to OpenAI's GPT-3 engine and receive a response. 
         The message is used as a prompt for the engine and the response is limited to 2000 characters.
         '''
-        client = OpenAI()
-        message = message + '.\n\n'
-        response = client.chat.completions.create(
-            engine=textmodel,
-            prompt=message,
-            temperature=1.0,
+        # client = OpenAI()
+        # message = message + '.\n\n'
+        # user = ctx.author.name
+        message_log = [
+            {"role": "user", "content": message}
+        ]
+        response = openai.ChatCompletion.create(
+            model=textmodel,
+            messages=message_log,
+            temperature=0.9,
             max_tokens=500,
-            n=1,
-            frequency_penalty=0.2,
-            presence_penalty=0.2,
-            # stop=["."]
+            stop=None,
         )
         out = response.choices[0]['message']['content'][:2000]
         await ctx.reply(out)
