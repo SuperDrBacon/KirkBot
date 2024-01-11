@@ -181,7 +181,7 @@ class Ai(commands.Cog):
         The message is used as a prompt for the engine and the response is limited to 2000 characters.
         '''
         message = message + '.\n\n'
-        response = openai.chat.completions.create(
+        response = openai.completions.create(
             engine=textmodel,
             prompt=message,
             temperature=1.0,
