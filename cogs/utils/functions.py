@@ -12,6 +12,7 @@ archive_database = rf'{ospath}/cogs/archive_data.db'
 economy_database = rf'{ospath}/cogs/economy_data.db'
 autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
 autorole_database = rf'{ospath}/cogs/autorole_data.db'
+invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
 
 setup_table_archive_database = '''
                 CREATE TABLE IF NOT EXISTS archive_data(
@@ -57,9 +58,29 @@ setup_table_autorole_database = '''
                     BASE_ROLE               TEXT,
                     ROLES                   TEXT);'''
 
+setup_table_invitelog_database_1 = '''
+                CREATE TABLE IF NOT EXISTS invitelog (
+                    SERVER_ID               INTEGER     NOT NULL,
+                    INVITE_CODE             TEXT,
+                    CURRENT_USES            INTEGER,
+                    MAX_USES                INTEGER,
+                    INVITER_ID              INTEGER,
+                    INVITER_NAME            TEXT,
+                    INVITE_CHANNEL_ID       INTEGER,
+                    EXPIRATION_DATE_UNIX    INTEGER);'''
+
+setup_table_invitelog_database_2 = '''
+                CREATE TABLE IF NOT EXISTS users (
+                    SERVER_ID               INTEGER     NOT NULL,
+                    INVITE_CODE             TEXT,
+                    USED_BY_NAME            TEXT,
+                    USED_BY_ID              INTEGER,
+                    FOREIGN KEY             (INVITE_CODE)
+                        REFERENCES invitelog(INVITE_CODE));'''
+
 setup_table_autodelete_database = '''
                 CREATE TABLE IF NOT EXISTS servers (
-                    SERVER_ID           INTEGER     NOT NULL    PRIMARY KEY);
+                    SERVER_ID           INTEGER         NOT NULL    PRIMARY KEY);
                 
                 CREATE TABLE IF NOT EXISTS channels (
                     SERVER_ID           INTEGER         NOT NULL,
@@ -177,6 +198,24 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                     cur.close()
                     con.close()
                     print("sqlite3 autorole database created")
+        elif dbtype == 'invitelog':
+            try:
+                # Create a connection to the invitelog database
+                con = sqlite3.connect(invitelog_database)
+                cur = con.cursor()
+                # Execute setup_table_invitelog_database query to create necessary tables
+                cur.execute(setup_table_invitelog_database_1)
+                cur.execute(setup_table_invitelog_database_2)
+                con.commit()
+            except Exception as error:
+                # Failed to create the invitelog database
+                print("Failed to make sqlite3 invitelog database:", error)
+            finally:
+                if con:
+                    # Close the connection
+                    cur.close()
+                    con.close()
+                    print("sqlite3 invitelog database created")
         else:
             # Invalid database type
             print("Database is True but dbtype is not one of the present options.")
