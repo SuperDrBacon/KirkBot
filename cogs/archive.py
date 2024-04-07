@@ -222,7 +222,7 @@ class Archiver(commands.Cog):
         con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
         cur = con.cursor()
         
-        cur.execute(f"SELECT USER_ID, USERNAME FROM archive_data WHERE SERVER_ID = {serverid}")
+        cur.execute(f"SELECT USER_ID, USERNAME FROM archive_data WHERE SERVER_ID = ?", (serverid,))
         userdata = cur.fetchall()
         previous_usernames = {}
         file_data = BytesIO()
