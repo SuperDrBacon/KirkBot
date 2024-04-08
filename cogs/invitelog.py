@@ -117,7 +117,7 @@ class InviteLog(commands.Cog):
                             embed.add_field(name="Inviter", value=f"{inviter.name} ID: {inviter.id}", inline=False)
                             embed.add_field(name="Invite Channel", value=f"<#{invite.channel.id}>", inline=False)
                             embed.add_field(name="Invite Expiration", value=f'{expiration_string}', inline=False)
-                            embed.add_field(name="Invite Uses", value=f"{current_uses} / {max_uses if not 0 else 'infinite'}", inline=False)
+                            embed.add_field(name="Invite Uses", value=f"{current_uses} / {max_uses if max_uses != 0 else 'Infinite'}", inline=False)
                             
                             break
         
