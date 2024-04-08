@@ -28,8 +28,7 @@ class InviteLog(commands.Cog):
     
     @commands.Cog.listener()
     async def on_ready(self):
-        # await self.update_invites_loop()
-        # await self.update_invites()
+        await self.update_invites()
         print('InviteLog module is online')
     
     async def update_invites(self):
@@ -196,7 +195,6 @@ class InviteLog(commands.Cog):
         while True:
             await asyncio.sleep(SECOND_LOOP_DELAY)
             # print ('update_invites_loop')
-            # self.loopcounter += SECOND_LOOP_DELAY
             await self.update_invites()
 
 async def setup(bot):
