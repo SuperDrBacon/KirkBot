@@ -1,6 +1,6 @@
 # Cogs
 
-Cogs can be reloaded while the bot is running making dev easier. Cogs alao make things more organized
+Cogs can be reloaded while the bot is running making dev easier. Cogs also make things more organized
 
 to do list
 - [ ] make it work
