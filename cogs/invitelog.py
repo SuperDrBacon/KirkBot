@@ -101,6 +101,7 @@ class InviteLog(commands.Cog):
                             # Update the current uses of the invite in the invitelog table
                             await c.execute("UPDATE invitelog SET CURRENT_USES = ? WHERE SERVER_ID = ? AND INVITE_CODE = ?", (current_uses, member.guild.id, invite.code))
                             
+                            await con.commit()
                             now = datetime.datetime.now().timestamp()
                             remaining_time = expiration_date_unix - now if expiration_date_unix != 0 else 0
                             if remaining_time > 0:
