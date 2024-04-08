@@ -16,7 +16,7 @@ config.read(rf'{ospath}/config.ini')
 prefix = config['BOTCONFIG']['prefix']
 invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
 
-SECOND_LOOP_DELAY = 30
+SECOND_LOOP_DELAY = 5
 
 class InviteLog(commands.Cog):
     def __init__(self, bot):
