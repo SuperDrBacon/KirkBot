@@ -136,7 +136,7 @@ class Invitelog(commands.Cog):
         self.update_invites_task = loop.create_task(self.update_invites_loop())
     
     @commands.group(name='invite', aliases=['inv'], invoke_without_command=True)
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_base(self, ctx):
         '''
@@ -150,7 +150,7 @@ class Invitelog(commands.Cog):
     
     
     @invitelog_base.command(name='list', invoke_without_command=True)
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_list(self, ctx):
         '''
@@ -239,7 +239,7 @@ class Invitelog(commands.Cog):
                 break
     
     @invitelog_base.command(name='show', invoke_without_command=True)
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_show(self, ctx, invite_code:str):
         '''
