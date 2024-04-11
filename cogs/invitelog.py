@@ -138,6 +138,7 @@ class Invitelog(commands.Cog):
         All commands related to the invite group.
         - `invite list` Displays a list of all the active invites for the current server.
         - `invite show` Displays information about a specific invite.
+        - `invite kick` Kicks all users who joined the server using a specific invite.
         '''
         embed = discord.Embed(title='Invitelog usage', description=f'', color=0x00ff00, timestamp=datetime.utcnow())
         embed.set_footer(text=botversion)
@@ -290,6 +291,43 @@ class Invitelog(commands.Cog):
                     embed.add_field(name="Users Joined", value="No users joined using this invite.", inline=False)
                     
                 await ctx.send(embed=embed)
+    
+    @invitelog_base.command(name='kick', invoke_without_command=True)
+    @commands.has_permissions(administrator=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def invitelog_kick(self, ctx, invite_code:str):
+        '''
+        This command kicks all users who joined the server using a specific invite.
+        '''
+        async with aiosqlite.connect(invitelog_database) as con:
+            async with con.cursor() as c:
+                await c.execute("SELECT USED_BY_NAME, USED_BY_ID FROM users WHERE SERVER_ID = ? AND INVITE_CODE = ?", (ctx.guild.id, invite_code))
+                users = await c.fetchall()
+                
+                if users:
+                    kicked_users = []
+                    not_kicked_users = []
+                    for user in users:
+                        user_name, user_id = user
+                        member = ctx.guild.get_member(user_id)
+                        if member:
+                            await member.kick(reason=f"Kicked for joining using the invite code {invite_code}")
+                            kicked_users.append(f"{user_name} (ID: {user_id})")
+                        else:
+                            not_kicked_users.append(f"Unable to kick user {user_name} (ID: {user_id}) as they are no longer in the server.")
+                    
+                    embed = discord.Embed(title="Invite Kick", color=0x00ff00)
+                    if kicked_users:
+                        kicked_users_list = "\n".join(kicked_users)
+                        embed.add_field(name="Kicked users", value=f"Successfully kicked the following users who joined using the invite code `{invite_code}`:\n\n{kicked_users_list}")
+                    
+                    elif not_kicked_users:
+                        not_kicked_users_list = "\n".join(not_kicked_users)
+                        embed.add_field(name="Not kicked users", value=f"Unable to kick the following users with invite:`{invite_code}` as they are no longer in the server.\n\n{not_kicked_users_list}.")
+                    await ctx.send(embed=embed)
+                else:
+                    embed = discord.Embed(title="Invite Kick", description=f"No users found who joined using the invite code `{invite_code}`.", color=0xff0000)
+                    await ctx.send(embed=embed)
     
     async def cog_unload(self):
         # print('invitelog cog_unload stopping update_invites_loop loop')
