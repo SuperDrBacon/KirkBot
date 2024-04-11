@@ -12,9 +12,9 @@
     - [ ] see above
     - [x] move function into utils into cogs
     - [x] make get all links in channels work
-    - [x] make tag game
+    - [ ] make tag game ~~ broken
     - [x] gcp dot status update in bot
-    - [ ] ~~get tweets / search tweets~~ Elon killed Twitter API
+    - [ ] ~~get tweets / search tweets ~~ Elon killed Twitter API
     - [ ] image manipulation
         - [x] react to a message with a command to make an image of that message
         - [?] react to a message with a command to make an image of that user with added own message
@@ -26,3 +26,8 @@
         - [x] top 5 words in a channel
         - [x] top 5 words from a user
         - [x] specific word count from word
+    - [x] invitelog
+        - [x] show info about person and invite when they join
+        - [x] show info about all invites with command
+        - [x] show info about specific invite with command
+        - [ ] kick all people who joined with a specific invite
