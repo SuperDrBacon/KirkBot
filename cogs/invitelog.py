@@ -54,12 +54,11 @@ class Invitelog(commands.Cog):
                         existing_invite = await c.fetchone()
                         if existing_invite:
                             # Update the existing invite
-                            await c.execute("UPDATE invitelog SET CURRENT_USES = ? WHERE SERVER_ID = ? AND INVITE_CODE = ?;",
-                                        (invite.uses, server.id, invite.code))
+                            await c.execute("UPDATE invitelog SET CURRENT_USES = ? WHERE SERVER_ID = ? AND INVITE_CODE = ?;", (invite.uses, server.id, invite.code))
                         else:
                             # Add a new invite
                             await c.execute("INSERT INTO invitelog(SERVER_ID, INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
-                                        (server.id, invite.code, invite.uses, invite.max_uses, invite.inviter.id, invite.inviter.name, invite.channel.id, (invite.expires_at.timestamp() if invite.expires_at else 0)))
+                                            (server.id, invite.code, invite.uses, invite.max_uses, invite.inviter.id, invite.inviter.name, invite.channel.id, (invite.expires_at.timestamp() if invite.expires_at else 0)))
                     
                     # Remove any invites that are no longer active
                     await c.execute("SELECT INVITE_CODE FROM invitelog WHERE SERVER_ID = ?", (server.id,))
@@ -68,10 +67,6 @@ class Invitelog(commands.Cog):
                         if db_invite not in [invite.code for invite in invites]:
                             await c.execute("DELETE FROM invitelog WHERE SERVER_ID = ? AND INVITE_CODE = ?", (server.id, db_invite))
                             # await c.execute("DELETE FROM users WHERE INVITE_CODE = ?", (db_invite,)) # dont remove the users from the users table as this is a log of all users that have joined a server
-                # else:
-                #     # The server is no longer available, remove it from the database
-                #     await c.execute("DELETE FROM invitelog WHERE SERVER_ID = ?", (server.id,))
-                #     # await c.execute("DELETE FROM users WHERE INVITE_CODE IN (SELECT INVITE_CODE FROM invitelog WHERE SERVER_ID = ?)", (server_id,)) # dont remove the users from the users table as this is a log of all users that have joined a server
             
             await con.commit()
     
