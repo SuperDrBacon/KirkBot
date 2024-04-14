@@ -367,8 +367,6 @@ class Fun(commands.Cog):
             
             try:
                 chart_height = float(driver.find_element(By.ID, 'gcpChart').get_attribute("height"))
-                # chart_height = float(driver.find_element(By.ID, 'gcpChartShadow').get_attribute("height"))
-                print(chart_height)
                 dot = driver.find_elements(By.XPATH, '/html/body/div/div')[-1]
                 dot_id = dot.get_attribute('id')
                 dot_height = driver.find_element(By.ID, dot_id).value_of_css_property('top')
@@ -377,7 +375,7 @@ class Fun(commands.Cog):
                 # Map dot height into domain [0.0...1.0] rather than raw css property value
                 high = 0
                 high = interp(float(dot_height), [0, chart_height], [0.0, 1.0])
-                print(chart_height, dot_height, high)
+                
                 if high == 0:
                     color = '#505050'
                     gcpStatus = 'It is hivemind time!'
@@ -439,7 +437,7 @@ class Fun(commands.Cog):
             byteiogcpdot = BytesIO()
             options = webdriver.ChromeOptions()
             
-            options.add_argument("--headless=new")
+            options.add_argument("--headless")
             options.add_argument("--window-size=1500,750")
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
