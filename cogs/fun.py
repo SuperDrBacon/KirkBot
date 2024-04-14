@@ -368,7 +368,9 @@ class Fun(commands.Cog):
             chart_file = BytesIO(base64.b64decode(chart_screenshot_base64))
             
             try:
-                chart_height = float(driver.find_element(By.ID, 'gcpChartShadow').get_attribute("height")) + 20
+                chart_height = float(driver.find_element(By.ID, 'gcpChart').get_attribute("height"))
+                # chart_height = float(driver.find_element(By.ID, 'gcpChartShadow').get_attribute("height"))
+                print(chart_height)
                 dot = driver.find_elements(By.XPATH, '/html/body/div/div')[-1]
                 dot_id = dot.get_attribute('id')
                 dot_height = driver.find_element(By.ID, dot_id).value_of_css_property('top')
@@ -452,7 +454,7 @@ class Fun(commands.Cog):
             chart_file = BytesIO(base64.b64decode(chart_screenshot_base64))
             
             try:
-                chart_height = float(driver.find_element(By.ID, 'gcpChartShadow').get_attribute("height")) + 20
+                chart_height = float(driver.find_element(By.ID, 'gcpChart').get_attribute("height"))
                 dot = driver.find_elements(By.XPATH, '/html/body/div/div')[-1]
                 dot_id = dot.get_attribute('id')
                 dot_height = driver.find_element(By.ID, dot_id).value_of_css_property('top')
