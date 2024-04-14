@@ -42,7 +42,7 @@ class Invitelog(commands.Cog):
     
     async def update_invites(self):
         async with aiosqlite.connect(invitelog_database) as con:
-            async with con.cursor() as c:
+            async with con.cursor() as cur:
                 # Loop through each server
                 for server in self.bot.guilds:
                     # Get the current invites for the server
@@ -50,23 +50,23 @@ class Invitelog(commands.Cog):
                     
                     # Update the database with the new invite information
                     for invite in invites:
-                        await c.execute("SELECT * FROM invitelog WHERE SERVER_ID = ? AND INVITE_CODE = ?", (server.id, invite.code))
-                        existing_invite = await c.fetchone()
+                        await cur.execute("SELECT * FROM invitelog WHERE SERVER_ID = ? AND INVITE_CODE = ?", (server.id, invite.code))
+                        existing_invite = await cur.fetchone()
                         if existing_invite:
                             # Update the existing invite
-                            await c.execute("UPDATE invitelog SET CURRENT_USES = ? WHERE SERVER_ID = ? AND INVITE_CODE = ?;", (invite.uses, server.id, invite.code))
+                            await cur.execute("UPDATE invitelog SET CURRENT_USES = ? WHERE SERVER_ID = ? AND INVITE_CODE = ?;", (invite.uses, server.id, invite.code))
                         else:
                             # Add a new invite
-                            await c.execute("INSERT INTO invitelog(SERVER_ID, INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+                            await cur.execute("INSERT INTO invitelog(SERVER_ID, INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
                                             (server.id, invite.code, invite.uses, invite.max_uses, invite.inviter.id, invite.inviter.name, invite.channel.id, (invite.expires_at.timestamp() if invite.expires_at else 0)))
                     
                     # Remove any invites that are no longer active
-                    await c.execute("SELECT INVITE_CODE FROM invitelog WHERE SERVER_ID = ?", (server.id,))
-                    db_invites = [row[0] for row in await c.fetchall()]
+                    await cur.execute("SELECT INVITE_CODE FROM invitelog WHERE SERVER_ID = ?", (server.id,))
+                    db_invites = [row[0] for row in await cur.fetchall()]
                     for db_invite in db_invites:
                         if db_invite not in [invite.code for invite in invites]:
-                            await c.execute("DELETE FROM invitelog WHERE SERVER_ID = ? AND INVITE_CODE = ?", (server.id, db_invite))
-                            # await c.execute("DELETE FROM users WHERE INVITE_CODE = ?", (db_invite,)) # dont remove the users from the users table as this is a log of all users that have joined a server
+                            await cur.execute("DELETE FROM invitelog WHERE SERVER_ID = ? AND INVITE_CODE = ?", (server.id, db_invite))
+                            # await cur.execute("DELETE FROM users WHERE INVITE_CODE = ?", (db_invite,)) # dont remove the users from the users table as this is a log of all users that have joined a server
             
             await con.commit()
     
@@ -85,10 +85,10 @@ class Invitelog(commands.Cog):
         current_server_invites = await member.guild.invites()
         
         async with aiosqlite.connect(invitelog_database) as con:
-            async with con.cursor() as c:
+            async with con.cursor() as cur:
                 # Get all the invites for the server from the database
-                await c.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID FROM invitelog WHERE SERVER_ID = ?", (member.guild.id,))
-                db_invites = await c.fetchall()
+                await cur.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID FROM invitelog WHERE SERVER_ID = ?", (member.guild.id,))
+                db_invites = await cur.fetchall()
                 
                 # Find the invite that has one more use than the database
                 for invite in current_server_invites:
@@ -100,10 +100,10 @@ class Invitelog(commands.Cog):
                             max_uses = db_invite[2]
                             
                             # Add the new user to the users table
-                            await c.execute("INSERT INTO users (SERVER_ID, INVITE_CODE, USED_BY_NAME, USED_BY_ID) VALUES (?, ?, ?, ?)", (member.guild.id, invite.code, member.name, member.id))
+                            await cur.execute("INSERT INTO users (SERVER_ID, INVITE_CODE, USED_BY_NAME, USED_BY_ID) VALUES (?, ?, ?, ?)", (member.guild.id, invite.code, member.name, member.id))
                             
                             # Update the current uses of the invite in the invitelog table
-                            await c.execute("UPDATE invitelog SET CURRENT_USES = ? WHERE SERVER_ID = ? AND INVITE_CODE = ?", (current_uses, member.guild.id, invite.code))
+                            await cur.execute("UPDATE invitelog SET CURRENT_USES = ? WHERE SERVER_ID = ? AND INVITE_CODE = ?", (current_uses, member.guild.id, invite.code))
                             
                             await con.commit()
                             now = datetime.datetime.now().timestamp()
@@ -162,10 +162,10 @@ class Invitelog(commands.Cog):
         - Current uses of the invite / Maximum uses (or "Infinite" if the invite has no use limit)
         '''
         async with aiosqlite.connect(invitelog_database) as con:
-            async with con.cursor() as c:
+            async with con.cursor() as cur:
                 # Get all the active invites for the server
-                await c.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX FROM invitelog WHERE SERVER_ID = ?", (ctx.guild.id,))
-                invites = await c.fetchall()
+                await cur.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX FROM invitelog WHERE SERVER_ID = ?", (ctx.guild.id,))
+                invites = await cur.fetchall()
         
         if not invites:
             embed = discord.Embed(title="Invite List", description="There are no active invites for this server.", color=0x00ff00)
@@ -250,10 +250,10 @@ class Invitelog(commands.Cog):
         - A list of users who joined the server using the invite
         '''
         async with aiosqlite.connect(invitelog_database) as con:
-            async with con.cursor() as c:
+            async with con.cursor() as cur:
                 # Get the invite information from the database
-                await c.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX FROM invitelog WHERE INVITE_CODE = ?", (invite_code,))
-                invite_info = await c.fetchone()
+                await cur.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX FROM invitelog WHERE INVITE_CODE = ?", (invite_code,))
+                invite_info = await cur.fetchone()
                 
                 if not invite_info:
                     embed = discord.Embed(title="Invite Information", description=f"No invite found with the code '{invite_code}'.", color=0xff0000)
@@ -274,8 +274,8 @@ class Invitelog(commands.Cog):
                     expiration_string = "No expiration"
                 
                 # Get the list of users who joined using this invite
-                await c.execute("SELECT USED_BY_NAME, USED_BY_ID FROM users WHERE SERVER_ID = ? AND INVITE_CODE = ?", (ctx.guild.id, invite_code))
-                users = await c.fetchall()
+                await cur.execute("SELECT USED_BY_NAME, USED_BY_ID FROM users WHERE SERVER_ID = ? AND INVITE_CODE = ?", (ctx.guild.id, invite_code))
+                users = await cur.fetchall()
                 
                 embed = discord.Embed(title="Invite Information", color=0x00ff00)
                 embed.add_field(name="Invite Code", value=invite_code, inline=False)
@@ -300,9 +300,9 @@ class Invitelog(commands.Cog):
         This command kicks all users who joined the server using a specific invite.
         '''
         async with aiosqlite.connect(invitelog_database) as con:
-            async with con.cursor() as c:
-                await c.execute("SELECT USED_BY_NAME, USED_BY_ID FROM users WHERE SERVER_ID = ? AND INVITE_CODE = ?", (ctx.guild.id, invite_code))
-                users = await c.fetchall()
+            async with con.cursor() as cur:
+                await cur.execute("SELECT USED_BY_NAME, USED_BY_ID FROM users WHERE SERVER_ID = ? AND INVITE_CODE = ?", (ctx.guild.id, invite_code))
+                users = await cur.fetchall()
                 
                 if users:
                     kicked_users = []
