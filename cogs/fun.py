@@ -355,7 +355,7 @@ class Fun(commands.Cog):
             
             # options.add_argument("--headless")
             options.add_argument("--headless=new")
-            options.add_argument("--window-size=1000,500")
+            options.add_argument("--window-size=2000,1000")
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
             
