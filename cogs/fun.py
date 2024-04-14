@@ -1,6 +1,5 @@
 import asyncio
 import base64
-import datetime as dt
 import json
 import math
 import os
@@ -13,7 +12,7 @@ import urllib.parse
 import urllib.request
 from collections import Counter, defaultdict
 from configparser import ConfigParser
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO, StringIO
 from multiprocessing import Pool, cpu_count
 from typing import Union
@@ -25,8 +24,7 @@ from discord.ext import commands
 from numpy import interp
 from PIL import Image, ImageColor, ImageDraw
 from selenium import webdriver
-from selenium.common.exceptions import (InvalidSessionIdException,
-                                        TimeoutException)
+from selenium.common.exceptions import (InvalidSessionIdException, TimeoutException)
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -258,7 +256,7 @@ class Fun(commands.Cog):
                 colour = discord.Colour.green()
             
             valuefield1 = f'You got {result}.'         
-            embedVar = discord.Embed(color=colour, timestamp=dt.datetime.utcnow())
+            embedVar = discord.Embed(color=colour, timestamp=datetime.now(timezone.utc))
             embedVar.add_field(name=number, value=valuefield1, inline=False)
             embedVar.set_footer(text=botversion)
             await ctx.send(embed=embedVar)
@@ -379,7 +377,7 @@ class Fun(commands.Cog):
                 # Map dot height into domain [0.0...1.0] rather than raw css property value
                 high = 0
                 high = interp(float(dot_height), [0, chart_height], [0.0, 1.0])
-                
+                print(chart_height, dot_height, high)
                 if high == 0:
                     color = '#505050'
                     gcpStatus = 'It is hivemind time!'
@@ -423,7 +421,7 @@ class Fun(commands.Cog):
             pics = [discord.File(byteiogcpdot, filename='gcpdot.png'), discord.File(chart_file, filename='wholechart.png')]
             colorint = int(color[1:], 16)
             gcppercent = round(high * 100, 2)
-            embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint, timestamp=dt.datetime.utcnow())
+            embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint, timestamp=datetime.now(timezone.utc))
             embed.set_image(url='attachment://wholechart.png')
             embed.set_thumbnail(url='attachment://gcpdot.png')
             embed.set_footer(text=f'Use {command_prefix}gcp full for an explanation of all the colours. {botversion}')
@@ -507,7 +505,7 @@ class Fun(commands.Cog):
             pics = [discord.File(byteiogcpdot, filename='gcpdot.png'), discord.File(chart_file, filename='wholechart.png')]
             colorint = int(color[1:], 16)
             gcppercent = round(high * 100, 2)
-            embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint, timestamp=dt.datetime.utcnow())
+            embed = discord.Embed(title=f'Currently the GCP Dot is {colorname} at {gcppercent}%.', description=gcpStatus, color=colorint, timestamp=datetime.now(timezone.utc))
             embed.set_image(url='attachment://wholechart.png')
             embed.set_thumbnail(url='attachment://gcpdot.png')
             embed.add_field(name="Blue ", value='Significantly small network variance. Suggestive of deeply shared, internally motivated group focus. The index is above 95%', inline=True)
@@ -776,13 +774,13 @@ class Fun(commands.Cog):
             
             top_words = [word for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
             if input_word is None:
-                embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words for {display_name} in {ctx.guild.name}", color=0x00ff00, timestamp=dt.datetime.utcnow())
+                embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words for {display_name} in {ctx.guild.name}", color=0x00ff00, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
                 embed.add_field(name=f"Word", value='\n'.join(f"> {word[:30]}" for word in top_words), inline=True)
                 embed.add_field(name=f"Occurrence", value='\n'.join(f"> {count}" for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)), inline=True)
             else:
                 count = data['word_counts'].get(input_word, 0)
-                embed = discord.Embed(title=f"{display_name}'s use of '{input_word[:128]}' in {ctx.guild.name}", color=0x00ff00, timestamp=dt.datetime.utcnow())
+                embed = discord.Embed(title=f"{display_name}'s use of '{input_word[:128]}' in {ctx.guild.name}", color=0x00ff00, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name=f"Occurrences of {input_word}", value=f"{count}", inline=False)
             embed.set_footer(text=f'Wordcount record {self.daysago()} days old. {botversion}')
             await ctx.send(embed=embed)
@@ -834,7 +832,7 @@ class Fun(commands.Cog):
             for user_data in sorted_users:
                 total_counts.update(user_data['word_counts'])
             top_words = [word for word, count in sorted_users[0]['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
-            embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words in {ctx.guild.name}", color=0xff0000, timestamp=dt.datetime.utcnow())
+            embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words in {ctx.guild.name}", color=0xff0000, timestamp=datetime.now(timezone.utc))
             embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
             embed.add_field(name=f"Word", value='\n'.join(f"> {word[:30]}" for word in top_words), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {total_counts[word]}" for word in top_words), inline=True)
@@ -849,7 +847,7 @@ class Fun(commands.Cog):
                 return
             sorted_users = sorted(user_word_counts.items(), key=lambda x: x[1], reverse=True)
             num_users = min(NUM_OF_RANKED_WORDS, len(sorted_users))
-            embed = discord.Embed(title=f"Top {num_users} users who used '{input_word[:128]}' in {ctx.guild.name}", color=0xff0000, timestamp=dt.datetime.utcnow())
+            embed = discord.Embed(title=f"Top {num_users} users who used '{input_word[:128]}' in {ctx.guild.name}", color=0xff0000, timestamp=datetime.now(timezone.utc))
             embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(num_users)), inline=True)
             embed.add_field(name=f"User", value='\n'.join(f"> {ctx.guild.get_member(user_id).display_name}" if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {str(count)}" for user_id, count in sorted_users[:num_users]), inline=True)
@@ -893,7 +891,7 @@ class Fun(commands.Cog):
             for user_data in sorted_users:
                 total_counts.update(user_data['word_counts'])
             top_words = [word for word, count in sorted_users[0]['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
-            embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words in {ctx.channel.name}", color=0x0000ff, timestamp=dt.datetime.utcnow())
+            embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words in {ctx.channel.name}", color=0x0000ff, timestamp=datetime.now(timezone.utc))
             embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
             embed.add_field(name=f"Word", value='\n'.join(f"> {word[:30]}" for word in top_words), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {total_counts[word]}" for word in top_words), inline=True)
@@ -908,7 +906,7 @@ class Fun(commands.Cog):
                 return
             sorted_users = sorted(user_word_counts.items(), key=lambda x: x[1], reverse=True)
             num_users = min(NUM_OF_RANKED_WORDS, len(sorted_users))
-            embed = discord.Embed(title=f"Top {num_users} users who used '{input_word[:128]}' in {ctx.channel.name}", color=0x0000ff, timestamp=dt.datetime.utcnow())
+            embed = discord.Embed(title=f"Top {num_users} users who used '{input_word[:128]}' in {ctx.channel.name}", color=0x0000ff, timestamp=datetime.now(timezone.utc))
             embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(num_users)), inline=True)
             embed.add_field(name=f"User", value='\n'.join(f"> {ctx.guild.get_member(user_id).display_name}" if ctx.guild.get_member(user_id) else getusername(user_id) for user_id, count in sorted_users[:num_users]), inline=True)
             embed.add_field(name=f"Occurrence", value='\n'.join(f"> {str(count)}" for user_id, count in sorted_users[:num_users]), inline=True)
