@@ -360,7 +360,7 @@ class Fun(commands.Cog):
             
             driver = webdriver.Chrome(options=options)
             driver.get("https://gcpdot.com/gcpchart.php")
-            time.sleep(5)
+            time.sleep(GCP_DELAY)
             
             chart_screenshot_base64 = driver.get_screenshot_as_base64()
             chart_file = BytesIO(base64.b64decode(chart_screenshot_base64))
