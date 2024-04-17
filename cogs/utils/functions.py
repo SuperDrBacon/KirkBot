@@ -53,10 +53,7 @@ setup_table_economy_database = '''
 setup_table_autorole_database = '''
                 CREATE TABLE IF NOT EXISTS autorole_data (
                     SERVER_ID               INTEGER     PRIMARY KEY,
-                    USER_ID                 INTEGER,
-                    JOIN_ROLE               TEXT,
-                    BASE_ROLE               TEXT,
-                    ROLES                   TEXT);'''
+                    JOIN_ROLE_IDS           TEXT);'''
 
 setup_table_invitelog_database_1 = '''
                 CREATE TABLE IF NOT EXISTS invitelog (
