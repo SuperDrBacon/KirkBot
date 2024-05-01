@@ -1,17 +1,14 @@
-# temp for 3.12  discord.py aiohttp version
-aiohttp==3.9.0b0
-ollama==0.1.8
-aiosqlite==0.19.0
-beautifulsoup4==4.12.2
+aiosqlite==0.20.0
+beautifulsoup4==4.12.3
 discord.py==2.3.2
-Django==4.2.6
-Flask==3.0.0
-GitPython==3.1.40
-numpy==1.26.1
+Flask==3.0.3
+GitPython==3.1.43
+numpy==1.26.4
+ollama==0.1.9
 openai==0.28.1
-Pillow==10.1.0
+Pillow==10.3.0
 pypresence==4.3.0
-python-mpv==1.0.4
-requests==2.31.0
-selenium==4.14.0
+python-mpv==1.0.5
+Requests==2.31.0
+selenium==4.20.0
 webdriver_manager==4.0.1
