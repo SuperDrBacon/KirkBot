@@ -180,7 +180,7 @@ class Invitelog(commands.Cog):
             start_index = page_num * invites_per_page
             end_index = min((page_num + 1) * invites_per_page, len(invites))
             
-            embed = discord.Embed(title=f"Invite List - Page {page_num + 1}/{total_pages}", color=0x00ff00)
+            embed = discord.Embed(title=f"Invite List ({len(invites)})- Page {page_num + 1}/{total_pages}", color=0x00ff00)
             for invite in invites[start_index:end_index]:
                 invite_code, current_uses, max_uses, inviter_id, inviter_name, invite_channel_id, expiration_date_unix = invite
                 inviter = await self.bot.fetch_user(inviter_id)
