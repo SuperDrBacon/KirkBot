@@ -22,7 +22,7 @@ import mpv
 # from wordcloud import WordCloud
 from discord.ext import commands
 from numpy import interp
-from PIL import Image, ImageColor, ImageDraw
+from PIL import Image, ImageColor, ImageDraw, ImageFont
 from selenium import webdriver
 from selenium.common.exceptions import (InvalidSessionIdException, TimeoutException)
 from selenium.webdriver.chrome.service import Service
@@ -358,7 +358,7 @@ class Fun(commands.Cog):
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
             
-            driver = webdriver.Chrome(options=options)
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
@@ -442,7 +442,7 @@ class Fun(commands.Cog):
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
             
-            driver = webdriver.Chrome(options=options)
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
@@ -730,7 +730,7 @@ class Fun(commands.Cog):
     
     @commands.group(name='wordcount', aliases=["wc"], invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def wordcount_base(self, ctx, member:Union[discord.Member, int], input_word:str=None):
+    async def wordcount_base(self, ctx, member:Union[discord.Member, int], input_word:str=None,):
         '''
         Get the word count statistics for a user in the server. 
         The command takes a member and an optional input word as arguments and returns the top used words and their occurrence count for the user.
@@ -770,8 +770,8 @@ class Fun(commands.Cog):
                     await msg.delete(delay=MSG_DEL_DELAY)
                     return
             
-            top_words = [word for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
             if input_word is None:
+                top_words = [word for word, count in data['word_counts'].most_common(NUM_OF_RANKED_WORDS)]
                 embed = discord.Embed(title=f"Top {NUM_OF_RANKED_WORDS} used words for {display_name} in {ctx.guild.name}", color=0x00ff00, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name=f"Rank", value='\n'.join(f"> #{i+1}" for i in range(NUM_OF_RANKED_WORDS)), inline=True)
                 embed.add_field(name=f"Word", value='\n'.join(f"> {word[:30]}" for word in top_words), inline=True)
@@ -914,6 +914,191 @@ class Fun(commands.Cog):
         cur.close()
         con.close()
     
+    # @commands.command(name='connectfour', aliases=["c4", "connect4", "connect_four", "connect-four"])
+    # @commands.cooldown(1, 5, commands.BucketType.user)
+    # async def connect_four(self, ctx):
+    #     '''
+    #     Play a game of Connect Four against another user.
+    #     '''
+    #     Embed = discord.Embed(title="Connect Four", description=f"{ctx.author.name} wants to play Connect Four.\n\nClick accept to play a game!", color=0x000000)
+    #     await ctx.send(embed=Embed)
+    #     # have 2 buttons under the message, one for accept and one for decline
+    #     # the one who called the command is player 1 and the one who accepts is player 2 only one person can accept then ther buttons disappear
+    #     # player 2 goes first
+    #     # player 1 is red and player 2 is yellow
+    #     # the game ends when a player gets 4 in a row or the board is full and it's a tie
+    #     # the board is 7 columns and 6 rows
+    @commands.command(name='connectfour', aliases=["c4", "connect4", "connect_four", "connect-four"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def connect_four(self, ctx):
+        """
+        Play a game of Connect Four against another user.
+        """
+        # Create a new game instance
+        opponent = ctx.message.mentions[0] if ctx.message.mentions else None
+        if not opponent:
+            await ctx.send("You need to mention another player to start a game.")
+            return
+
+        game = ConnectFourGame(ctx.author, opponent)
+
+        # Create the initial board image
+        board_image = game.get_board_image()
+        board_file = discord.File(fp=board_image.tobytes(), filename="board.png")
+
+        # Send the initial board as an embed
+        embed = discord.Embed(title="Connect Four", color=0x00ff00)
+        embed.set_image(url="attachment://board.png")
+        message = await ctx.send(file=board_file, embed=embed)
+
+        # Wait for player moves
+        while True:
+            def check(m):
+                return m.channel == ctx.channel and m.author == game.players[game.current_player] and m.content.isdigit() and 0 <= int(m.content) < BOARD_SIZE
+
+            try:
+                move_message = await self.bot.wait_for("message", check=check, timeout=60.0)
+            except asyncio.TimeoutError:
+                await ctx.send("Game timed out due to inactivity.")
+                break
+
+            column = int(move_message.content)
+            game.make_move(column)
+
+            # Update the board image
+            board_image = game.get_board_image()
+            board_file = discord.File(fp=board_image.tobytes(), filename="board.png")
+
+            # Update the embed with the new board
+            embed.set_image(url="attachment://board.png")
+            await message.edit(embed=embed, file=board_file)
+
+            # Check for a winner
+            # ... (implement the logic to check for a winner and end the game if there is a winner)
+
+async def setup(bot):
+    await bot.add_cog(Fun(bot))
+
+
+
+# Define the game board size
+BOARD_SIZE = 7  # Number of columns
+BOARD_HEIGHT = 6  # Number of rows
+
+# Define the colors for the players
+PLAYER_COLORS = {
+    1: (255, 0, 0),  # Red
+    2: (255, 255, 0)  # Yellow
+}
+# Define the size of the tiles
+TILE_SIZE = 50
+
+# Define the font for displaying the player's turn
+imagepath = rf'{ospath}/images/'
+FONT = ImageFont.truetype(imagepath+'impact.ttf', 24)
+
+class ConnectFourGame:
+    def __init__(self, player1, player2):
+        self.board = [[0 for _ in range(BOARD_SIZE)] for _ in range(BOARD_HEIGHT)]
+        self.current_player = 2  # Player 2 goes first
+        self.players = {1: player1, 2: player2}
+
+    def get_board_image(self):
+        # Create a new image for the game board
+        board_image = Image.new("RGB", (BOARD_SIZE * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE), (255, 255, 255))
+        draw = ImageDraw.Draw(board_image)
+
+        # Draw the board
+        for row in range(BOARD_HEIGHT):
+            for col in range(BOARD_SIZE):
+                x1 = col * TILE_SIZE
+                y1 = row * TILE_SIZE
+                x2 = x1 + TILE_SIZE
+                y2 = y1 + TILE_SIZE
+                draw.rectangle([(x1, y1), (x2, y2)], outline=(0, 0, 0))
+
+                # Draw the player's piece if there is one
+                if self.board[row][col] != 0:
+                    player_color = PLAYER_COLORS[self.board[row][col]]
+                    draw.ellipse([(x1 + 5, y1 + 5), (x2 - 5, y2 - 5)], fill=player_color)
+
+        # Draw the player's turn
+        player_name = self.players[self.current_player].display_name
+        draw.text((10, 10), f"{player_name}'s turn", font=FONT, fill=(0, 0, 0))
+
+        return board_image
+
+    def make_move(self, column):
+        for row in range(BOARD_HEIGHT - 1, -1, -1):
+            if self.board[row][column] == 0:
+                self.board[row][column] = self.current_player
+                break
+
+        # Check for a winner
+        # ... (implement the logic to check for a winner)
+
+        # Switch to the next player
+        self.current_player = 1 if self.current_player == 2 else 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # @commands.command(aliases=["fish"])
     # @commands.cooldown(1, 5, commands.BucketType.user)
     # async def fishtank_monitor(self, ctx):
@@ -931,8 +1116,6 @@ class Fun(commands.Cog):
     #     streams_matrix = mpv_screenshots(streams)
     #     await ctx.reply(file=discord.File(streams_matrix, 'fishtank_monitor.jpg'))
     
-async def setup(bot):
-    await bot.add_cog(Fun(bot))
 
 # def daysago():
 #     con = sqlite3.connect(archive_database)
