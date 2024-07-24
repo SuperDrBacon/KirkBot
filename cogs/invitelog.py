@@ -74,7 +74,7 @@ class Invitelog(commands.Cog):
     async def on_member_join(self, member):
         self.update_invites_task.cancel()
         
-        log_channel_id = 1261142859525001219  # glowing invites channel
+        log_channel_id = 1265749657720717321  # glowing invites channel
         log_channel = self.bot.get_channel(log_channel_id)
         
         embed = discord.Embed(title="New member joined", color=0x00ff00)
