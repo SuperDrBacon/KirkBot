@@ -82,9 +82,9 @@
     - [x] `react`: React to a message with a random react image with a speech bubble above and their message above that.
     - [x] `caption`: Caption the previous image or gif posted in the chat.
 - [x] Invitelog
-    -[x] `invite list`: List all invites for the server.
-    -[x] `invite show`: Display the invite information for a specific invite.
-    -[x] `invite kick`: Kick all users who joined through a specific invite.
+    - [x] `invite list`: List all invites for the server.
+    - [x] `invite show`: Display the invite information for a specific invite.
+    - [x] `invite kick`: Kick all users who joined through a specific invite.
 - [ ] Moderator
     - [x] `setpermissions chatai`: Enable or disable the chatai function for a channel.
     - [x] `setpermissions show`: List all channels with chatai enabled.
