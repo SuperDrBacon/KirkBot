@@ -52,7 +52,7 @@ class ModCommands(commands.Cog):
     @set_permissions_base.command(name='chatai', description='Enable or disable the chatbot AI in the channel.')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def set_chatai_permissions(self, ctx, channel_permission:bool):
+    async def set_chatai_permissions(self, ctx, channel_permission:bool = False):
         '''
         Set the permissions for the current channel.
         Select which module you want to enable or disable.
@@ -77,8 +77,8 @@ class ModCommands(commands.Cog):
         channel_id = ctx.channel.id
         async with aiosqlite.connect(permissions_database) as con:
             async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
-                result = await cursor.fetchone()
-        await ctx.reply(f'Chat AI module is {"enabled" if result[0] else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+                enabled = (result := await cursor.fetchone()) is not None and result[0]
+        await ctx.reply(f'Chat AI module is {"enabled" if enabled else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
     
     @commands.command()
     @commands.has_permissions(kick_members=True)
