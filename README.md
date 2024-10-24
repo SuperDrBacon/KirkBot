@@ -27,6 +27,10 @@
 ## Features
 - [ ] Admin
     - Nothing yet
+- [x] AI
+    - [x] `@bot`: The bot replies with a message through markovian text generation.
+    - [x] `ai`: The bot replies with a message through a large langue model.
+    - [x] If you reply to the bot with a message, it will reply back using the large language model.
 - [x] Archive
     - [x] `on_message`: Archive all messages going through the bot.
     - [x] `archive`: Archive a channel into multiple zip files.
