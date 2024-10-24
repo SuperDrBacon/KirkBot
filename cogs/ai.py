@@ -150,7 +150,7 @@ class Ai(commands.Cog):
         #replies to messages in channels that have the AI enabled
         async with aiosqlite.connect(permissions_database) as con:
             async with con.execute('SELECT server_id, channel_id FROM permissions WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
-                channel_enabled = await cursor.fetchone()
+                channel_enabled = (result := await cursor.fetchone()) is not None and result[0]
         if random.randint(1, 15) == 1 and channel_enabled is True:
             '''
             get the last 15 messages from the channel and generate a response
