@@ -1,9 +1,23 @@
+import os
+import aiosqlite
 import discord
 import asyncio
+from datetime import datetime, timezone
 from discord.ext import commands
 from discord.ext.commands import CheckFailure
+from configparser import ConfigParser
 
+import cogs.utils.functions as functions
 
+ospath = os.path.abspath(os.getcwd())
+config, info = ConfigParser(), ConfigParser()
+info.read(rf'{ospath}/info.ini')
+config.read(rf'{ospath}/config.ini')
+command_prefix = config['BOTCONFIG']['prefix']
+botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
+permissions_database = rf'{ospath}/cogs/permissions_data.db'
+
+MSG_DEL_DELAY = 10
 
 class ModCommands(commands.Cog):
     '''
@@ -11,56 +25,85 @@ class ModCommands(commands.Cog):
     '''
     def __init__(self, bot):
         self.bot = bot
+        functions.checkForFile(filepath=os.path.dirname(permissions_database), filename=os.path.basename(permissions_database), database=True, dbtype='permissions')
 
     @commands.Cog.listener()
     async def on_ready(self):
             print('moderator module online')
-
-
-    # @commands.command(name='purge')
-    # @commands.has_permissions(manage_messages=True)
-    # async def purge(self, ctx, amount=0):
-    #     # await ctx.message.delete()
-
-    #     if amount == 0:
-    #         await ctx.send("You didn't specify a purge amount.")
-    #         await asyncio.sleep(1)
-    #         await ctx.channel.purge(limit = 1)
-
-    #     if amount >= 1:
-    #         await ctx.channel.purge(limit = amount + 1)
-        
-    #     if amount < 0:
-    #         await ctx.send('you just tried to delete a negative amount of messages. are you braindumb')
-    #         await asyncio.sleep(1)
-    #         await ctx.channel.purge(limit = 1)
-    # @purge.error
-    # async def purge_error(self, ctx, error):
-    #     if isinstance(error, CheckFailure):
-    #         await ctx.send("No permissions to purge")
-
     
-    # @commands.command()
-    # async def kick(self, ctx, member : discord.Member, *, reason=None):
-    #     if not reason:
-    #         await member.kick(f'{discord.Member} was kicked without reason.')
+    @commands.group(name='setpermissions', aliases=["setperm, setperms"], description='Set the permissions for the current channel.', invoke_without_command=True)
+    @commands.has_permissions(manage_messages=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def set_permissions_base(self, ctx):
+        '''
+        Set the permissions for the current channel.
+        Select which module you want to enable or disable.
+        Use the following format for the command:
+        `setpermissions <module> <'True' or 'False'>`
         
-    #     if reason:
-    #         await member.kick(f'{discord.Member} was kicked with the reason {reason}')
-            
-            
-            
-    # @commands.command()
-    # @commands.command()
-    # @commands.command()
-    # @commands.command()
-    # @commands.command()
-    # @commands.command()
-
-
-
-
-
+        Current modules:
+            - chatai
+        '''
+        embed = discord.Embed(title='Set Permissions usage', description=f'To see how to use the Set Permissions module use:\n`{command_prefix}help setpermissions`\n\n\
+            Current modules:\n\t- chatai\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
+        embed.set_footer(text=botversion)
+        await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
+    
+    @set_permissions_base.command(name='chatai', description='Enable or disable the chatbot AI in the channel.')
+    @commands.has_permissions(manage_messages=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def set_chatai_permissions(self, ctx, channel_permission:bool):
+        '''
+        Set the permissions for the current channel.
+        Select which module you want to enable or disable.
+        Use the following format for the command:
+        `setpermissions <module> <'True' or 'False'>`
+        '''
+        guild_id = ctx.guild.id
+        channel_id = ctx.channel.id
+        async with aiosqlite.connect(permissions_database) as con:
+            async with con.execute('UPDATE chatai SET enabled = ? WHERE server_id = ? AND channel_id = ?', (channel_permission, guild_id, channel_id)) as cursor:
+                await con.commit()
+        await ctx.reply(f'Chat AI module {"enabled" if channel_permission else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+    
+    @set_chatai_permissions.command(name='show', description='Show the current permissions for the chatbot AI in the channel.')
+    @commands.has_permissions(manage_messages=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def show_chatai_permissions(self, ctx):
+        '''
+        Show the current permissions for the chatbot AI in the channel.
+        '''
+        guild_id = ctx.guild.id
+        channel_id = ctx.channel.id
+        async with aiosqlite.connect(permissions_database) as con:
+            async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
+                result = await cursor.fetchone()
+        await ctx.reply(f'Chat AI module is {"enabled" if result[0] else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+    
+    @commands.command()
+    @commands.has_permissions(kick_members=True)
+    async def kick(self, ctx, member: discord.Member, *, reason=None):
+        '''
+        Kicks a member from the server.
+        '''
+        ...
+    
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def purge(self, ctx, amount: int):
+        '''
+        Purges a specified amount of messages.
+        '''
+        ...
+    
+    @commands.command()
+    @commands.has_permissions(ban_members=True)
+    async def ban(self, ctx, member: discord.Member, *, reason=None):
+        '''
+        Bans a member from the server.
+        '''
+        ...
+    
 
 async def setup(bot):
     await bot.add_cog(ModCommands(bot))

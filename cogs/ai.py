@@ -1,9 +1,12 @@
 # import datetime
+from email import message
 import os
 import random
 import re
 import sqlite3
+import aiosqlite
 import discord
+import cogs.utils.functions as functions
 # import openai
 import ollama
 # from openai import OpenAI
@@ -18,6 +21,8 @@ ospath = os.path.abspath(os.getcwd())
 config = ConfigParser()
 config.read(rf'{ospath}/config.ini')
 imagepath = rf'{ospath}/images/'
+
+permissions_database = rf'{ospath}/cogs/permissions_data.db'
 
 # key = config['BOTCONFIG']['openaiAPI']
 botID = config['BOTCONFIG']['botID']
@@ -91,6 +96,7 @@ class Ai(commands.Cog):
     '''
     def __init__(self, bot):
         self.bot = bot
+        functions.checkForFile(filepath=os.path.dirname(permissions_database), filename=os.path.basename(permissions_database), database=True, dbtype='permissions')
     
     @commands.Cog.listener()
     async def on_ready(self):
@@ -98,9 +104,10 @@ class Ai(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, ctx):
+        guild_id = ctx.guild.id	
+        channel_id = ctx.channel.id
+        #replies to messages that mention the bot
         if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
-            guild_id = ctx.guild.id	
-            channel_id = ctx.channel.id
             con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
             con.row_factory = lambda cursor, row: row[0]
             cur = con.cursor()
@@ -140,6 +147,33 @@ class Ai(commands.Cog):
                 else:
                     await ctx.reply('I am sorry, I am unable to generate a response at this time. -God')
         
+        #replies to messages in channels that have the AI enabled
+        async with aiosqlite.connect(permissions_database) as con:
+            async with con.execute('SELECT server_id, channel_id FROM permissions WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
+                channel_enabled = await cursor.fetchone()
+        if random.randint(1, 15) == 1 and channel_enabled is True:
+            '''
+            get the last 15 messages from the channel and generate a response
+            '''
+            messages = await ctx.channel.history(limit=15).flatten()
+            message_log = [{"role": "assistant", "content": "To reply to a specific user, use @user_id: message"}]
+            messages.reverse()
+            for message in messages:
+                if message.content:
+                    message_log.append({
+                        "role": "user",
+                        "content": f"{message.author.display_name}#{message.author.id}: {message.content}"
+                    })
+            response = ollama.chat(model=textmodel, messages=message_log)
+            if response:
+                await ctx.reply(response['message']['content'][:2000])
+            else:
+                response = ollama.chat(model=textmodel, messages=message_log)
+                if response:
+                    await ctx.reply(response['message']['content'][:2000])
+                else:
+                    await ctx.reply('I am sorry, I am unable to generate a response at this time. -God')
+    
     @commands.command(name='ai')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def ai(self, ctx, *, message):

@@ -13,6 +13,7 @@ economy_database = rf'{ospath}/cogs/economy_data.db'
 autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
 autorole_database = rf'{ospath}/cogs/autorole_data.db'
 invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
+permissions_database = rf'{ospath}/cogs/permissions_data.db'
 
 setup_table_archive_database = '''
                 CREATE TABLE IF NOT EXISTS archive_data(
@@ -98,6 +99,13 @@ setup_table_autodelete_database = '''
                         REFERENCES channels(CHANNEL_ID, SERVER_ID)
                         ON DELETE CASCADE,
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID, MESSAGE_ID));'''
+
+setup_table_permissions_database = '''
+                CREATE TABLE IF NOT EXISTS chatai (
+                    SERVER_ID           INTEGER     NOT NULL,
+                    CHANNEL_ID          INTEGER     NOT NULL,
+                    ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
+'''
 
 def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
     """
@@ -213,6 +221,23 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                     cur.close()
                     con.close()
                     print("sqlite3 invitelog database created")
+        elif dbtype == 'permissions':
+            try:
+                # Create a connection to the permissions database
+                con = sqlite3.connect(permissions_database)
+                cur = con.cursor()
+                # Execute setup_table_invitelog_database query to create necessary tables
+                cur.execute(setup_table_permissions_database)
+                con.commit()
+            except Exception as error:
+                # Failed to create the invitelog database
+                print("Failed to make sqlite3 permissions database:", error)
+            finally:
+                if con:
+                    # Close the connection
+                    cur.close()
+                    con.close()
+                    print("sqlite3 permissions database created")
         else:
             # Invalid database type
             print("Database is True but dbtype is not one of the present options.")
