@@ -104,8 +104,7 @@ setup_table_permissions_database = '''
                 CREATE TABLE IF NOT EXISTS chatai (
                     SERVER_ID           INTEGER     NOT NULL,
                     CHANNEL_ID          INTEGER     NOT NULL,
-                    ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
-'''
+                    ENABLED             BOOLEAN     NOT NULL);'''
 
 def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
     """
