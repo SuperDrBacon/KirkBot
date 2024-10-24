@@ -31,7 +31,7 @@ class ModCommands(commands.Cog):
     async def on_ready(self):
             print('moderator module online')
     
-    @commands.group(name='setpermissions', aliases=["setperm, setperms"], description='Set the permissions for the current channel.', invoke_without_command=True)
+    @commands.group(name='setpermissions', aliases=["setperm", "setperms"], description='Set the permissions for the current channel.', invoke_without_command=True)
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def set_permissions_base(self, ctx):
