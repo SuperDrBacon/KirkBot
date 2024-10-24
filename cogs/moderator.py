@@ -48,11 +48,12 @@ class ModCommands(commands.Cog):
             Current modules:\n\t- chatai\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
         embed.set_footer(text=botversion)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @set_permissions_base.command(name='chatai', description='Enable or disable the chatbot AI in the channel.')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def set_chatai_permissions(self, ctx, channel_permission:bool = False):
+    async def set_chatai_permissions(self, ctx, channel_permission:bool):
         '''
         Set the permissions for the current channel.
         Select which module you want to enable or disable.
@@ -62,9 +63,10 @@ class ModCommands(commands.Cog):
         guild_id = ctx.guild.id
         channel_id = ctx.channel.id
         async with aiosqlite.connect(permissions_database) as con:
-            async with con.execute('UPDATE chatai SET enabled = ? WHERE server_id = ? AND channel_id = ?', (channel_permission, guild_id, channel_id)) as cursor:
+            async with con.execute('UPDATE chatai SET enabled = ? WHERE server_id = ? AND channel_id = ?', (channel_permission.upper(), guild_id, channel_id)) as cursor:
                 await con.commit()
         await ctx.reply(f'Chat AI module {"enabled" if channel_permission else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @set_permissions_base.command(name='show', description='Show the current permissions for the chatbot AI in the channel.')
     @commands.has_permissions(manage_messages=True)
@@ -79,6 +81,7 @@ class ModCommands(commands.Cog):
             async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
                 enabled = (result := await cursor.fetchone()) is not None and result[0]
         await ctx.reply(f'Chat AI module is {"enabled" if enabled else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @commands.command()
     @commands.has_permissions(kick_members=True)
