@@ -63,7 +63,7 @@ class ModCommands(commands.Cog):
         guild_id = ctx.guild.id
         channel_id = ctx.channel.id
         async with aiosqlite.connect(permissions_database) as con:
-            async with con.execute('UPDATE chatai SET enabled = ? WHERE server_id = ? AND channel_id = ?', (channel_permission.upper(), guild_id, channel_id)) as cursor:
+            async with con.execute('UPDATE chatai SET enabled = ? WHERE server_id = ? AND channel_id = ?', (channel_permission, guild_id, channel_id)) as cursor:
                 await con.commit()
         await ctx.reply(f'Chat AI module {"enabled" if channel_permission else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
