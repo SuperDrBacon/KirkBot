@@ -66,10 +66,10 @@ class ModCommands(commands.Cog):
                 await con.commit()
         await ctx.reply(f'Chat AI module {"enabled" if channel_permission else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
     
-    @set_chatai_permissions.command(name='show', description='Show the current permissions for the chatbot AI in the channel.')
+    @set_permissions_base.command(name='show', description='Show the current permissions for the chatbot AI in the channel.')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def show_chatai_permissions(self, ctx):
+    async def show_permissions(self, ctx):
         '''
         Show the current permissions for the chatbot AI in the channel.
         '''
