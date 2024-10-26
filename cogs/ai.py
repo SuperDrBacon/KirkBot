@@ -126,7 +126,6 @@ class Ai(commands.Cog):
             generated_text = ' '.join(word for word in generated_text_generator)
             await ctx.reply(generated_text)
         
-        
         #replies to messages that replied to the bot
         if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(botID):
             base = f'{ctx.reference.resolved.content}'
@@ -149,21 +148,22 @@ class Ai(commands.Cog):
         
         #replies to messages in channels that have the AI enabled
         async with aiosqlite.connect(permissions_database) as con:
-            async with con.execute('SELECT server_id, channel_id FROM permissions WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
+            async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
                 channel_enabled = (result := await cursor.fetchone()) is not None and result[0]
-        if random.randint(1, 15) == 1 and channel_enabled is True:
+        if random.randint(1, 20) == 1 and channel_enabled == 1 and not ctx.author.bot:
             '''
             get the last 15 messages from the channel and generate a response
             '''
-            messages = await ctx.channel.history(limit=15).flatten()
-            message_log = [{"role": "assistant", "content": "To reply to a specific user, use @user_id: message"}]
+            messages = [message async for message in ctx.channel.history(limit=15, oldest_first=False)]
             messages.reverse()
+            message_log = [{"role": "assistant", "content": "To reply to a specific user, use @user_id: message"}]
             for message in messages:
                 if message.content:
                     message_log.append({
                         "role": "user",
                         "content": f"{message.author.display_name}#{message.author.id}: {message.content}"
                     })
+            
             response = ollama.chat(model=textmodel, messages=message_log)
             if response:
                 await ctx.reply(response['message']['content'][:2000])
