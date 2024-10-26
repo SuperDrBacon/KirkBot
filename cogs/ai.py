@@ -150,18 +150,18 @@ class Ai(commands.Cog):
         async with aiosqlite.connect(permissions_database) as con:
             async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
                 channel_enabled = (result := await cursor.fetchone()) is not None and result[0]
-        if random.randint(1, 2) == 1 and channel_enabled == 1 and not ctx.author.bot:
+        if random.randint(1, 20) == 1 and channel_enabled == 1 and not ctx.author.bot:
             '''
             get the last 15 messages from the channel and generate a response
             '''
             messages = [message async for message in ctx.channel.history(limit=15, oldest_first=False)]
             messages.reverse()
-            message_log = [{"role": "assistant", "content": "To reply to a specific user, use @user_id: message"}]
+            message_log = [{"role": "assistant", "content": "To reply to a specific user, use @id"}]
             for message in messages:
                 if message.content and not re.search(r'(https?://\S+)', message.content):
                     message_log.append({
                         "role": "user",
-                        "content": f"{message.author.display_name}#{message.author.id}: {message.content}"
+                        "content": f"{message.author.display_name} @{message.author.id}: {message.content}"
                     })
             response = ollama.chat(model=textmodel, messages=message_log)
             if response:
