@@ -78,10 +78,21 @@ class ModCommands(commands.Cog):
         guild_id = ctx.guild.id
         channel_id = ctx.channel.id
         async with aiosqlite.connect(permissions_database) as con:
-            async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
-                enabled = (result := await cursor.fetchone()) is not None and result[0]
-        await ctx.reply(f'Chat AI module is {"enabled" if enabled else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
-        await ctx.message.delete(delay=MSG_DEL_DELAY)
+            async with con.execute('SELECT enabled, channel_id FROM chatai WHERE server_id = ?', (guild_id, )) as cursor:
+                enabled_channels = await cursor.fetchall()
+        
+        embed = discord.Embed(title="Chat AI Enabled Channels", color=discord.Color.blue())
+        channel_list = []
+        if enabled_channels:
+            for enabled, channel_id in enabled_channels:
+                channel = ctx.guild.get_channel(channel_id)
+                if channel:
+                    channel_list.append(channel.name)
+            embed.add_field(name='', value='\n'.join(channel_list), inline=False)
+        else:
+            embed.description = "No channels have Chat AI enabled."
+        
+        await ctx.reply(embed=embed, mention_author=False)
     
     @commands.command()
     @commands.has_permissions(kick_members=True)
