@@ -27,12 +27,12 @@ class StatusManager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.switch_status_task = None
-        if not self.switch_status_task or self.switch_status_task.done():
-            self.switch_status_task = asyncio.create_task(self.switch_status_loop())
     
     #events
     @commands.Cog.listener()
     async def on_ready(self):
+        if not self.switch_status_task or self.switch_status_task.done():
+            self.switch_status_task = asyncio.create_task(self.switch_status_loop())
         print('Status module online')
     
     #commands
