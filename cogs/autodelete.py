@@ -56,12 +56,12 @@ class Autodelete(commands.Cog):
         self.bot = bot
         self.loopcounter = 0
         self.monitor_expired_messages_task = None
-        if not self.monitor_expired_messages_task or self.monitor_expired_messages_task.done():
-            self.monitor_expired_messages_task = asyncio.create_task(self.monitor_expired_messages_loop())
         functions.checkForFile(filepath=os.path.dirname(autodelete_database), filename=os.path.basename(autodelete_database), database=True, dbtype='autodelete')
     
     @commands.Cog.listener()
     async def on_ready(self):
+        if not self.monitor_expired_messages_task or self.monitor_expired_messages_task.done():
+            self.monitor_expired_messages_task = asyncio.create_task(self.monitor_expired_messages_loop())
         await self.fetch_missed_messages()
         print('Autodelete module online')
     
