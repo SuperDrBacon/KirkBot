@@ -60,7 +60,7 @@ class Autorole(commands.Cog):
         embed.set_footer(text=botversion)
         await ctx.reply(embed=embed)
     
-    @joinrole_base.command(name='add', invoke_without_command=True)
+    @joinrole_base.command(name='add')
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def joinrole_add(self, ctx, *roles: discord.Role):
@@ -77,7 +77,7 @@ class Autorole(commands.Cog):
             role_mentions = ', '.join(role.mention for role in roles)
             await ctx.reply(f'Join roles set to: {role_mentions}')
     
-    @joinrole_base.command(name='remove', invoke_without_command=True)
+    @joinrole_base.command(name='remove')
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def joinrole_remove(self, ctx, *roles: discord.Role):

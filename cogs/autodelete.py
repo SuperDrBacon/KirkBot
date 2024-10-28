@@ -267,7 +267,7 @@ class Autodelete(commands.Cog):
         embed.set_footer(text=botversion)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
     
-    @autodelete_base.command(name='start', invoke_without_command=True)
+    @autodelete_base.command(name='start')
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def autodelete_start(self, ctx, *count_and_or_time):
@@ -442,7 +442,7 @@ class Autodelete(commands.Cog):
                 ctx._error_reason_ = 'Something went wrong'
                 raise commands.UserInputError
     
-    @autodelete_base.command(name='list', invoke_without_command=True)
+    @autodelete_base.command(name='list')
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def autodelete_list(self, ctx):
@@ -468,7 +468,7 @@ class Autodelete(commands.Cog):
             embed.set_footer(text=botversion)
             await ctx.send(embed=embed)
     
-    @autodelete_base.command(name='stop', invoke_without_command=True)
+    @autodelete_base.command(name='stop')
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def autodelete_stop(self, ctx, channel:discord.TextChannel=None):

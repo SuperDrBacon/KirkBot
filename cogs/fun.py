@@ -425,7 +425,7 @@ class Fun(commands.Cog):
             embed.set_footer(text=f'Use {command_prefix}gcp full for an explanation of all the colours. {botversion}')
             await ctx.reply(embed=embed, files=pics)
     
-    @gcp_dot_base.command(name='full', invoke_without_command=True)
+    @gcp_dot_base.command(name='full')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def gcp_dot_full(self, ctx):
         '''
@@ -560,7 +560,7 @@ class Fun(commands.Cog):
             await ctx.author.remove_roles(role)
             await ctx.channel.send(f'{member.mention} got tagged!')
 
-    @tag_base.command(name='get', invoke_without_command=True)
+    @tag_base.command(name='get')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def tag_get(self, ctx):
         '''
@@ -654,7 +654,7 @@ class Fun(commands.Cog):
         await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @commands.has_permissions(administrator=True)
-    @flag_base.command(name='remove', invoke_without_command=True)
+    @flag_base.command(name='remove')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_remove(self, ctx, member:discord.Member):
         '''
@@ -678,7 +678,7 @@ class Fun(commands.Cog):
         await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @commands.has_permissions(administrator=True)
-    @flag_base.command(name='toggle', invoke_without_command=True)
+    @flag_base.command(name='toggle')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def flag_toggle(self, ctx):
         '''
@@ -796,7 +796,7 @@ class Fun(commands.Cog):
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
-    @wordcount_base.command(name='server', invoke_without_command=True)
+    @wordcount_base.command(name='server')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_server(self, ctx, input_word:str=None):
         '''
@@ -855,7 +855,7 @@ class Fun(commands.Cog):
         cur.close()
         con.close()
     
-    @wordcount_base.command(name='channel', invoke_without_command=True)
+    @wordcount_base.command(name='channel')
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def wordcount_channel(self, ctx, input_word:str=None):
         '''

@@ -145,7 +145,7 @@ class Invitelog(commands.Cog):
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
     
     
-    @invitelog_base.command(name='list', invoke_without_command=True)
+    @invitelog_base.command(name='list')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_list(self, ctx):
@@ -234,7 +234,7 @@ class Invitelog(commands.Cog):
                 await message.remove_reaction(f"{current_page + 1}\uFE0F\u20E3", self.bot.user)
                 break
     
-    @invitelog_base.command(name='show', invoke_without_command=True)
+    @invitelog_base.command(name='show')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_show(self, ctx, invite_code:str):
@@ -292,7 +292,7 @@ class Invitelog(commands.Cog):
                     
                 await ctx.send(embed=embed)
     
-    @invitelog_base.command(name='kick', invoke_without_command=True)
+    @invitelog_base.command(name='kick')
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_kick(self, ctx, invite_code:str):
