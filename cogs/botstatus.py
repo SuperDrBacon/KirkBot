@@ -98,7 +98,6 @@ class StatusManager(commands.Cog):
         if self.switch_status_task and self.switch_status_task.done():
             loop = asyncio.get_event_loop()
             self.switch_status_task = loop.create_task(self.switch_status_loop())
-            await self.fetch_missed_messages()
     
     @commands.Cog.listener()
     async def on_disconnect(self):
@@ -111,7 +110,6 @@ class StatusManager(commands.Cog):
         if self.switch_status_task and self.switch_status_task.done():
             loop = asyncio.get_event_loop()
             self.switch_status_task = loop.create_task(self.switch_status_loop())
-            await self.fetch_missed_messages()
     
     async def switch_status_loop(self):
         while True:
