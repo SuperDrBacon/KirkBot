@@ -30,7 +30,7 @@ prefix = config['BOTCONFIG']['prefix']
 # openai.api_key = key
 # textmodel = 'text-curie-001'
 # textmodel = 'gpt-3.5-turbo'
-textmodel = 'wvun'
+textmodel = 'dpun'
 
 ORDER = 4
 TEXT_WORD_COUNT = ORDER * 15 
