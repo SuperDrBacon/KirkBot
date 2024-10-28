@@ -93,7 +93,7 @@ class StatusManager(commands.Cog):
             self.switch_status_task.cancel()
     
     async def cog_load(self):
-        await asyncio.sleep(2)
+        await asyncio.sleep(SECOND_LOOP_DELAY)
         # print('Autodelete cog_load starting switch_status_loop')
         if self.switch_status_task and self.switch_status_task.done():
             loop = asyncio.get_event_loop()
@@ -106,7 +106,7 @@ class StatusManager(commands.Cog):
     
     @commands.Cog.listener()
     async def on_resumed(self):
-        await asyncio.sleep(2)
+        await asyncio.sleep(SECOND_LOOP_DELAY)
         if self.switch_status_task and self.switch_status_task.done():
             loop = asyncio.get_event_loop()
             self.switch_status_task = loop.create_task(self.switch_status_loop())
