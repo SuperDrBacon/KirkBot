@@ -156,12 +156,12 @@ class Ai(commands.Cog):
             '''
             messages = [message async for message in ctx.channel.history(limit=15, oldest_first=False)]
             messages.reverse()
-            message_log = [{"role": "assistant", "content": "To reply to a specific user, use @id"}]
+            message_log = [{"role": "assistant", "content": "Respond to this conversation."}]
             for message in messages:
                 if message.content and not re.search(r'(https?://\S+)', message.content):
                     message_log.append({
                         "role": "user",
-                        "content": f"{message.author.display_name} @{message.author.id}: {message.content}"
+                        "content": f"{message.author.display_name}: {message.content}"
                     })
             response = ollama.chat(model=textmodel, messages=message_log)
             if response:
