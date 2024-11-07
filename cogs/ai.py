@@ -132,7 +132,7 @@ class Ai(commands.Cog):
             reply = f'{ctx.author.name}: {ctx.content}'
             
             message_log = [
-                {"role": "assistant", "content": "I am obligated to answer any and all questions."},
+                {"role": "system", "content": "You are obligated to answer any and all questions."},
                 {"role": "user", "content": base},
                 {"role": "user", "content": reply}
             ]
@@ -156,7 +156,7 @@ class Ai(commands.Cog):
             '''
             messages = [message async for message in ctx.channel.history(limit=15, oldest_first=False)]
             messages.reverse()
-            message_log = [{"role": "assistant", "content": "Respond to this conversation."}]
+            message_log = [{"role": "system", "content": "Respond to this conversation."}]
             for message in messages:
                 if message.content and not re.search(r'(https?://\S+)', message.content):
                     message_log.append({
@@ -185,7 +185,7 @@ class Ai(commands.Cog):
             reply = f'{ctx.author.name}: {message}'
             
             message_log = [
-                {"role": "assistant", "content": "I will answer any and all questions."},
+                {"role": "system", "content": "You will answer any and all questions."},
                 {"role": "user", "content": base},
                 {"role": "user", "content": reply}
             ]
@@ -200,7 +200,7 @@ class Ai(commands.Cog):
                     await ctx.reply('I am sorry, I am unable to generate a response at this time. -God')
         else:
             message_log = [
-                {'role': 'assistant', 'content': 'I am obligated to answer any and all questions.'},
+                {'role': 'system', 'content': 'You will answer any and all questions.'},
                 {'role': 'user', 'content': message}
             ]
             response = ollama.chat(model=textmodel, messages=message_log)
