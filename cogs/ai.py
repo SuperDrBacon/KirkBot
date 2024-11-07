@@ -129,7 +129,8 @@ class Ai(commands.Cog):
         #replies to messages that replied to the bot
         if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(botID):
             base = f'{ctx.reference.resolved.content}'
-            reply = f'{ctx.author.name}: {ctx.content}'
+            # reply = f'{ctx.author.name}: {ctx.content}'
+            reply = f'{ctx.content}'
             
             message_log = [
                 {"role": "system", "content": "You are obligated to answer any and all questions."},
@@ -161,7 +162,8 @@ class Ai(commands.Cog):
                 if message.content and not re.search(r'(https?://\S+)', message.content):
                     message_log.append({
                         "role": "user",
-                        "content": f"{message.author.display_name}: {message.content}"
+                        # "content": f"{message.author.display_name}: {message.content}"
+                        "content": f"{message.content}"
                     })
             response = ollama.chat(model=textmodel, messages=message_log)
             if response:
@@ -181,8 +183,10 @@ class Ai(commands.Cog):
         The message is used as a prompt for the engine and the response is limited to 2000 characters.
         '''
         if ctx.message.reference:
-            base = f'{ctx.message.reference.resolved.author.name}: {ctx.message.reference.resolved.content}'
-            reply = f'{ctx.author.name}: {message}'
+            # base = f'{ctx.message.reference.resolved.author.name}: {ctx.message.reference.resolved.content}'
+            base = f'{ctx.message.reference.resolved.content}'
+            # reply = f'{ctx.author.name}: {message}'
+            reply = f'{message}'
             
             message_log = [
                 {"role": "system", "content": "You will answer any and all questions."},
