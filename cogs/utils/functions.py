@@ -35,28 +35,31 @@ setup_table_archive_database = '''
                     UNIX_TIME               REAL);'''
 
 setup_table_economy_database = '''
-                CREATE TABLE IF NOT EXISTS economy_data(
-                    ID                      INTEGER     PRIMARY KEY,
-                    USER_ID                 INTEGER,
-                    USERNAME                TEXT,
-                    SERVER_ID               INTEGER,
-                    UNIX_TIME               REAL,
-                    BALANCE                 REAL,
-                    BANK                    REAL,
-                    SLOTS_WINS              INTEGER,
-                    SLOTS_LOSSES            INTEGER,
-                    BJ_WINS                 INTEGER,
-                    BJ_LOSSES               INTEGER,
-                    BJ_TIES                 INTEGER,
-                    CF_WINS                 INTEGER,
-                    CF_LOSSES               INTEGER);'''
+            CREATE TABLE IF NOT EXISTS economy_data(
+                ID                      INTEGER     PRIMARY KEY,
+                USER_ID                 INTEGER,
+                USERNAME                TEXT,
+                SERVER_ID               INTEGER,
+                UNIX_TIME               REAL,
+                BALANCE                 REAL,
+                BANK                    REAL,
+                SLOTS_WINS              INTEGER,
+                SLOTS_LOSSES            INTEGER,
+                BJ_WINS                 INTEGER,
+                BJ_LOSSES               INTEGER,
+                BJ_TIES                 INTEGER,
+                CF_WINS                 INTEGER,
+                CF_LOSSES               INTEGER,
+                TTT_WINS                INTEGER,
+                TTT_LOSSES              INTEGER,
+                TTT_TIES                INTEGER);'''
 
 setup_table_autorole_database = '''
                 CREATE TABLE IF NOT EXISTS autorole_data (
                     SERVER_ID               INTEGER     PRIMARY KEY,
                     JOIN_ROLE_IDS           TEXT);'''
 
-setup_table_invitelog_database_1 = '''
+setup_table_invitelog_database = '''
                 CREATE TABLE IF NOT EXISTS invitelog (
                     SERVER_ID               INTEGER     NOT NULL,
                     INVITE_CODE             TEXT,
@@ -65,9 +68,8 @@ setup_table_invitelog_database_1 = '''
                     INVITER_ID              INTEGER,
                     INVITER_NAME            TEXT,
                     INVITE_CHANNEL_ID       INTEGER,
-                    EXPIRATION_DATE_UNIX    INTEGER);'''
-
-setup_table_invitelog_database_2 = '''
+                    EXPIRATION_DATE_UNIX    INTEGER);
+                    
                 CREATE TABLE IF NOT EXISTS users (
                     SERVER_ID               INTEGER     NOT NULL,
                     INVITE_CODE             TEXT,
@@ -102,6 +104,12 @@ setup_table_autodelete_database = '''
 
 setup_table_permissions_database = '''
                 CREATE TABLE IF NOT EXISTS chatai (
+                    SERVER_ID           INTEGER     NOT NULL,
+                    CHANNEL_ID          INTEGER     NOT NULL,
+                    ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
+                    PRIMARY KEY         (SERVER_ID, CHANNEL_ID));
+                
+                CREATE TABLE IF NOT EXISTS economy (
                     SERVER_ID           INTEGER     NOT NULL,
                     CHANNEL_ID          INTEGER     NOT NULL,
                     ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
@@ -209,8 +217,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                 con = sqlite3.connect(invitelog_database)
                 cur = con.cursor()
                 # Execute setup_table_invitelog_database query to create necessary tables
-                cur.execute(setup_table_invitelog_database_1)
-                cur.execute(setup_table_invitelog_database_2)
+                cur.executescript(setup_table_invitelog_database)
                 con.commit()
             except Exception as error:
                 # Failed to create the invitelog database
@@ -226,11 +233,11 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                 # Create a connection to the permissions database
                 con = sqlite3.connect(permissions_database)
                 cur = con.cursor()
-                # Execute setup_table_invitelog_database query to create necessary tables
-                cur.execute(setup_table_permissions_database)
+                # Execute setup_table_permissions_database query to create necessary tables
+                cur.executescript(setup_table_permissions_database)  # Changed from execute to executescript
                 con.commit()
             except Exception as error:
-                # Failed to create the invitelog database
+                # Failed to create the permissions database
                 print("Failed to make sqlite3 permissions database:", error)
             finally:
                 if con:
