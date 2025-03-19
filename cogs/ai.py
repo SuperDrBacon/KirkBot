@@ -151,6 +151,7 @@ class Ai(commands.Cog):
         async with aiosqlite.connect(permissions_database) as con:
             async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
                 channel_enabled = (result := await cursor.fetchone()) is not None and result[0]
+        
         if random.randint(1, 60) == 1 and channel_enabled == 1 and not ctx.author.bot:
             '''
             get the last 15 messages from the channel and generate a response
