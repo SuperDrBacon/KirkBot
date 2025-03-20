@@ -1,19 +1,25 @@
 import asyncio
 import math
-import uuid
-import discord
-import time
-import sqlite3
 import os
-import cogs.utils.functions as functions
-from PIL import Image, UnidentifiedImageError
-from zipfile import ZipFile
-from io import BytesIO
-from discord.ext import commands
+import sqlite3
+import time
+import uuid
 from datetime import datetime, timezone
+from io import BytesIO
+from zipfile import ZipFile
+
+import discord
+import requests
+from discord.ext import commands
+from PIL import Image, UnidentifiedImageError
+
+import cogs.utils.functions as functions
 
 ospath = os.path.abspath(os.getcwd())
 archive_database = rf'{ospath}/cogs/archive_data.db'
+
+# WebSocket notification endpoint - used to notify the admin portal
+ADMIN_PORTAL_WS_URL = "http://localhost:5000/api/new_message"
 
 class Archiver(commands.Cog):
     '''
@@ -21,11 +27,23 @@ class Archiver(commands.Cog):
     '''
     def __init__(self, bot): 
         self.bot = bot
-        functions.checkForFile(os.path.dirname(archive_database), os.path.basename(archive_database), True, 'archive')
     
     @commands.Cog.listener()
     async def on_ready(self):
         print('Archiver module online')
+
+    # Helper method to notify admin portal of new messages
+    def notify_admin_portal(self, ctx, message_data):
+        try:
+            # Make sure server_id is included in the notification
+            if hasattr(ctx, 'guild') and ctx.guild:
+                message_data['server_id'] = ctx.guild.id
+                message_data['server_name'] = ctx.guild.name
+                
+            requests.post(ADMIN_PORTAL_WS_URL, json=message_data, timeout=0.5)
+        except requests.RequestException:
+            # Silently fail if admin portal isn't running
+            pass
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
@@ -60,9 +78,21 @@ class Archiver(commands.Cog):
         
         print(f'#{channel_name[:15]:<15} - {user_name}: {message}')
         
+        # Prepare message data for dashboard notification
+        message_data = {
+            "server_name": server_name,
+            "channel_name": channel_name,
+            "username": user_name,
+            "message": message,
+            "is_reply": reply
+        }
+        
         if reply == 1:
+            message_data["original_username"] = original_username
+            message_data["original_message"] = original_message
+            
             try:
-                con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
+                con = sqlite3.connect(archive_database)
                 cur = con.cursor()
                 data_to_insert = '''INSERT INTO archive_data(
                             SERVER_NAME,
@@ -105,9 +135,12 @@ class Archiver(commands.Cog):
                 if con:
                     cur.close()
                     con.close()
+            
+            # Notify admin portal of new message
+            self.notify_admin_portal(ctx, message_data)
         else:
             try:
-                con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
+                con = sqlite3.connect(archive_database)
                 cur = con.cursor()
                 data_to_insert = '''INSERT INTO archive_data(
                             SERVER_NAME,
@@ -142,6 +175,9 @@ class Archiver(commands.Cog):
                 if con:
                     cur.close()
                     con.close()
+            
+            # Notify admin portal of new message
+            self.notify_admin_portal(ctx, message_data)
     
     @commands.command(name='archive', hidden=True)
     @commands.has_permissions(administrator=True)
@@ -219,7 +255,7 @@ class Archiver(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def getuserlist(self, ctx, serverid:int):
-        con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
+        con = sqlite3.connect(archive_database)
         cur = con.cursor()
         
         cur.execute(f"SELECT USER_ID, USERNAME FROM archive_data WHERE SERVER_ID = ?", (serverid,))

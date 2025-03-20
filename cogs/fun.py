@@ -34,38 +34,25 @@ from webdriver_manager.chrome import ChromeDriverManager
 import cogs.utils.functions as functions
 
 ospath = os.path.abspath(os.getcwd())
-kirklinePath = rf'{ospath}/cogs/kirklines.txt'
-tagpath = rf'{ospath}/cogs/tag.json'
 emojipath = rf'{ospath}/emojis/'
 flagpath = rf'{ospath}/cogs/flags.json'
 archive_database = rf'{ospath}/cogs/archive_data.db'
+
 config, info = ConfigParser(), ConfigParser()
 config.read(rf'{ospath}/config.ini')
 info.read(rf'{ospath}/info.ini')
+
 command_prefix = config['BOTCONFIG']['prefix']
 botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
+
 IMAGE_SIZE = 854, 480
 GCP_DELAY = 1
 MSG_DEL_DELAY = 10
 NUM_OF_RANKED_WORDS = 5
 
-def loadLines():
-    with open(kirklinePath, 'r', encoding='utf-8') as f:
-        lines = [line.rstrip() for line in f]
-    return lines
-
 flagInit = {
     "flags": [],
     "allowedChannels": []
-}
-tagInit = {
-    "Servers": [
-        {
-            "Servername": "serverNAME",
-            "ServerID": 123,
-            "Tags": []
-        }
-    ]
 }
 class Fun(commands.Cog):
     '''
@@ -73,19 +60,11 @@ class Fun(commands.Cog):
     '''
     def __init__(self, bot):
         self.bot = bot
-        functions.checkForFile(os.path.dirname(kirklinePath), os.path.basename(kirklinePath))
-        functions.checkForFile(os.path.dirname(tagpath), os.path.basename(tagpath))
-        functions.checkForFile(os.path.dirname(flagpath), os.path.basename(flagpath))
         functions.checkForDir(emojipath)
-        if os.stat(tagpath).st_size == 0:
-            with open(tagpath, 'w') as f:
-                json.dump(tagInit, f, indent=4)
+        
         if os.stat(flagpath).st_size == 0:
             with open(flagpath, 'w') as f:
                 json.dump(flagInit, f, indent=4)
-        if os.stat(kirklinePath).st_size == 0:
-            with open(kirklinePath, 'w') as f:
-                f.write("Kirk is a based god")
     
     def daysago(self):
         con = sqlite3.connect(archive_database)
@@ -515,64 +494,6 @@ class Fun(commands.Cog):
             embed.set_footer(text=botversion)
             await ctx.reply(embed=embed, files=pics)        
     
-    @commands.has_role('Tag')
-    @commands.group(name='tag', invoke_without_command=True)
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def tag_base(self, ctx, member:discord.Member):
-        '''
-        Tag a user and add the "Tag" role to them.
-        Removes it from the author of the command, i.e. the person who was tagged before.
-        '''
-        serverNAME = ctx.guild.name
-        serverID = ctx.guild.id
-        userNAME = member.name
-        userID = member.id
-        newserver = {
-            "Servername": serverNAME,
-            "ServerID": serverID,
-            "Tags":[{
-                "Tagged username": userNAME,
-                "Tagged userid": userID,          
-                }]
-            }
-        newtag = {
-            "Tagged user": userNAME,
-            "Tagged userid": userID,
-        }
-        
-        with open(tagpath, 'r') as tagin:
-            tagdata = json.load(tagin)
-        async with ctx.typing():
-            try:
-                for servers in tagdata['Servers']:
-                    if serverID == servers["ServerID"]:
-                        servers["Tags"].append(newtag)
-                        raise StopIteration
-                tagdata["Servers"].append(newserver)                   
-            except StopIteration:
-                pass
-            
-            with open(tagpath, 'w') as tagout:
-                json.dump(tagdata, tagout, indent=4)
-            
-            role = discord.utils.get(ctx.guild.roles, name='Tag')
-            await member.add_roles(role)
-            await ctx.author.remove_roles(role)
-            await ctx.channel.send(f'{member.mention} got tagged!')
-
-    @tag_base.command(name='get')
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def tag_get(self, ctx):
-        '''
-        Get the user who is currently tagged.
-        '''
-        role = discord.utils.get(ctx.guild.roles, name='Tag')
-        guild = self.bot.get_guild(ctx.guild.id)
-        async with ctx.typing():
-            for members in guild.members:
-                if role in members.roles:
-                    await ctx.channel.send(f'{members.mention} is tagged!')
-    
     @commands.has_permissions(administrator=True)
     @commands.command(name='whocare')
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -715,18 +636,6 @@ class Fun(commands.Cog):
         for emoji in self.bot.emojis:
             now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             await emoji.save(rf'{emojipath}{emoji.name}_{now}.png')    
-    
-    @tag_base.error
-    async def tag_base_handeler(self, ctx, error):
-        '''
-        Error handler for tag_base command.
-        '''
-        if (discord.utils.get(ctx.guild.roles, name='Tag')) is None:
-            await ctx.guild.create_role(name='Tag')
-            await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Tag'))
-            
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply(f'To tag use {command_prefix}tag @user')
     
     @commands.group(name='wordcount', aliases=["wc"], invoke_without_command=True)
     @commands.cooldown(1, 5, commands.BucketType.user)

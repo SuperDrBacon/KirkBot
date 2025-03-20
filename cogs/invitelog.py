@@ -33,7 +33,6 @@ class Invitelog(commands.Cog):
         self.update_invites_task = None
         if not self.update_invites_task or self.update_invites_task.done():
             self.update_invites_task = asyncio.create_task(self.update_invites_loop())
-        functions.checkForFile(filepath=os.path.dirname(invitelog_database), filename=os.path.basename(invitelog_database), database=True, dbtype='invitelog')
     
     @commands.Cog.listener()
     async def on_ready(self):

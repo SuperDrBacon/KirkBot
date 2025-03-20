@@ -56,7 +56,6 @@ class Autodelete(commands.Cog):
         self.bot = bot
         self.loopcounter = 0
         self.monitor_expired_messages_task = None
-        functions.checkForFile(filepath=os.path.dirname(autodelete_database), filename=os.path.basename(autodelete_database), database=True, dbtype='autodelete')
     
     @commands.Cog.listener()
     async def on_ready(self):

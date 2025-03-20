@@ -17,7 +17,6 @@ botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
 class Autorole(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        functions.checkForFile(os.path.dirname(autorole_database), os.path.basename(autorole_database), True, 'autorole')
     
     @commands.Cog.listener()
     async def on_ready(self):

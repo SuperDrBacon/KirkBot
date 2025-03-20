@@ -1,11 +1,12 @@
+import asyncio
 import os
+from configparser import ConfigParser
+from datetime import datetime, timezone
+
 import aiosqlite
 import discord
-import asyncio
-from datetime import datetime, timezone
 from discord.ext import commands
 from discord.ext.commands import CheckFailure
-from configparser import ConfigParser
 
 import cogs.utils.functions as functions
 
@@ -25,74 +26,136 @@ class ModCommands(commands.Cog):
     '''
     def __init__(self, bot):
         self.bot = bot
-        functions.checkForFile(filepath=os.path.dirname(permissions_database), filename=os.path.basename(permissions_database), database=True, dbtype='permissions')
 
     @commands.Cog.listener()
     async def on_ready(self):
             print('moderator module online')
     
-    @commands.group(name='setpermissions', aliases=["setperm", "setperms"], description='Set the permissions for the current channel.', invoke_without_command=True)
+    @commands.group(name='commands', aliases=["cmd", "cmds"], description='Enable or disable commands in the current channel.', invoke_without_command=True)
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def set_permissions_base(self, ctx):
+    async def commands_base(self, ctx):
         '''
-        Set the permissions for the current channel.
+        Enable or disable commands for the current channel.
         Select which module you want to enable or disable.
         Use the following format for the command:
-        `setpermissions <module> <'True' or 'False'>`
+        `commands <module> <'enable' or 'disable'>`
         
         Current modules:
-            - chatai
+        - chatai
+        - economy
         '''
-        embed = discord.Embed(title='Set Permissions usage', description=f'To see how to use the Set Permissions module use:\n`{command_prefix}help setpermissions`\n\n\
-            Current modules:\n\t- chatai\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
+        embed = discord.Embed(title='Commands Module', description=f'To see how to use the Commands module use:\n`{command_prefix}help commands`\n\n\
+            Current modules:\n- chatai\n- economy\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
         embed.set_footer(text=botversion)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
-    
-    @set_permissions_base.command(name='chatai', description='Enable or disable the chatbot AI in the channel.')
+
+    @commands_base.command(name='chatai', description='Enable or disable the chatbot AI in the channel.')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def set_chatai_permissions(self, ctx, channel_permission:bool):
+    async def commands_chatai(self, ctx, action: str):
         '''
-        Set the permissions for the current channel.
-        Select which module you want to enable or disable.
+        Enable or disable the chatbot AI for the current channel.
         Use the following format for the command:
-        `setpermissions <module> <'True' or 'False'>`
+        `commands chatai <'enable' or 'disable'>`
         '''
+        action = action.lower()
+        if action not in ["enable", "disable"]:
+            await ctx.reply("Invalid action. Use 'enable' or 'disable'.", mention_author=False, delete_after=MSG_DEL_DELAY)
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            return
+        
+        channel_permission = (action == "enable")
         guild_id = ctx.guild.id
         channel_id = ctx.channel.id
+        
         async with aiosqlite.connect(permissions_database) as con:
             async with con.execute('INSERT OR REPLACE INTO chatai (server_id, channel_id, enabled) VALUES (?, ?, ?)', (guild_id, channel_id, channel_permission)) as cursor:
                 await con.commit()
-        await ctx.reply(f'Chat AI module {"enabled" if channel_permission else "disabled"} for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        
+        await ctx.reply(f'Chat AI module {action}d for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
-    
-    @set_permissions_base.command(name='show', description='Show the current permissions for the chatbot AI in the channel.')
+
+    @commands_base.command(name='economy', description='Enable or disable economy commands in the channel.')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def show_permissions(self, ctx):
+    async def commands_economy(self, ctx, action: str):
         '''
-        Show the current permissions for the chatbot AI in the channel.
+        Enable or disable economy commands for the current channel.
+        Use the following format for the command:
+        `commands economy <'enable' or 'disable'>`
         '''
+        action = action.lower()
+        if action not in ["enable", "disable"]:
+            await ctx.reply("Invalid action. Use 'enable' or 'disable'.", mention_author=False, delete_after=MSG_DEL_DELAY)
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            return
+        
+        channel_permission = (action == "enable")
         guild_id = ctx.guild.id
         channel_id = ctx.channel.id
+        
+        async with aiosqlite.connect(permissions_database) as con:
+            async with con.execute('INSERT OR REPLACE INTO economy (server_id, channel_id, enabled) VALUES (?, ?, ?)', (guild_id, channel_id, channel_permission)) as cursor:
+                await con.commit()
+        #                            enable/disable
+        await ctx.reply(f'Economy commands {action}d for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
+
+    @commands_base.command(name='show', description='Show the current command settings for this server.')
+    @commands.has_permissions(manage_messages=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def commands_show(self, ctx):
+        '''
+        Show which commands are enabled in which channels for this server.
+        '''
+        guild_id = ctx.guild.id
+        embed = discord.Embed(title="Command Settings", color=discord.Color.blue(), timestamp=datetime.now(timezone.utc))
+        embed.set_footer(text=botversion)
+        
+        # Get ChatAI permissions
         async with aiosqlite.connect(permissions_database) as con:
             async with con.execute('SELECT enabled, channel_id FROM chatai WHERE server_id = ?', (guild_id, )) as cursor:
-                enabled_channels = await cursor.fetchall()
+                chatai_channels = await cursor.fetchall()
         
-        embed = discord.Embed(title="Chat AI Enabled Channels", color=discord.Color.blue())
-        channel_list = []
-        if enabled_channels:
-            for enabled, channel_id in enabled_channels:
-                channel = ctx.guild.get_channel(channel_id)
-                if channel:
-                    channel_list.append(channel.name)
-            embed.add_field(name='', value='\n'.join(channel_list), inline=False)
+        # Get Economy permissions
+        async with aiosqlite.connect(permissions_database) as con:
+            async with con.execute('SELECT enabled, channel_id FROM economy WHERE server_id = ?', (guild_id, )) as cursor:
+                economy_channels = await cursor.fetchall()
+        
+        # Add ChatAI enabled channels to embed
+        chatai_list = []
+        if chatai_channels:
+            for enabled, channel_id in chatai_channels:
+                if enabled:
+                    channel = ctx.guild.get_channel(channel_id)
+                    if channel:
+                        chatai_list.append(f"#{channel.name}")
+            if chatai_list:
+                embed.add_field(name='ChatAI Enabled Channels', value='\n'.join(chatai_list) or "None", inline=False)
+            else:
+                embed.add_field(name='ChatAI Enabled Channels', value="None", inline=False)
         else:
-            embed.description = "No channels have Chat AI enabled."
+            embed.add_field(name='ChatAI Enabled Channels', value="None", inline=False)
         
-        await ctx.reply(embed=embed, mention_author=False)
+        # Add Economy enabled channels to embed
+        economy_list = []
+        if economy_channels:
+            for enabled, channel_id in economy_channels:
+                if enabled:
+                    channel = ctx.guild.get_channel(channel_id)
+                    if channel:
+                        economy_list.append(f"#{channel.name}")
+            if economy_list:
+                embed.add_field(name='Economy Enabled Channels', value='\n'.join(economy_list) or "None", inline=False)
+            else:
+                embed.add_field(name='Economy Enabled Channels', value="None", inline=False)
+        else:
+            embed.add_field(name='Economy Enabled Channels', value="None", inline=False)
+        
+        await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @commands.command()
     @commands.has_permissions(kick_members=True)

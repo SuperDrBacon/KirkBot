@@ -96,7 +96,6 @@ class Ai(commands.Cog):
     '''
     def __init__(self, bot):
         self.bot = bot
-        functions.checkForFile(filepath=os.path.dirname(permissions_database), filename=os.path.basename(permissions_database), database=True, dbtype='permissions')
     
     @commands.Cog.listener()
     async def on_ready(self):

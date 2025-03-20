@@ -14,6 +14,7 @@ autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
 autorole_database = rf'{ospath}/cogs/autorole_data.db'
 invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
 permissions_database = rf'{ospath}/cogs/permissions_data.db'
+command_logs_database = rf'{ospath}/cogs/command_logs.db'
 
 setup_table_archive_database = '''
                 CREATE TABLE IF NOT EXISTS archive_data(
@@ -114,6 +115,19 @@ setup_table_permissions_database = '''
                     CHANNEL_ID          INTEGER     NOT NULL,
                     ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID));'''
+
+setup_table_command_logs = '''
+                CREATE TABLE IF NOT EXISTS command_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    command_name TEXT,
+                    args TEXT,
+                    username TEXT,
+                    user_id TEXT,
+                    server_name TEXT,
+                    server_id TEXT,
+                    channel_name TEXT,
+                    channel_id TEXT,
+                    timestamp TEXT);'''
 
 def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
     """
@@ -245,6 +259,23 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
                     cur.close()
                     con.close()
                     print("sqlite3 permissions database created")
+        elif dbtype == 'command_logs':
+            try:
+                # Create a connection to the command logs database
+                con = sqlite3.connect(command_logs_database)
+                cur = con.cursor()
+                # Execute setup_table_command_logs query to create necessary tables
+                cur.executescript(setup_table_command_logs)
+                con.commit()
+            except Exception as error:
+                # Failed to create the command logs database
+                print("Failed to make sqlite3 command logs database:", error)
+            finally:
+                if con:
+                    # Close the connection
+                    cur.close()
+                    con.close()
+                    print("sqlite3 command logs database created")
         else:
             # Invalid database type
             print("Database is True but dbtype is not one of the present options.")
