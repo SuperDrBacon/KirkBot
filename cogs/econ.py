@@ -34,7 +34,8 @@ botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
 MSG_DEL_DELAY = 10
 STARTING_BALANCE = 1000
 STARTING_BANK = 0
-ONE_DAY = 86400
+# ONE_DAY = 86400
+ONE_DAY = 1
 SLOTS_ROTATE_DELAY = 0.4
 SLOT_SYMBOLS = {
     "🍒": 2,
