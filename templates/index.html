@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KirkBot Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #36393f;
+            color: #dcddde;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+        
+        .navbar {
+            background-color: #202225;
+            border-bottom: 1px solid #2d2f33;
+            padding: 0.5rem 1rem;
+        }
+        
+        .container-fluid {
+            height: calc(100vh - 56px);
+            padding: 0;
+        }
+        
+        .server-list {
+            background-color: #2f3136;
+            width: 240px;
+            height: 100%;
+            border-right: 1px solid #202225;
+            overflow-y: auto;
+            float: left;
+        }
+        
+        .server-list-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 2px 8px;
+            transition: background-color 0.1s;
+        }
+        
+        .server-list-item:hover {
+            background-color: #393c43;
+        }
+        
+        .server-list-item.active {
+            background-color: #5865f2;
+            color: white;
+        }
+        
+        .message-area {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .server-header {
+            padding: 12px 16px;
+            background-color: #36393f;
+            border-bottom: 1px solid #2d2f33;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .message-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column-reverse; /* Messages start from bottom */
+        }
+        
+        .message {
+            padding: 8px 0;
+            border-top: 1px solid #40444b;
+        }
+        
+        .message:first-child {
+            border-top: none;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+        
+        .username {
+            font-weight: bold;
+            color: #ffffff;
+            margin-right: 8px;
+        }
+        
+        .channel-name {
+            color: #72767d;
+            font-size: 0.85rem;
+            margin-right: 8px;
+        }
+        
+        .timestamp {
+            color: #72767d;
+            font-size: 0.75rem;
+        }
+        
+        .message-content {
+            color: #dcddde;
+            word-wrap: break-word;
+        }
+        
+        .reply-container {
+            background-color: #32353b;
+            border-left: 2px solid #4f545c;
+            padding: 8px;
+            margin-bottom: 4px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .reply-username {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 0.85rem;
+        }
+        
+        .reply-content {
+            color: #b9bbbe;
+            font-size: 0.85rem;
+        }
+        
+        .main-content {
+            margin-left: 240px;
+            height: 100%;
+        }
+        
+        .no-server-selected {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            color: #72767d;
+            font-size: 1.2rem;
+        }
+        
+        /* Add this for responsive design */
+        @media (max-width: 768px) {
+            .server-list {
+                width: 100%;
+                height: auto;
+                float: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                height: calc(100% - 200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">KirkBot Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Messages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stats">Stats</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/commands">Commands</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/invites">Invites</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="server-list" id="server-list">
+            <div class="p-3 mb-2 text-white">Servers</div>
+            {% for server_id, server_data in page_data.items() %}
+                <div class="server-list-item" 
+                     data-server-id="{{ server_id }}" 
+                     onclick="selectServer('{{ server_id }}')">
+                    {{ server_data.name }}
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="main-content">
+            <div id="no-server-message" class="no-server-selected">
+                <div>Select a server from the list to view messages</div>
+            </div>
+            
+            {% for server_id, server_data in page_data.items() %}
+                <div class="message-area" id="server-{{ server_id }}" style="display: none;">
+                    <div class="server-header">
+                        <i class="bi bi-hash me-2"></i> {{ server_data.name }}
+                    </div>
+                    <div class="message-container" id="messages-{{ server_id }}">
+                        {% for message in server_data.messages %}
+                            <div class="message">
+                                <div class="message-header">
+                                    <span class="username">{{ message.username }}</span>
+                                    <span class="channel-name">#{{ message.channel_name }}</span>
+                                    {% if message.timestamp %}
+                                        <span class="timestamp">{{ message.timestamp }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if message.is_reply %}
+                                    <div class="reply-container">
+                                        <span class="reply-username">{{ message.original_username }}</span>
+                                        <div class="reply-content">{{ message.original_message }}</div>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="message-content">{{ message.message }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script>
+        let currentServer = null;
+        
+        // Function to select a server
+        function selectServer(serverId) {
+            // Hide all server message areas
+            document.querySelectorAll('.message-area').forEach(element => {
+                element.style.display = 'none';
+            });
+            
+            // Hide the no server message
+            document.getElementById('no-server-message').style.display = 'none';
+            
+            // Show the selected server's messages
+            const serverElement = document.getElementById(`server-${serverId}`);
+            if (serverElement) {
+                serverElement.style.display = 'flex';
+                
+                // Update active class on server list
+                document.querySelectorAll('.server-list-item').forEach(element => {
+                    element.classList.remove('active');
+                });
+                
+                document.querySelector(`.server-list-item[data-server-id="${serverId}"]`).classList.add('active');
+                
+                // Update current server
+                currentServer = serverId;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Connect to WebSocket server
+            const socket = io();
+            
+            // Listen for new messages
+            socket.on('new_message', function(data) {
+                const serverId = data.server_id;
+                const serverName = data.server_name;
+                const messageData = data.message;
+                
+                // Find or create server in the sidebar
+                let serverListItem = document.querySelector(`.server-list-item[data-server-id="${serverId}"]`);
+                
+                // If this server doesn't exist yet, create it
+                if (!serverListItem) {
+                    // Add to server list
+                    const serverList = document.getElementById('server-list');
+                    
+                    serverListItem = document.createElement('div');
+                    serverListItem.className = 'server-list-item';
+                    serverListItem.setAttribute('data-server-id', serverId);
+                    serverListItem.setAttribute('onclick', `selectServer('${serverId}')`);
+                    serverListItem.textContent = serverName;
+                    
+                    serverList.appendChild(serverListItem);
+                    
+                    // Create message area
+                    const mainContent = document.querySelector('.main-content');
+                    const messageArea = document.createElement('div');
+                    messageArea.className = 'message-area';
+                    messageArea.id = `server-${serverId}`;
+                    messageArea.style.display = 'none';
+                    
+                    messageArea.innerHTML = `
+                        <div class="server-header">
+                            <i class="bi bi-hash me-2"></i> ${serverName}
+                        </div>
+                        <div class="message-container" id="messages-${serverId}">
+                        </div>
+                    `;
+                    
+                    mainContent.appendChild(messageArea);
+                }
+                
+                // Find the correct server message container
+                let messageContainer = document.getElementById(`messages-${serverId}`);
+                
+                if (messageContainer) {
+                    // Create a new message element
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message';
+                    
+                    // Create message HTML
+                    let messageHTML = `
+                        <div class="message-header">
+                            <span class="username">${messageData.username}</span>
+                            <span class="channel-name">#${messageData.channel_name}</span>
+                    `;
+                    
+                    if (messageData.timestamp) {
+                        messageHTML += `<span class="timestamp">${messageData.timestamp}</span>`;
+                    }
+                    
+                    messageHTML += '</div>';
+                    
+                    if (messageData.is_reply) {
+                        messageHTML += `
+                            <div class="reply-container">
+                                <span class="reply-username">${messageData.original_username}</span>
+                                <div class="reply-content">${messageData.original_message}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    messageHTML += `<div class="message-content">${messageData.message}</div>`;
+                    
+                    messageElement.innerHTML = messageHTML;
+                    
+                    // Add to the beginning of the list (since we're using flex-direction: column-reverse)
+                    messageContainer.prepend(messageElement);
+                    
+                    // Remove the oldest message if there are more than 100
+                    const messages = messageContainer.getElementsByClassName('message');
+                    if (messages.length > 100) {
+                        messageContainer.removeChild(messages[messages.length - 1]);
+                    }
+                    
+                    // Scroll to the bottom if this is the current server
+                    if (currentServer === serverId) {
+                        messageContainer.scrollTop = 0;
+                    }
+                }
+            });
+            
+            // Select first server automatically if available
+            const firstServer = document.querySelector('.server-list-item');
+            if (firstServer) {
+                const serverId = firstServer.getAttribute('data-server-id');
+                selectServer(serverId);
+            }
+        });
+    </script>
+</body>
+</html>

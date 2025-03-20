@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KirkBot - Messages</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body, html {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .messages-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 140px); /* Subtract navbar and margins */
+        }
+        
+        .server-list-container, .message-view-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .server-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 0;
+        }
+        
+        .server-tab {
+            background-color: #2f3136;
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .server-tab.active {
+            background-color: #4f545c;
+        }
+        
+        .server-tab:hover {
+            background-color: #393c43;
+        }
+        
+        .message-count {
+            background-color: #5865F2;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+        
+        .message-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message-container {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        
+        .message-item {
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            background-color: #36393f;
+            border-radius: 4px;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .username {
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        .channel {
+            color: #b9bbbe;
+            font-size: 0.8rem;
+        }
+        
+        .message-content {
+            word-break: break-word;
+        }
+        
+        .reply-message {
+            border-left: 3px solid #5865F2;
+        }
+        
+        .original-message {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #2f3136;
+            border-radius: 4px;
+        }
+        
+        .original-username {
+            font-weight: 600;
+            color: #b9bbbe;
+            margin-bottom: 3px;
+        }
+        
+        .card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-body {
+            flex: 1;
+            overflow: hidden;
+            padding: 15px;
+        }
+        
+        .no-server-selected {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* On mobile screens, adjust the height */
+        @media (max-width: 768px) {
+            .messages-wrapper {
+                height: auto;
+            }
+            
+            .server-list {
+                max-height: 300px;
+                margin-bottom: 20px;
+            }
+            
+            .message-list {
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">KirkBot Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/messages">Messages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stats">Stats</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/commands">Commands</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/invites">Invites</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container messages-wrapper">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Server Messages</h5>
+            </div>
+            <div class="card-body">
+                {% if page_data %}
+                <div class="row h-100">
+                    <div class="col-md-4 server-list-container">
+                        <h6 class="mb-3">Servers</h6>
+                        <div class="server-list">
+                            {% for server_id, server in page_data.items() %}
+                            <div class="server-tab" data-server-id="{{ server_id }}">
+                                <span class="server-name">{{ server.name }}</span>
+                                <span class="message-count">{{ server.messages|length }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-8 message-view-container">
+                        <h6 class="mb-3">Messages</h6>
+                        <div class="no-server-selected">
+                            <p class="text-muted">Select a server from the list to view messages</p>
+                        </div>
+                        
+                        {% for server_id, server in page_data.items() %}
+                        <div class="server-messages message-list" id="server-{{ server_id }}" style="display: none;">
+                            <div class="message-container">
+                                {% for message in server.messages|reverse %}
+                                <div class="message-item {% if message.is_reply %}reply-message{% endif %}">
+                                    <div class="message-header">
+                                        <span class="username">{{ message.username }}</span>
+                                        <span class="channel">#{{ message.channel_name }}</span>
+                                    </div>
+                                    {% if message.is_reply %}
+                                    <div class="original-message">
+                                        <div class="original-username">{{ message.original_username }}</div>
+                                        <div class="original-content">{{ message.original_message }}</div>
+                                    </div>
+                                    {% endif %}
+                                    <div class="message-content">{{ message.message }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center p-5">
+                    <p class="text-muted">No message data available yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        // Connect to Socket.IO server
+        const socket = io();
+        
+        // Handle window resize to adjust container heights
+        function adjustHeight() {
+            const windowHeight = window.innerHeight;
+            const navbar = document.querySelector('.navbar');
+            const navbarHeight = navbar ? navbar.offsetHeight : 0;
+            const messagesWrapper = document.querySelector('.messages-wrapper');
+            
+            if (messagesWrapper) {
+                messagesWrapper.style.height = `${windowHeight - navbarHeight - 30}px`;
+            }
+        }
+        
+        // Call on page load and window resize
+        window.addEventListener('load', adjustHeight);
+        window.addEventListener('resize', adjustHeight);
+        
+        // Handle new messages from Socket.IO
+        socket.on('new_message', function(data) {
+            const serverId = data.server_id;
+            const serverName = data.server_name;
+            const message = data.message;
+            
+            // Check if we already have this server in our list
+            let serverTab = document.querySelector(`.server-tab[data-server-id="${serverId}"]`);
+            let serverMessages = document.getElementById(`server-${serverId}`);
+            
+            if (!serverTab) {
+                // Create new server tab if it doesn't exist
+                const serverList = document.querySelector('.server-list');
+                
+                serverTab = document.createElement('div');
+                serverTab.className = 'server-tab';
+                serverTab.setAttribute('data-server-id', serverId);
+                
+                const serverNameSpan = document.createElement('span');
+                serverNameSpan.className = 'server-name';
+                serverNameSpan.textContent = serverName;
+                
+                const messageCountSpan = document.createElement('span');
+                messageCountSpan.className = 'message-count';
+                messageCountSpan.textContent = '1';
+                
+                serverTab.appendChild(serverNameSpan);
+                serverTab.appendChild(messageCountSpan);
+                serverList.insertBefore(serverTab, serverList.firstChild);
+                
+                // Create new server messages container
+                const messageDisplay = document.querySelector('.message-view-container');
+                
+                serverMessages = document.createElement('div');
+                serverMessages.className = 'server-messages message-list';
+                serverMessages.id = `server-${serverId}`;
+                serverMessages.style.display = 'none';
+                
+                // Add a container for messages
+                const messageContainer = document.createElement('div');
+                messageContainer.className = 'message-container';
+                serverMessages.appendChild(messageContainer);
+                
+                messageDisplay.appendChild(serverMessages);
+                
+                // Add click handler to the new tab
+                serverTab.addEventListener('click', function() {
+                    showServer(serverId);
+                });
+            } else {
+                // Update message count
+                const messageCountSpan = serverTab.querySelector('.message-count');
+                messageCountSpan.textContent = parseInt(messageCountSpan.textContent) + 1;
+            }
+            
+            // Find the message container
+            const messageContainer = serverMessages.querySelector('.message-container') || serverMessages;
+            
+            // Create the new message element
+            const messageItem = document.createElement('div');
+            messageItem.className = `message-item ${message.is_reply ? 'reply-message' : ''}`;
+            
+            const messageHeader = document.createElement('div');
+            messageHeader.className = 'message-header';
+            
+            const usernameSpan = document.createElement('span');
+            usernameSpan.className = 'username';
+            usernameSpan.textContent = message.username;
+            
+            const channelSpan = document.createElement('span');
+            channelSpan.className = 'channel';
+            channelSpan.textContent = `#${message.channel_name}`;
+            
+            messageHeader.appendChild(usernameSpan);
+            messageHeader.appendChild(channelSpan);
+            
+            messageItem.appendChild(messageHeader);
+            
+            if (message.is_reply) {
+                const originalMessage = document.createElement('div');
+                originalMessage.className = 'original-message';
+                
+                const originalUsername = document.createElement('div');
+                originalUsername.className = 'original-username';
+                originalUsername.textContent = message.original_username;
+                
+                const originalContent = document.createElement('div');
+                originalContent.className = 'original-content';
+                originalContent.textContent = message.original_message;
+                
+                originalMessage.appendChild(originalUsername);
+                originalMessage.appendChild(originalContent);
+                
+                messageItem.appendChild(originalMessage);
+            }
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = message.message;
+            
+            messageItem.appendChild(messageContent);
+            
+            // Add new message at the bottom
+            messageContainer.appendChild(messageItem);
+            
+            // Scroll to bottom
+            serverMessages.scrollTop = serverMessages.scrollHeight;
+            
+            // Trim message list if it gets too long (remove from the top now)
+            const messageItems = messageContainer.querySelectorAll('.message-item');
+            if (messageItems.length > 100) {
+                messageContainer.removeChild(messageItems[0]);
+            }
+            
+            // If this server is currently selected, scroll to show the new message
+            if (serverTab.classList.contains('active')) {
+                serverMessages.scrollTop = serverMessages.scrollHeight;
+            }
+        });
+        
+        // Set up server tab click handlers
+        document.querySelectorAll('.server-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const serverId = this.getAttribute('data-server-id');
+                showServer(serverId);
+            });
+        });
+        
+        function showServer(serverId) {
+            // Hide all server message containers
+            document.querySelectorAll('.server-messages').forEach(container => {
+                container.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.server-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Hide the "no server selected" message
+            document.querySelector('.no-server-selected').style.display = 'none';
+            
+            // Show the selected server's messages
+            const serverMessages = document.getElementById(`server-${serverId}`);
+            if (serverMessages) {
+                serverMessages.style.display = 'block';
+                // Scroll to bottom when showing server messages
+                serverMessages.scrollTop = serverMessages.scrollHeight;
+            }
+            
+            // Add active class to the selected tab
+            const serverTab = document.querySelector(`.server-tab[data-server-id="${serverId}"]`);
+            if (serverTab) {
+                serverTab.classList.add('active');
+            }
+        }
+        
+        // When the page loads, initialize the scroll positions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize heights
+            adjustHeight();
+            
+            // Scroll message containers to bottom
+            document.querySelectorAll('.server-messages').forEach(container => {
+                container.scrollTop = container.scrollHeight;
+            });
+        });
+    </script>
+</body>
+</html>

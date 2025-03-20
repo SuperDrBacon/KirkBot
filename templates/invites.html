@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KirkBot - Invites</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #36393f;
+            color: #dcddde;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background-color: #202225;
+            border-bottom: 1px solid #2d2f33;
+            padding: 0.5rem 1rem;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background-color: #2f3136;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-header {
+            background-color: #202225;
+            color: #ffffff;
+            border-bottom: 1px solid #2d2f33;
+            padding: 12px 16px;
+            font-weight: 600;
+        }
+        
+        .table {
+            color: #dcddde;
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            border-bottom: 2px solid #4f545c;
+            color: #b9bbbe;
+            font-weight: 600;
+            padding: 12px 16px;
+        }
+        
+        .table tbody td {
+            border-top: 1px solid #4f545c;
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #32353b;
+        }
+        
+        .invite-code {
+            font-family: monospace;
+            background-color: #40444b;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        
+        .badge {
+            padding: 5px 8px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+        
+        .btn-copy {
+            background-color: #4f545c;
+            border: none;
+            color: #dcddde;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            margin-left: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-copy:hover {
+            background-color: #5d6269;
+            color: #ffffff;
+        }
+        
+        .search-filters {
+            margin-bottom: 20px;
+        }
+        
+        .form-control, .form-select {
+            background-color: #40444b;
+            border-color: #202225;
+            color: #dcddde;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: #40444b;
+            border-color: #7289da;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(114, 137, 218, 0.25);
+        }
+        
+        .stats-box {
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .stats-title {
+            color: #b9bbbe;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">KirkBot Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/messages">Messages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stats">Stats</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/commands">Commands</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/invites">Invites</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Invite Summary</h5>
+                        <span class="badge bg-secondary">Total: {{ invites_data.invites|length }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stats-box">
+                                    <div class="stats-title">Total Invites</div>
+                                    <div class="stats-value">{{ invites_data.invites|length }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stats-box">
+                                    <div class="stats-title">Total Uses</div>
+                                    <div class="stats-value" id="totalUses">
+                                        <!-- Calculated in JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stats-box">
+                                    <div class="stats-title">Active Invites</div>
+                                    <div class="stats-value" id="activeInvites">
+                                        <!-- Calculated in JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stats-box">
+                                    <div class="stats-title">Unique Servers</div>
+                                    <div class="stats-value" id="uniqueServers">
+                                        <!-- Calculated in JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Server Invites</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Search and filters -->
+                        <div class="row search-filters">
+                            <div class="col-md-8 mb-3">
+                                <input type="text" class="form-control" id="inviteSearch" placeholder="Search by invite code or inviter...">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <select class="form-select" id="filterStatus">
+                                    <option value="all">All Invites</option>
+                                    <option value="active">Active Only</option>
+                                    <option value="expired">Expired Only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {% if invites_data.invites %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Invite Code</th>
+                                        <th>Server ID</th>
+                                        <th>Inviter</th>
+                                        <th>Uses</th>
+                                        <th>Expires</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invitesTable">
+                                    {% for invite in invites_data.invites %}
+                                    <tr class="invite-row" data-inviter="{{ invite[5]|lower }}" data-code="{{ invite[1]|lower }}">
+                                        <td>
+                                            <span class="invite-code">{{ invite[1] }}</span>
+                                            <button class="btn-copy" onclick="copyInvite('{{ invite[1] }}')">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </td>
+                                        <td>{{ invite[0] }}</td>
+                                        <td>{{ invite[5] }}</td>
+                                        <td>
+                                            {{ invite[2] }}{% if invite[3] > 0 %}/{{ invite[3] }}{% endif %}
+                                        </td>
+                                        <td>
+                                            {% if invite[7] > 0 %}
+                                                <span data-timestamp="{{ invite[7] }}">
+                                                    {{ invite[7]|timestamp_to_date }}
+                                                </span>
+                                            {% else %}
+                                                Never
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% set now = current_timestamp() %}
+                                            {% if invite[7] > 0 and now > invite[7] %}
+                                                <span class="badge bg-danger invite-status" data-status="expired">Expired</span>
+                                            {% else %}
+                                                <span class="badge bg-success invite-status" data-status="active">Active</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center p-5">
+                            <p>No invite data available yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if invites_data.invite_uses %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Invite Uses</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Invite Code</th>
+                                        <th>Used By</th>
+                                        <th>Created By</th>
+                                        <th>Server ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for use in invites_data.invite_uses %}
+                                    <tr>
+                                        <td><span class="invite-code">{{ use[0] }}</span></td>
+                                        <td>{{ use[1] }}</td>
+                                        <td>{{ use[3] }}</td>
+                                        <td>{{ use[4] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to copy invite link to clipboard
+        function copyInvite(code) {
+            const inviteUrl = `https://discord.gg/${code}`;
+            navigator.clipboard.writeText(inviteUrl).then(() => {
+                // Show feedback that it was copied
+                const copyBtn = event.currentTarget;
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                }, 1500);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calculate statistics using JavaScript
+            const inviteRows = document.querySelectorAll('#invitesTable .invite-row');
+            const now = Math.floor(Date.now() / 1000);
+            
+            let totalUses = 0;
+            let activeInvites = 0;
+            const serverIds = new Set();
+            
+            inviteRows.forEach(row => {
+                // Calculate total uses
+                const usesCell = row.querySelector('td:nth-child(4)');
+                if (usesCell) {
+                    const usesText = usesCell.textContent.trim();
+                    const uses = parseInt(usesText.split('/')[0]);
+                    if (!isNaN(uses)) {
+                        totalUses += uses;
+                    }
+                }
+                
+                // Count active invites
+                const statusBadge = row.querySelector('.invite-status');
+                if (statusBadge && statusBadge.getAttribute('data-status') === 'active') {
+                    activeInvites++;
+                }
+                
+                // Count unique servers
+                const serverId = row.querySelector('td:nth-child(2)').textContent.trim();
+                if (serverId) {
+                    serverIds.add(serverId);
+                }
+            });
+            
+            // Update the statistics
+            document.getElementById('totalUses').textContent = totalUses;
+            document.getElementById('activeInvites').textContent = activeInvites;
+            document.getElementById('uniqueServers').textContent = serverIds.size;
+            
+            // Implement search functionality
+            const searchInput = document.getElementById('inviteSearch');
+            const filterStatus = document.getElementById('filterStatus');
+            
+            function filterInvites() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const statusFilter = filterStatus.value;
+                
+                inviteRows.forEach(row => {
+                    const inviterName = row.getAttribute('data-inviter');
+                    const inviteCode = row.getAttribute('data-code');
+                    const status = row.querySelector('.invite-status').getAttribute('data-status');
+                    
+                    const matchesSearch = !searchTerm || 
+                                         inviterName.includes(searchTerm) || 
+                                         inviteCode.includes(searchTerm);
+                    
+                    const matchesStatus = statusFilter === 'all' || 
+                                         (statusFilter === 'active' && status === 'active') ||
+                                         (statusFilter === 'expired' && status === 'expired');
+                    
+                    row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+                });
+            }
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', filterInvites);
+            }
+            
+            if (filterStatus) {
+                filterStatus.addEventListener('change', filterInvites);
+            }
+            
+            // Format dates for better display
+            const timestamps = document.querySelectorAll('[data-timestamp]');
+            timestamps.forEach(el => {
+                const timestamp = parseInt(el.getAttribute('data-timestamp'));
+                if (!isNaN(timestamp) && timestamp > 0) {
+                    const date = new Date(timestamp * 1000); // Convert from Unix timestamp
+                    el.textContent = date.toLocaleString();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

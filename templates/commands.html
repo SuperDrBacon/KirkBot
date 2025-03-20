@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KirkBot - Commands</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Override Bootstrap table colors for dark theme */
+        .table {
+            color: #dcddde;
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            border-bottom: 2px solid #4f545c;
+            color: #b9bbbe;
+            font-weight: 600;
+            padding: 12px 16px;
+        }
+        
+        .table tbody td {
+            border-top: 1px solid #4f545c;
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #32353b;
+        }
+        
+        .command-name {
+            font-family: monospace;
+            background-color: #40444b;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        
+        /* Make sure text content is properly visible */
+        .card-body {
+            color: #dcddde;
+        }
+        
+        .text-center p {
+            color: #b9bbbe;
+        }
+        
+        /* Badge styling for command count */
+        .badge {
+            padding: 5px 8px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">KirkBot Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/messages">Messages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stats">Stats</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/commands">Commands</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/invites">Invites</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Command Summary Card -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Command Usage Summary</h5>
+                        <span class="badge bg-secondary" id="totalCommands">Total: {{ commands_data.total_commands }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="stats-box">
+                                    <div class="stats-title">Most Used Command</div>
+                                    <div class="stats-value">
+                                        {% if commands_data.most_used and commands_data.most_used|length > 0 %}
+                                            <span class="command-name">{{ commands_data.most_used[0].command_name }}</span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-box">
+                                    <div class="stats-title">Top Command User</div>
+                                    <div class="stats-value">
+                                        {% if commands_data.top_users and commands_data.top_users|length > 0 %}
+                                            {{ commands_data.top_users[0].username }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-box">
+                                    <div class="stats-title">Total Commands Used</div>
+                                    <div class="stats-value" id="commandsCount">
+                                        {{ commands_data.total_commands }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Commands -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Commands</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if commands_data.recent_commands and commands_data.recent_commands|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Command</th>
+                                        <th>Arguments</th>
+                                        <th>User</th>
+                                        <th>Server</th>
+                                        <th>Channel</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commandsTable">
+                                    {% for cmd in commands_data.recent_commands %}
+                                    <tr class="command-row">
+                                        <td><span class="command-name">{{ cmd.command_name }}</span></td>
+                                        <td>{{ cmd.args }}</td>
+                                        <td>{{ cmd.username }}</td>
+                                        <td>{{ cmd.server_name }}</td>
+                                        <td>{{ cmd.channel_name }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center p-5" id="noCommandsMessage">
+                            <p>No command data available yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Most Used Commands & Top Users Cards -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Most Used Commands</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if commands_data.most_used and commands_data.most_used|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Command</th>
+                                        <th>Usage Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cmd in commands_data.most_used %}
+                                    <tr>
+                                        <td><span class="command-name">{{ cmd.command_name }}</span></td>
+                                        <td>{{ cmd.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center p-5">
+                            <p>No command usage data available.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Top Command Users</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if commands_data.top_users and commands_data.top_users|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Commands Used</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in commands_data.top_users %}
+                                    <tr>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center p-5">
+                            <p>No user data available.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        // Connect to Socket.IO server for real-time command updates
+        const socket = io();
+        
+        // Track total command count for updating the counter
+        let totalCommands = {{ commands_data.total_commands }};
+        
+        // Listen for new command events
+        socket.on('new_command', function(commandData) {
+            console.log("New command received:", commandData);
+            
+            // Update total command count
+            totalCommands++;
+            document.getElementById('totalCommands').innerText = `Total: ${totalCommands}`;
+            document.getElementById('commandsCount').innerText = totalCommands;
+            
+            // Get the commands table
+            const commandsTable = document.getElementById('commandsTable');
+            if (!commandsTable) {
+                // If table doesn't exist yet, create it
+                const noCommandsMessage = document.getElementById('noCommandsMessage');
+                if (noCommandsMessage) {
+                    noCommandsMessage.style.display = 'none';
+                }
+                
+                const tableParent = document.querySelector('.table-responsive');
+                if (!tableParent) {
+                    // Create the whole table structure if it doesn't exist
+                    const cardBody = document.querySelector('.card-body');
+                    if (!cardBody) return;
+                    
+                    const tableResponsive = document.createElement('div');
+                    tableResponsive.className = 'table-responsive';
+                    
+                    const table = document.createElement('table');
+                    table.className = 'table table-hover';
+                    
+                    const thead = document.createElement('thead');
+                    thead.innerHTML = `
+                        <tr>
+                            <th>Command</th>
+                            <th>Arguments</th>
+                            <th>User</th>
+                            <th>Server</th>
+                            <th>Channel</th>
+                        </tr>
+                    `;
+                    
+                    const tbody = document.createElement('tbody');
+                    tbody.id = 'commandsTable';
+                    
+                    table.appendChild(thead);
+                    table.appendChild(tbody);
+                    tableResponsive.appendChild(table);
+                    cardBody.appendChild(tableResponsive);
+                    
+                    // Add the new command to the tbody
+                    const row = document.createElement('tr');
+                    row.className = 'command-row';
+                    row.innerHTML = `
+                        <td><span class="command-name">${commandData.command_name}</span></td>
+                        <td>${commandData.args || ''}</td>
+                        <td>${commandData.username}</td>
+                        <td>${commandData.server_name}</td>
+                        <td>${commandData.channel_name}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            } else {
+                // Add the new command to the existing table
+                const row = document.createElement('tr');
+                row.className = 'command-row';
+                row.innerHTML = `
+                    <td><span class="command-name">${commandData.command_name}</span></td>
+                    <td>${commandData.args || ''}</td>
+                    <td>${commandData.username}</td>
+                    <td>${commandData.server_name}</td>
+                    <td>${commandData.channel_name}</td>
+                `;
+                
+                // Add the row to the table at the top
+                commandsTable.insertBefore(row, commandsTable.firstChild);
+                
+                // Remove the last row if there are too many
+                if (commandsTable.children.length > 50) {
+                    commandsTable.removeChild(commandsTable.lastChild);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
