@@ -10,12 +10,28 @@ from configparser import ConfigParser
 from cogs.utils.helpcommand import NewHelpCommand
 
 ospath = os.path.abspath(os.getcwd())
+archive_database = rf'{ospath}/cogs/archive_data.db'
+autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
+autorole_database = rf'{ospath}/cogs/autorole_data.db'
+command_logs_data = rf'{ospath}/cogs/command_logs.db'
+economy_data = rf'{ospath}/cogs/economy_data.db'
+invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
+permissions_data = rf'{ospath}/cogs/permissions_data.db'
 
 def mainProgram():
     print('Logging in...')
+    
+    functions.checkForFile(filepath=ospath, filename='info.ini', database=False) 
+    functions.checkForFile(filepath=ospath, filename='config.ini', database=False) 
+    functions.checkForFile(filepath=os.path.dirname(archive_database),    filename=os.path.basename(archive_database),    database=True, dbtype='archive')
+    functions.checkForFile(filepath=os.path.dirname(autodelete_database), filename=os.path.basename(autodelete_database), database=True, dbtype='autodelete')
+    functions.checkForFile(filepath=os.path.dirname(autorole_database),   filename=os.path.basename(autorole_database),   database=True, dbtype='autorole')
+    functions.checkForFile(filepath=os.path.dirname(command_logs_data),   filename=os.path.basename(command_logs_data),   database=True, dbtype='command_logs')
+    functions.checkForFile(filepath=os.path.dirname(economy_data),        filename=os.path.basename(economy_data),        database=True, dbtype='economy')
+    functions.checkForFile(filepath=os.path.dirname(invitelog_database),  filename=os.path.basename(invitelog_database),  database=True, dbtype='invitelog')
+    functions.checkForFile(filepath=os.path.dirname(permissions_data),    filename=os.path.basename(permissions_data),    database=True, dbtype='permissions')
+    
     info, config = ConfigParser(), ConfigParser()
-    functions.checkForFile(ospath, 'info.ini') 
-    functions.checkForFile(ospath, 'config.ini') 
     info.read(rf'{ospath}/info.ini')
     config.read(rf'{ospath}/config.ini')
     title = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
