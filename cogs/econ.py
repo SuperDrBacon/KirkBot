@@ -1796,7 +1796,7 @@ class BlackjackView(View):
         embed.set_footer(text=botversion)
         
         # Update the message with the new embed and attachment
-        await self.message.edit(embed=embed, attachments=[file])
+        await self.message.edit(embed=embed, attachments=[file], view=self)
         
         # Check if player busted
         if player_value > 21:
