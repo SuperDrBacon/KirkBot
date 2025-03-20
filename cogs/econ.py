@@ -1746,6 +1746,14 @@ class BlackjackView(View):
         player_value = self.cog.calculate_hand_value(self.player_hand)
         dealer_value = self.cog.calculate_hand_value([self.dealer_hand[0]])
         
+        # Disable the double down button after first hit
+        if len(self.player_hand) > 2:
+            # Find the double down button and disable it
+            for item in self.children:
+                if isinstance(item, discord.ui.Button) and item.label == "Double Down":
+                    item.disabled = True
+                    break
+        
         # Create updated embed with current state
         embed = discord.Embed(
             title="Blackjack",
