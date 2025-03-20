@@ -1740,7 +1740,6 @@ class BlackjackView(View):
         await self.hit_action(stand_after=True)
     
     async def hit_action(self, stand_after=False):
-        print("Hit action triggered")
         # Deal a new card
         self.player_hand.append(self.deck.pop())
         player_value = self.cog.calculate_hand_value(self.player_hand)
@@ -1801,7 +1800,6 @@ class BlackjackView(View):
             return
     
     async def stand_action(self):
-        print("Stand action triggered")
         # Dealer plays their hand
         self.dealer_hand, dealer_value = self.cog.dealer_play(self.deck, self.dealer_hand)
         player_value = self.cog.calculate_hand_value(self.player_hand)
