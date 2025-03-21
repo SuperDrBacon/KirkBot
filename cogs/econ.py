@@ -475,7 +475,7 @@ class Economy(commands.Cog):
             
         # Check for one pair
         if values[0] == 2:
-            return "Pair", 0.8
+            return "Pair", 0
             
         # High card - no win
         return "Nothing", 0
