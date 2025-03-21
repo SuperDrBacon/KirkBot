@@ -463,7 +463,7 @@ class Economy(commands.Cog):
             
         # Check for straight (5 consecutive values)
         if len(counts) == 5 and max(dice) - min(dice) == 4:
-            return "Straight", 2
+            return "Straight", 3
             
         # Check for three of a kind
         if values[0] == 3:
@@ -1203,7 +1203,7 @@ class Economy(commands.Cog):
         - Five of a kind: 10x bet   was 50
         - Four of a kind: 5x bet    was 10
         - Full house: 4x bet        was 7
-        - Straight: 2x bet          was 5
+        - Straight: 3x bet          was 5
         - Three of a kind: 1.5x bet   was 3
         - Two pair: 0x bet        was 2
         - Pair: 1x bet 
