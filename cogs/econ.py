@@ -451,27 +451,27 @@ class Economy(commands.Cog):
         
         # Check for five of a kind
         if values[0] == 5:
-            return "Five of a Kind", 50
+            return "Five of a Kind", 10
             
         # Check for four of a kind
         if values[0] == 4:
-            return "Four of a Kind", 10
+            return "Four of a Kind", 5
             
         # Check for full house (3 of a kind + pair)
         if values[0] == 3 and values[1] == 2:
-            return "Full House", 7
+            return "Full House", 4
             
         # Check for straight (5 consecutive values)
         if len(counts) == 5 and max(dice) - min(dice) == 4:
-            return "Straight", 5
+            return "Straight", 3
             
         # Check for three of a kind
         if values[0] == 3:
-            return "Three of a Kind", 3
+            return "Three of a Kind", 2
             
         # Check for two pair
         if values[0] == 2 and values[1] == 2:
-            return "Two Pair", 2
+            return "Two Pair", 1.5
             
         # Check for one pair
         if values[0] == 2:
@@ -1199,13 +1199,14 @@ class Economy(commands.Cog):
         """
         Play Dice Poker - Roll 5 dice and get paid based on your hand.
         Payout table:
-        - Five of a kind: 50x bet
-        - Four of a kind: 10x bet
-        - Full house: 7x bet
-        - Straight: 5x bet
-        - Three of a kind: 3x bet
-        - Two pair: 2x bet
-        - Pair: 1x bet (money back)
+        - Five of a kind: 10x bet
+        - Four of a kind: 5x bet
+        - Full house: 4x bet
+        - Straight: 3x bet
+        - Three of a kind: 2x bet
+        - Two pair: 1.5x bet
+        - Pair: 1x bet 
+        - No win: lose bet
         """
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
         user_id = ctx.author.id
@@ -1250,20 +1251,6 @@ class Economy(commands.Cog):
                 # Final roll
                 await asyncio.sleep(0.5)
                 dice = [random.randint(1, 6) for _ in range(5)]
-                
-                # # Create final dice image
-                # dice_image = self.create_dice_image(dice)
-                
-                # # Convert the PIL image to a bytes object
-                # with BytesIO() as image_binary:
-                #     dice_image.save(image_binary, 'PNG')
-                #     image_binary.seek(0)
-                #     file = discord.File(fp=image_binary, filename="final_dice_roll.png")
-                
-                # # Update embed with final dice values
-                # embed.set_field_at(0, name="Your dice", value=f"{' '.join([str(d) for d in dice])}", inline=False)
-                # embed.set_image(url="attachment://final_dice_roll.png")
-                # await msg.edit(embed=embed, attachments=[file])
                 
                 # Evaluate hand
                 hand_type, multiplier = self.evaluate_dice_hand(dice)
