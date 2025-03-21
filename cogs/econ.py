@@ -463,19 +463,19 @@ class Economy(commands.Cog):
             
         # Check for straight (5 consecutive values)
         if len(counts) == 5 and max(dice) - min(dice) == 4:
-            return "Straight", 3
+            return "Straight", 2
             
         # Check for three of a kind
         if values[0] == 3:
-            return "Three of a Kind", 2
+            return "Three of a Kind", 1.5
             
         # Check for two pair
         if values[0] == 2 and values[1] == 2:
-            return "Two Pair", 1.5
+            return "Two Pair", 1.2
             
         # Check for one pair
         if values[0] == 2:
-            return "Pair", 1
+            return "Pair", 0.8
             
         # High card - no win
         return "Nothing", 0
@@ -1199,12 +1199,12 @@ class Economy(commands.Cog):
         """
         Play Dice Poker - Roll 5 dice and get paid based on your hand.
         Payout table:
-        - Five of a kind: 10x bet
-        - Four of a kind: 5x bet
-        - Full house: 4x bet
-        - Straight: 3x bet
-        - Three of a kind: 2x bet
-        - Two pair: 1.5x bet
+        - Five of a kind: 10x bet   was 50
+        - Four of a kind: 5x bet    was 10
+        - Full house: 4x bet        was 7
+        - Straight: 2x bet          was 5
+        - Three of a kind: 1.5x bet   was 3
+        - Two pair: 0x bet        was 2
         - Pair: 1x bet 
         - No win: lose bet
         """
