@@ -563,12 +563,13 @@ class Economy(commands.Cog):
                         dice_colors[i] = 'red'
                         
         elif hand_type == "Pair":
+            pass
             # Pair in green
-            for value, count in counts.items():
-                if count == 2:
-                    for i, die in enumerate(dice_values):
-                        if die == value:
-                            dice_colors[i] = 'green'
+            # for value, count in counts.items():
+            #     if count == 2:
+            #         for i, die in enumerate(dice_values):
+            #             if die == value:
+            #                 dice_colors[i] = 'green'
         
         # Add each dice image
         x_offset = 0
