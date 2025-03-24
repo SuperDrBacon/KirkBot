@@ -32,7 +32,7 @@ log.disabled = True
 # Configure SocketIO to be silent
 socketio = SocketIO(app, cors_allowed_origins="*", logger=False, engineio_logger=False)
 
-def run_flask(host='0.0.0.0', port=5005, debug=True):
+def run_flask(host='0.0.0.0', port=5005, debug=False):
     socketio.run(app, host=host, port=port, debug=debug, use_reloader=True)
 
 def read_database_data():
