@@ -21,12 +21,14 @@
         - [ ] Idk where its at right now lol, lmao even
     - [ ] Economy
         - [x] Underlying economy system
-        - [x] A few games
         - [ ] Needs more games
+    - [ ] Admin
+        - Nothing yet
+    - [ ] Music
+        - Nothing yet
 
 ## Features
-- [ ] Admin
-    - Nothing yet
+
 - [x] AI
     - [x] `@bot`: The bot replies with a message through markovian text generation.
     - [x] `ai`: The bot replies with a message through a large language model.
@@ -61,9 +63,12 @@
     - [x] `leaderboard`: Get the leaderboard.
     - [x] `daily`: Get a daily reward.
     - [x] `undaily`: Reset the daily reward timer for a user. 
+    - [x] `gamestats`: Get the statistics for a user.
+    - [x] `tictactoe`: Play tictactoe with another user.
+    - [x] `dicepoker`: Play dicepoker for a chance to win.
     - [x] `slots`: Play the slots for a chance to win.
     - [x] `coinflip`: Flip a coin for a chance to win.
-    - [ ] `blackjack`: Play blackjack for a chance to win.
+    - [x] `blackjack`: Play blackjack for a chance to win.
 - [x] Errorhandler
     - [x] `on_command_error`: Try to catch as many different errors as possible to provide detailed feedback.
 - [x] Fun Commands
@@ -90,10 +95,10 @@
     - [x] `invite show`: Display the invite information for a specific invite.
     - [x] `invite kick`: Kick all users who joined through a specific invite.
 - [ ] Moderator
-    - [x] `setpermissions chatai`: Enable or disable the chatai function for a channel.
-    - [x] `setpermissions show`: List all channels with chatai enabled.
-- [ ] Music
-    - Nothing yet
+    - [x] `commands`: List the modules that can be enabled or disabled.
+    - [x] `commands show`: List all channels with modules enabled.
+    - [x] `commands chatai`: Enable or disable the chatai module for a channel.
+    - [x] `commands economy`: Enable or disable the economy module for a channel.
 - [x] Helpcommand
     - [x] `help`: Get a list of all commands automatically generated from the commands in the cogs.
     - [x] `help cog`: Get a list of all commands in a specific cog.
