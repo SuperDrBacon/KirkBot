@@ -78,10 +78,9 @@
     - [x] `bigletter`: Convert text to big letters.
     - [x] `braille`: Convert text to braille.
     - [x] `youtube`: Search for YouTube videos.
-    - [x] `gcp dot minimal`: Get the base GCP dot status.
-    - [x] `gcp dot full`: Get the full GCP dot status with explanations.
-    - [x] `tag`: Tag a user and they become it.
-    - [x] `who care`: Delete the message if no one cares.
+    - [x] `gcp`: Get the base GCP dot status.
+    - [x] `gcp full`: Get the full GCP dot status with explanations.
+    - [x] `whocare`: Spell whocare in emojis under the replied to message.
     - [x] `flag`: Toggle if an emoji is reacted to a user by the bot.
     - [x] `wordcount user`: Get the word count for a specific member.
     - [x] `wordcount channel`: Get the word count for a specific word in a channel.
