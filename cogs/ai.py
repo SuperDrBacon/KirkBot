@@ -1,40 +1,19 @@
 # import datetime
-from email import message
 import os
 import random
 import re
 import sqlite3
 import aiosqlite
 import discord
-import cogs.utils.functions as functions
-# import openai
 import ollama
-# from openai import OpenAI
-# from ollama import AsyncClient
-from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
 from discord.ext import commands
 from configparser import ConfigParser
 from collections import defaultdict
+from cogs.utils.constants import (
+    ORDER, TEXT_WORD_COUNT, MEME_WORD_COUNT, 
+    permissions_database, botID, archive_database)
 
-ospath = os.path.abspath(os.getcwd())
-config = ConfigParser()
-config.read(rf'{ospath}/config.ini')
-imagepath = rf'{ospath}/images/'
-
-permissions_database = rf'{ospath}/cogs/permissions_data.db'
-
-# key = config['BOTCONFIG']['openaiAPI']
-botID = config['BOTCONFIG']['botID']
-prefix = config['BOTCONFIG']['prefix']
-# openai.api_key = key
-# textmodel = 'text-curie-001'
-# textmodel = 'gpt-3.5-turbo'
 textmodel = 'dpun'
-
-ORDER = 4
-TEXT_WORD_COUNT = ORDER * 15 
-MEME_WORD_COUNT = ORDER * 5
 
 class MarkovChain:
     def __init__(self, order:int):
@@ -107,7 +86,7 @@ class Ai(commands.Cog):
         channel_id = ctx.channel.id
         #replies to messages that mention the bot
         if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
-            con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
+            con = sqlite3.connect(archive_database)
             con.row_factory = lambda cursor, row: row[0]
             cur = con.cursor()
             text = cur.execute('SELECT message FROM archive_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
