@@ -1,14 +1,5 @@
-import os
 import discord
-from configparser import ConfigParser
 from discord.ext import commands
-
-ospath = os.path.abspath(os.getcwd())
-config = ConfigParser()
-config.read(rf'{ospath}/config.ini')
-owner_id = int(config['BOTCONFIG']['ownerid'])
-
-MSG_DEL_DELAY = 5
 
 class AdminCommands(commands.Cog):
     '''
