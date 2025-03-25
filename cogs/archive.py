@@ -1,25 +1,16 @@
 import asyncio
-import math
-import os
 import sqlite3
 import time
 import uuid
+import discord
+import requests
+
 from datetime import datetime, timezone
 from io import BytesIO
 from zipfile import ZipFile
-
-import discord
-import requests
+from cogs.utils.constants import ADMIN_PORTAL_WS_URL, archive_database
 from discord.ext import commands
-from PIL import Image, UnidentifiedImageError
 
-import cogs.utils.functions as functions
-
-ospath = os.path.abspath(os.getcwd())
-archive_database = rf'{ospath}/cogs/archive_data.db'
-
-# WebSocket notification endpoint - used to notify the admin portal
-ADMIN_PORTAL_WS_URL = "http://localhost:5000/api/new_message"
 
 class Archiver(commands.Cog):
     '''
