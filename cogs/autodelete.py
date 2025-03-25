@@ -1,52 +1,14 @@
 import asyncio
-import os
 import re
-from datetime import datetime, timedelta, timezone
-from configparser import ConfigParser
-
-# import sqlite3
 import aiosqlite
 import discord
-from discord.ext import commands, tasks
-
 import cogs.utils.functions as functions
 
-ospath = os.path.abspath(os.getcwd())
-archive_database = rf'{ospath}/cogs/archive_data.db'
-autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
-config, info = ConfigParser(), ConfigParser()
-info.read(rf'{ospath}/info.ini')
-config.read(rf'{ospath}/config.ini')
-command_prefix = config['BOTCONFIG']['prefix']
-botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
-
-MSG_DEL_DELAY = 10
-SECOND_LOOP_DELAY = 5
-
-TIME_UNITS = {  
-    's':        ('second',  'seconds',  1),
-    'sec':      ('second',  'seconds',  1),
-    'secs':     ('second',  'seconds',  1),
-    'second':   ('second',  'seconds',  1),
-    'seconds':  ('second',  'seconds',  1),
-    'm':        ('minute',  'minutes',  60),
-    'min':      ('minute',  'minutes',  60),
-    'mins':     ('minute',  'minutes',  60),
-    'minute':   ('minute',  'minutes',  60),
-    'minutes':  ('minute',  'minutes',  60),
-    'h':        ('hour',    'hours',    3600),
-    'hr':       ('hour',    'hours',    3600),
-    'hrs':      ('hour',    'hours',    3600),
-    'hour':     ('hour',    'hours',    3600),
-    'hours':    ('hour',    'hours',    3600),
-    'd':        ('day',     'days',     86400),
-    'day':      ('day',     'days',     86400),
-    'days':     ('day',     'days',     86400),
-    'w':        ('week',    'weeks',    604800),
-    'week':     ('week',    'weeks',    604800),
-    'weeks':    ('week',    'weeks',    604800),
-    'month':    ('month',   'months',   2592000),
-    'months':   ('month',   'months',   2592000)}
+from datetime import datetime, timedelta, timezone
+from discord.ext import commands
+from cogs.utils.constants import (
+    MSG_DEL_DELAY, SECOND_LOOP_DELAY, TIME_UNITS,
+    command_prefix, botversion, autodelete_database)
 
 class Autodelete(commands.Cog):
     '''
