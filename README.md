@@ -69,6 +69,7 @@
     - [x] `slots`: Play the slots for a chance to win.
     - [x] `coinflip`: Flip a coin for a chance to win.
     - [x] `blackjack`: Play blackjack for a chance to win.
+    - [ ] `connect 4`: Play connect 4 with another user.
 - [x] Errorhandler
     - [x] `on_command_error`: Try to catch as many different errors as possible to provide detailed feedback.
 - [x] Fun Commands
@@ -85,7 +86,6 @@
     - [x] `wordcount user`: Get the word count for a specific member.
     - [x] `wordcount channel`: Get the word count for a specific word in a channel.
     - [x] `wordcount server`: Get the word count for a specific word in the server.
-    - [ ] `connect 4`: Play connect 4 with another user.
 - [ ] Images
     - [x] `react`: React to a message with a random react image with a speech bubble above and their message above that.
     - [x] `caption`: Caption the previous image or gif posted in the chat.
