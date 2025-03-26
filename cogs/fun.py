@@ -20,7 +20,6 @@ from typing import Union
 from discord.ext import commands
 from numpy import interp
 from PIL import Image, ImageDraw
-from pyparsing import C
 from selenium import webdriver
 from selenium.common.exceptions import InvalidSessionIdException, TimeoutException
 from selenium.webdriver.chrome.service import Service
