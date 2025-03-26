@@ -1,24 +1,9 @@
-import asyncio
-import os
-from configparser import ConfigParser
-from datetime import datetime, timezone
-
 import aiosqlite
 import discord
+
 from discord.ext import commands
-from discord.ext.commands import CheckFailure
-
-import cogs.utils.functions as functions
-
-ospath = os.path.abspath(os.getcwd())
-config, info = ConfigParser(), ConfigParser()
-info.read(rf'{ospath}/info.ini')
-config.read(rf'{ospath}/config.ini')
-command_prefix = config['BOTCONFIG']['prefix']
-botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
-permissions_database = rf'{ospath}/cogs/permissions_data.db'
-
-MSG_DEL_DELAY = 10
+from datetime import datetime, timezone
+from cogs.utils.constants import BOTVERSION, COMMAND_PREFIX, MSG_DEL_DELAY,PERMISSIONS_DATABASE
 
 class ModCommands(commands.Cog):
     '''
@@ -45,9 +30,9 @@ class ModCommands(commands.Cog):
         - chatai
         - economy
         '''
-        embed = discord.Embed(title='Commands Module', description=f'To see how to use the Commands module use:\n`{command_prefix}help commands`\n\n\
+        embed = discord.Embed(title='Commands Module', description=f'To see how to use the Commands module use:\n`{COMMAND_PREFIX}help commands`\n\n\
             Current modules:\n- chatai\n- economy\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
-        embed.set_footer(text=botversion)
+        embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
@@ -70,7 +55,7 @@ class ModCommands(commands.Cog):
         guild_id = ctx.guild.id
         channel_id = ctx.channel.id
         
-        async with aiosqlite.connect(permissions_database) as con:
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
             async with con.execute('INSERT OR REPLACE INTO chatai (server_id, channel_id, enabled) VALUES (?, ?, ?)', (guild_id, channel_id, channel_permission)) as cursor:
                 await con.commit()
         
@@ -96,7 +81,7 @@ class ModCommands(commands.Cog):
         guild_id = ctx.guild.id
         channel_id = ctx.channel.id
         
-        async with aiosqlite.connect(permissions_database) as con:
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
             async with con.execute('INSERT OR REPLACE INTO economy (server_id, channel_id, enabled) VALUES (?, ?, ?)', (guild_id, channel_id, channel_permission)) as cursor:
                 await con.commit()
         #                            enable/disable
@@ -112,15 +97,15 @@ class ModCommands(commands.Cog):
         '''
         guild_id = ctx.guild.id
         embed = discord.Embed(title="Command Settings", color=discord.Color.blue(), timestamp=datetime.now(timezone.utc))
-        embed.set_footer(text=botversion)
+        embed.set_footer(text=BOTVERSION)
         
         # Get ChatAI permissions
-        async with aiosqlite.connect(permissions_database) as con:
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
             async with con.execute('SELECT enabled, channel_id FROM chatai WHERE server_id = ?', (guild_id, )) as cursor:
                 chatai_channels = await cursor.fetchall()
         
         # Get Economy permissions
-        async with aiosqlite.connect(permissions_database) as con:
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
             async with con.execute('SELECT enabled, channel_id FROM economy WHERE server_id = ?', (guild_id, )) as cursor:
                 economy_channels = await cursor.fetchall()
         

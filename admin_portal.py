@@ -4,22 +4,16 @@ import os
 import sqlite3
 import sys
 import time
-from datetime import datetime
-from threading import Lock
+import aiosqlite
 
-import aiosqlite as sql
+from datetime import datetime
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO
-
+from cogs.utils.constants import ARCHIVE_DATABASE, COMMAND_LOGS_DATABASE, INVITELOG_DATABASE
 # Disable Flask's built-in logging
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 logging.getLogger('socketio').setLevel(logging.ERROR)
 logging.getLogger('engineio').setLevel(logging.ERROR)
-
-ospath = os.path.abspath(os.getcwd())
-archive_database = rf'{ospath}/cogs/archive_data.db'
-command_logs_database = rf'{ospath}/cogs/command_logs.db'
-invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
 
 app = Flask(__name__)
 # app.config['SECRET_KEY'] = 'kirkbot-secret-key'
@@ -36,7 +30,7 @@ def run_flask(host='0.0.0.0', port=5005, debug=False):
     socketio.run(app, host=host, port=port, debug=debug, use_reloader=True)
 
 def read_database_data():
-    con = sqlite3.connect(archive_database)
+    con = sqlite3.connect(ARCHIVE_DATABASE)
     # Note: Added server_id to the SELECT query
     cur = con.execute('SELECT server_name, channel_name, username, message, is_reply, original_username, original_message, server_id FROM archive_data ORDER BY rowid DESC')
     server_data = cur.fetchall()
@@ -149,7 +143,7 @@ def index():
     
     try:
         # Get server, user and message stats
-        con = sqlite3.connect(archive_database)
+        con = sqlite3.connect(ARCHIVE_DATABASE)
         cur = con.cursor()
         
         cur.execute("SELECT COUNT(DISTINCT SERVER_ID) FROM archive_data")
@@ -164,7 +158,7 @@ def index():
         con.close()
         
         # Get command stats
-        con = sqlite3.connect(command_logs_database)
+        con = sqlite3.connect(COMMAND_LOGS_DATABASE)
         cur = con.cursor()
         
         cur.execute("SELECT COUNT(*) FROM command_logs")
@@ -173,7 +167,7 @@ def index():
         con.close()
         
         # Get active invites
-        con = sqlite3.connect(invitelog_database)
+        con = sqlite3.connect(INVITELOG_DATABASE)
         cur = con.cursor()
         
         current_time = int(time.time())
@@ -193,7 +187,7 @@ def stats():
     
     # Get actual statistics from database
     try:
-        con = sqlite3.connect(archive_database)
+        con = sqlite3.connect(ARCHIVE_DATABASE)
         cur = con.cursor()
         
         # Count unique servers
@@ -225,7 +219,7 @@ def commands():
     }
     
     try:
-        con = sqlite3.connect(command_logs_database)
+        con = sqlite3.connect(COMMAND_LOGS_DATABASE)
         con.row_factory = sqlite3.Row  # This allows accessing columns by name
         cur = con.cursor()
         
@@ -303,7 +297,7 @@ def invites():
     invites_data = {"invites": []}
     
     try:
-        con = sqlite3.connect(invitelog_database)
+        con = sqlite3.connect(INVITELOG_DATABASE)
         con.row_factory = sqlite3.Row  # This allows accessing columns by name
         cur = con.cursor()
         

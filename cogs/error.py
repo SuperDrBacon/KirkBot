@@ -1,18 +1,9 @@
-import discord
-import asyncio
-import os
 import traceback
-from datetime import datetime, timezone
-from discord.ext import commands
-from configparser import ConfigParser
+import discord
 
-path = os.path.abspath(os.getcwd())
-config, info = ConfigParser(), ConfigParser()
-info.read(rf'{path}/info.ini')
-config.read(rf'{path}/config.ini')
-command_prefix = config['BOTCONFIG']['prefix']
-botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
-MSG_DEL_DELAY = 10
+from discord.ext import commands
+from datetime import datetime, timezone
+from cogs.utils.constants import BOTVERSION, COMMAND_PREFIX, MSG_DEL_DELAY
 
 class Error(commands.Cog):
     def __init__(self, bot):
@@ -32,7 +23,7 @@ class Error(commands.Cog):
             else:
                 embed = discord.Embed(title=f"Error description", description=f"I couldn't send this information to you via direct message. Are your DMs enabled?", color=0xff0000, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name="Error techincal", value=f"{error}", inline=False)
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
             
@@ -42,7 +33,7 @@ class Error(commands.Cog):
             else:
                 embed = discord.Embed(title=f"Error description", description=f"You missed the argument `{error.param.name}` for this command!", color=0xff0000, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name="Error techincal", value=f"{error}", inline=False)
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
         
@@ -52,7 +43,7 @@ class Error(commands.Cog):
             else:
                 embed = discord.Embed(title=f"Error description", description=f"Missing permissions: {error.missing_permissions}", color=0xff0000, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name="Error techincal", value=f"{error}", inline=False)
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
             
@@ -69,12 +60,12 @@ class Error(commands.Cog):
             if hasattr(ctx, '_ignore_'):
                 pass
             else:
-                embed = discord.Embed(title=f"Error description", description=f"I can't understand this command message! Please check `{command_prefix}help {ctx.command}`", color=0xff0000, timestamp=datetime.now(timezone.utc))
+                embed = discord.Embed(title=f"Error description", description=f"I can't understand this command message! Please check `{COMMAND_PREFIX}help {ctx.command}`", color=0xff0000, timestamp=datetime.now(timezone.utc))
                 if str(error).startswith('Converting to \"float\" failed for parameter'):
                     embed.add_field(name="Error techincal", value=f"Please use a dot '.' as a decimal separator when passing a nummer in a command", inline=False)
                 else:
                     embed.add_field(name="Error techincal", value=f"{error}", inline=False)
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
             
@@ -82,9 +73,9 @@ class Error(commands.Cog):
             if hasattr(ctx, '_ignore_'):
                 pass
             else:
-                embed = discord.Embed(title=f"Error description", description=f"No such command found. Try `{command_prefix}help`", color=0xff0000, timestamp=datetime.now(timezone.utc))
+                embed = discord.Embed(title=f"Error description", description=f"No such command found. Try `{COMMAND_PREFIX}help`", color=0xff0000, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name="Error techincal", value=f"{error}", inline=False)
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
             
@@ -94,7 +85,7 @@ class Error(commands.Cog):
             else:
                 embed = discord.Embed(title=f"Error description", description=f"This command is on cooldown bozo. Try again in {error.retry_after:.2f} seconds.", color=0xff0000, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name="Error technical", value=f"{error}", inline=False)
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
         
@@ -104,7 +95,7 @@ class Error(commands.Cog):
             else:
                 embed = discord.Embed(name="Error description", description=f"The command you've entered could not be completed at this time.", color=0xff0000, timestamp=datetime.now(timezone.utc))
                 embed.add_field(name="Error technical", value=f"{error}", inline=False)
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
                 print(f'CONSOLE ONLY, COMMAND FAILED: {error}')        

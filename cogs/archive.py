@@ -5,12 +5,11 @@ import uuid
 import discord
 import requests
 
+from discord.ext import commands
 from datetime import datetime, timezone
 from io import BytesIO
 from zipfile import ZipFile
-from cogs.utils.constants import ADMIN_PORTAL_WS_URL, archive_database
-from discord.ext import commands
-
+from cogs.utils.constants import ADMIN_PORTAL_WS_URL, ARCHIVE_DATABASE
 
 class Archiver(commands.Cog):
     '''
@@ -83,7 +82,7 @@ class Archiver(commands.Cog):
             message_data["original_message"] = original_message
             
             try:
-                con = sqlite3.connect(archive_database)
+                con = sqlite3.connect(ARCHIVE_DATABASE)
                 cur = con.cursor()
                 data_to_insert = '''INSERT INTO archive_data(
                             SERVER_NAME,
@@ -131,7 +130,7 @@ class Archiver(commands.Cog):
             self.notify_admin_portal(ctx, message_data)
         else:
             try:
-                con = sqlite3.connect(archive_database)
+                con = sqlite3.connect(ARCHIVE_DATABASE)
                 cur = con.cursor()
                 data_to_insert = '''INSERT INTO archive_data(
                             SERVER_NAME,
@@ -246,7 +245,7 @@ class Archiver(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def getuserlist(self, ctx, serverid:int):
-        con = sqlite3.connect(archive_database)
+        con = sqlite3.connect(ARCHIVE_DATABASE)
         cur = con.cursor()
         
         cur.execute(f"SELECT USER_ID, USERNAME FROM archive_data WHERE SERVER_ID = ?", (serverid,))

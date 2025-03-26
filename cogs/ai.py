@@ -1,17 +1,16 @@
 # import datetime
-import os
 import random
 import re
 import sqlite3
+from collections import defaultdict
+
 import aiosqlite
 import discord
 import ollama
 from discord.ext import commands
-from configparser import ConfigParser
-from collections import defaultdict
-from cogs.utils.constants import (
-    ORDER, TEXT_WORD_COUNT, MEME_WORD_COUNT, 
-    permissions_database, botID, archive_database)
+
+from cogs.utils.constants import (ARCHIVE_DATABASE, BOTID, MEME_WORD_COUNT,
+                                  ORDER, PERMISSIONS_DATABASE, TEXT_WORD_COUNT)
 
 textmodel = 'dpun'
 
@@ -85,8 +84,8 @@ class Ai(commands.Cog):
         guild_id = ctx.guild.id	
         channel_id = ctx.channel.id
         #replies to messages that mention the bot
-        if ctx.content.startswith(f'<@!{botID}>') or ctx.content.startswith(f'<@{botID}>'):
-            con = sqlite3.connect(archive_database)
+        if ctx.content.startswith(f'<@!{BOTID}>') or ctx.content.startswith(f'<@{BOTID}>'):
+            con = sqlite3.connect(ARCHIVE_DATABASE)
             con.row_factory = lambda cursor, row: row[0]
             cur = con.cursor()
             text = cur.execute('SELECT message FROM archive_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
@@ -105,7 +104,7 @@ class Ai(commands.Cog):
             await ctx.reply(generated_text)
         
         #replies to messages that replied to the bot
-        if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(botID):
+        if not ctx.author.bot and ctx.reference and int(ctx.reference.resolved.author.id) == int(BOTID):
             base = f'{ctx.reference.resolved.content}'
             # reply = f'{ctx.author.name}: {ctx.content}'
             reply = f'{ctx.content}'
@@ -126,7 +125,7 @@ class Ai(commands.Cog):
                     await ctx.reply('I am sorry, I am unable to generate a response at this time. -God')
         
         #replies to messages in channels that have the AI enabled
-        async with aiosqlite.connect(permissions_database) as con:
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
             async with con.execute('SELECT enabled FROM chatai WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)) as cursor:
                 channel_enabled = (result := await cursor.fetchone()) is not None and result[0]
         
@@ -229,7 +228,7 @@ async def setup(bot):
     #     # imagefile.seek(0)
     #     # await ctx.send(file=discord.File(imagefile, filename='meme.png'))
         
-    #     con = sqlite3.connect(f'{ospath}/cogs/archive_data.db')
+    #     con = sqlite3.connect(f'{OSPATH}/cogs/archive_data.db')
     #     con.row_factory = lambda _, row: row[0]
     #     cur = con.cursor()
     #     # text = cur.execute('SELECT message FROM archive_data WHERE server_id = ? AND channel_id = ?', (guild_id, channel_id)).fetchall()
@@ -252,7 +251,7 @@ async def setup(bot):
     #     top_text = get_text()
     #     bottom_text = get_text()
         
-    #     font = ImageFont.truetype(imagepath+'impact.ttf', 60)
+    #     font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 60)
     #     draw = ImageDraw.Draw(avatar)
         
     #     text_color = (237, 230, 211)

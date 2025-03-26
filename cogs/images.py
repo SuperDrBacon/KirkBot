@@ -2,29 +2,19 @@ import asyncio
 import os
 import random
 import shutil
-import discord
 import textwrap
 import requests
-from PIL import Image
-from PIL import ImageFont
-from PIL import ImageDraw
-from PIL import ImageSequence
-from PIL import ImageOps
-from configparser import ConfigParser
-from discord.ext import commands
+import discord
+
 from io import BytesIO
 from string import ascii_letters
 from bs4 import BeautifulSoup
+from discord.ext import commands
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageSequence
+
+from cogs.utils.constants import COMMAND_PREFIX, IMAGEPATH
 
 ua = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'}
-
-path = os.path.abspath(os.getcwd())
-imagepath = rf'{path}/images/'
-
-config = ConfigParser()
-config.read(rf'{path}/config.ini')
-
-prefix = config['BOTCONFIG']['prefix']
 
 class Images(commands.Cog):
     '''
@@ -45,8 +35,8 @@ class Images(commands.Cog):
         '''
         byteio = BytesIO()
         react_images = []            
-        print(imagepath)
-        for filename in os.listdir(imagepath):
+        print(IMAGEPATH)
+        for filename in os.listdir(IMAGEPATH):
             if filename.startswith('react'):
                 react_images.append(filename[6:-4])
         choices = ''
@@ -54,16 +44,16 @@ class Images(commands.Cog):
             choices += ''.join(f"{choice}{'.' if choice == react_images[-1] else ','}")
         
         if facetype.lower() in react_images:
-            reac_img = Image.open(f'{imagepath}react {facetype}.png')
+            reac_img = Image.open(f'{IMAGEPATH}react {facetype}.png')
         else:
             randomfacetype = random.choice(react_images)
-            reac_img = Image.open(f'{imagepath}react {randomfacetype}.png')
+            reac_img = Image.open(f'{IMAGEPATH}react {randomfacetype}.png')
             if ctx.message.reference:
                 msg = await ctx.reply(f'Didn\'t specify a reaction type, picking random one for now: **{randomfacetype} face**. Available choices are: **{choices}**')
         
         if ctx.message.reference:   
-            speech_bubble = Image.open(imagepath+'speech_bubble.png')
-            font = ImageFont.truetype(imagepath+'impact.ttf', 60)
+            speech_bubble = Image.open(IMAGEPATH+'speech_bubble.png')
+            font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 60)
             
             img_width = 1000
             reac_width, reac_height = reac_img.size
@@ -103,7 +93,7 @@ class Images(commands.Cog):
             
             await ctx.reply(file=discord.File(byteio, filename='Final_react.png'))            
         else:
-            mgs2 = await ctx.reply(f"React to a message to use this command. Specify an image by using these keywords: **{choices}** Use {prefix}help to see other image commands.")
+            mgs2 = await ctx.reply(f"React to a message to use this command. Specify an image by using these keywords: **{choices}** Use {COMMAND_PREFIX}help to see other image commands.")
         
         await asyncio.sleep(10)
         
@@ -122,10 +112,10 @@ class Images(commands.Cog):
         '''
         byteio = BytesIO()
         messages = await ctx.channel.history(limit=50, oldest_first=False).flatten()
-        if os.path.exists(imagepath+'dl temp.png'):
-            os.remove(imagepath+'dl temp.png')
-        if os.path.exists(imagepath+'dl temp.gif'):
-            os.remove(imagepath+'dl temp.gif')
+        if os.path.exists(IMAGEPATH+'dl temp.png'):
+            os.remove(IMAGEPATH+'dl temp.png')
+        if os.path.exists(IMAGEPATH+'dl temp.gif'):
+            os.remove(IMAGEPATH+'dl temp.gif')
         try:
             for message in messages:
                 if message.attachments:
@@ -142,10 +132,10 @@ class Images(commands.Cog):
                             raise StopIteration
                         elif attachment.filename.endswith('.gif'):
                             try:
-                                await attachment.save(imagepath+'dl temp.gif', use_cached=False)
+                                await attachment.save(IMAGEPATH+'dl temp.gif', use_cached=False)
                             except Exception as e:
                                 try:
-                                    await attachment.save(imagepath+'dl temp.gif', use_cached=True)
+                                    await attachment.save(IMAGEPATH+'dl temp.gif', use_cached=True)
                                 except Exception as ee:
                                     print(f'{e} -EN- {ee}')
                                     return await ctx.reply('Failed to get image gif')
@@ -153,7 +143,7 @@ class Images(commands.Cog):
                 elif message.content.endswith('.gif'):
                     try:
                         response = requests.get(message.content, stream=True)
-                        with open(imagepath+'dl temp.gif', 'wb') as f:
+                        with open(IMAGEPATH+'dl temp.gif', 'wb') as f:
                             response.raw.decode_content = True
                             shutil.copyfileobj(response.raw, f)
                     except Exception as e:
@@ -168,7 +158,7 @@ class Images(commands.Cog):
                         channels = soup.find('div', class_="Gif")
                         ctenor = channels.find('img').attrs['src']
                         response = requests.get(ctenor, stream=True)
-                        with open(imagepath+'dl temp.gif', 'wb') as f:
+                        with open(IMAGEPATH+'dl temp.gif', 'wb') as f:
                             response.raw.decode_content = True
                             shutil.copyfileobj(response.raw, f)
                     except Exception as e:
@@ -179,13 +169,13 @@ class Images(commands.Cog):
         except StopIteration:
             pass
         
-        if os.path.exists(imagepath+'dl temp.png'):
-            reac_img = Image.open(imagepath+'dl temp.png')
+        if os.path.exists(IMAGEPATH+'dl temp.png'):
+            reac_img = Image.open(IMAGEPATH+'dl temp.png')
             reac_width, reac_height = reac_img.size
             if reac_width < 500:
-                font = ImageFont.truetype(imagepath+'impact.ttf', 30)
+                font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 30)
             else:
-                font = ImageFont.truetype(imagepath+'impact.ttf', 60)
+                font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 60)
             fontw, fonth = font.getsize(caption)
             
             avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(ascii_letters)
@@ -205,12 +195,12 @@ class Images(commands.Cog):
             final_img = Image.new('RGBA', (reac_width, img_text_height+reac_height))
             final_img.paste(text_img, (0, 0))
             final_img.paste(reac_img, (0, img_text_height))
-            final_img.save(imagepath+'final_react.png', 'PNG')
-            return await ctx.reply(file=discord.File(imagepath+'final_react.png')) 
+            final_img.save(IMAGEPATH+'final_react.png', 'PNG')
+            return await ctx.reply(file=discord.File(IMAGEPATH+'final_react.png')) 
         
-        elif os.path.exists(imagepath+'dl temp.gif'):
-            reac_gif = Image.open(imagepath+'dl temp.gif')
-            font = ImageFont.truetype(imagepath+'impact.ttf', 60)
+        elif os.path.exists(IMAGEPATH+'dl temp.gif'):
+            reac_gif = Image.open(IMAGEPATH+'dl temp.gif')
+            font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 60)
             reac_width, reac_height = reac_gif.size
             
             fontw, fonth = font.getsize(caption)
@@ -233,25 +223,25 @@ class Images(commands.Cog):
             makegif(reac_gif, text_img, img_text_height, quality)
             
             try:
-                await ctx.reply(file=discord.File(imagepath+'final_react.gif'))
+                await ctx.reply(file=discord.File(IMAGEPATH+'final_react.gif'))
             except Exception:
                 try:
                     resizemsg = await ctx.reply(f'Hold on gif too big, resizing now.')
                     quality = 60
                     makegif(reac_gif, text_img, img_text_height, quality)
-                    await ctx.reply(file=discord.File(imagepath+'final_react.gif'))
+                    await ctx.reply(file=discord.File(IMAGEPATH+'final_react.gif'))
                 except Exception:
                     try:
                         quality = 30
                         makegif(reac_gif, text_img, img_text_height, quality)
-                        await ctx.reply(file=discord.File(imagepath+'final_react.gif'))
+                        await ctx.reply(file=discord.File(IMAGEPATH+'final_react.gif'))
                     except Exception:
                         await ctx.reply(f'gif too big, can\'t resize enough.')
         else:
             return await ctx.reply('Something brokey')
         await resizemsg.delete()
-        # reac_img = Image.open(imagepath+'dl temp')
-        # font = ImageFont.truetype(imagepath+'impact.ttf', 30)
+        # reac_img = Image.open(IMAGEPATH+'dl temp')
+        # font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 30)
 
 
 def makegif(reac_gif, text_img, img_text_height, quality):
@@ -269,7 +259,7 @@ def makegif(reac_gif, text_img, img_text_height, quality):
             reac_gif.seek(reac_gif.tell()+1)
     except EOFError:
         frametime = duration / frames
-        images[0].save(imagepath+'final_react.gif', quality=quality, save_all=True, append_images=images[1:], duration=frametime, loop=0, disposal=2, optimize=True)
+        images[0].save(IMAGEPATH+'final_react.gif', quality=quality, save_all=True, append_images=images[1:], duration=frametime, loop=0, disposal=2, optimize=True)
         # print(f'{frames} frames, {duration/1000}s, {frametime}ms per frame, {frames/duration*1000} fps')
 
 async def setup(bot):

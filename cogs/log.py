@@ -1,17 +1,10 @@
 import os
-import re
 import sqlite3
-import time
-from datetime import datetime
-
-import discord
 import requests
+
 from discord.ext import commands
-
-import cogs.utils.functions as functions
-
-ospath = os.path.abspath(os.getcwd())
-command_logs_data = rf'{ospath}/cogs/command_logs.db'
+from datetime import datetime
+from cogs.utils.constants import COMMAND_LOGS_DATABASE
 
 class Log(commands.Cog):
     def __init__(self, bot):
@@ -67,7 +60,7 @@ class Log(commands.Cog):
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
             # Log to database
-            con = sqlite3.connect(command_logs_data)
+            con = sqlite3.connect(COMMAND_LOGS_DATABASE)
             cur = con.cursor()
             
             cur.execute('''

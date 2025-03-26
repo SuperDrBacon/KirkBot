@@ -1,24 +1,16 @@
-import random
-import discord
 import asyncio
-import os
-from discord.ext import commands, tasks
 from configparser import ConfigParser
-from pypresence import Presence 
 
+import discord
+from discord.ext import commands
 
-ospath = os.path.abspath(os.getcwd())
+from cogs.utils.constants import (COMMAND_PREFIX, OSPATH, STATUS_LOOP_DELAY, STATUS)
+
 info = ConfigParser()
-config = ConfigParser()
-info.read(rf'{ospath}/info.ini')
-config.read(rf'{ospath}/config.ini')
-
-command_prefix = config['BOTCONFIG']['prefix']
-status = info['STATUS']['status']
-activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+info.read(rf'{OSPATH}/info.ini')
+activity = discord.Activity(name=STATUS, type=discord.ActivityType.watching)
 started_tasks = []
 
-SECOND_LOOP_DELAY = 10
 
 class StatusManager(commands.Cog):
     '''
@@ -43,7 +35,7 @@ class StatusManager(commands.Cog):
         This command group is used to change the bot's status.
         It Gets the current status of the bot and send it as a message to the channel.
         '''
-        await ctx.channel.send(f'current status is: {status}')
+        await ctx.channel.send(f'current status is: {STATUS}')
     
     @botstatus_base.command(name='set')
     @commands.has_permissions(administrator=True)
@@ -82,7 +74,7 @@ class StatusManager(commands.Cog):
         
         info.set('STATUS', 'status', statusmessage)
         
-        with open(rf'{ospath}/info.ini', 'w') as infofile:
+        with open(rf'{OSPATH}/info.ini', 'w') as infofile:
             info.write(infofile)
         await message.edit(content=f'Updated Status to: {strstatus} {statusmessage}')
         await message.clear_reactions()
@@ -93,7 +85,7 @@ class StatusManager(commands.Cog):
             self.switch_status_task.cancel()
     
     async def cog_load(self):
-        await asyncio.sleep(SECOND_LOOP_DELAY)
+        await asyncio.sleep(STATUS_LOOP_DELAY)
         # print('Autodelete cog_load starting switch_status_loop')
         if self.switch_status_task and self.switch_status_task.done():
             loop = asyncio.get_event_loop()
@@ -106,7 +98,7 @@ class StatusManager(commands.Cog):
     
     @commands.Cog.listener()
     async def on_resumed(self):
-        await asyncio.sleep(SECOND_LOOP_DELAY)
+        await asyncio.sleep(STATUS_LOOP_DELAY)
         if self.switch_status_task and self.switch_status_task.done():
             loop = asyncio.get_event_loop()
             self.switch_status_task = loop.create_task(self.switch_status_loop())
@@ -114,13 +106,13 @@ class StatusManager(commands.Cog):
     async def switch_status_loop(self):
         while True:
             # print ('switch_status_loop')
-            activity = discord.Activity(name=status, type=discord.ActivityType.watching)
+            activity = discord.Activity(name=STATUS, type=discord.ActivityType.watching)
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            await asyncio.sleep(SECOND_LOOP_DELAY)
+            await asyncio.sleep(STATUS_LOOP_DELAY)
             
-            activity = discord.Activity(name=f'{command_prefix}help', type=discord.ActivityType.playing)
+            activity = discord.Activity(name=f'{COMMAND_PREFIX}help', type=discord.ActivityType.playing)
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            await asyncio.sleep(SECOND_LOOP_DELAY)
+            await asyncio.sleep(STATUS_LOOP_DELAY)
     
 async def setup(bot):
     await bot.add_cog(StatusManager(bot))

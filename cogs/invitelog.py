@@ -1,26 +1,10 @@
 import asyncio
 import datetime
-import os
-import discord
 import aiosqlite
-import cogs.utils.functions as functions
+import discord
 
-from configparser import ConfigParser
-from discord import Embed
-from discord.ext import commands, tasks
-
-ospath = os.path.abspath(os.getcwd())
-config, info = ConfigParser(), ConfigParser()
-config.read(rf'{ospath}/config.ini')
-info.read(rf'{ospath}/info.ini')
-
-prefix = config['BOTCONFIG']['prefix']
-invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
-command_prefix = config['BOTCONFIG']['prefix']
-botversion = info['DEFAULT']['title'] + ' v' + info['DEFAULT']['version']
-
-MSG_DEL_DELAY = 10
-SECOND_LOOP_DELAY = 5
+from discord.ext import commands
+from cogs.utils.constants import BOTVERSION, INVITELOG_DATABASE, MSG_DEL_DELAY, SECOND_LOOP_DELAY
 
 class Invitelog(commands.Cog):
     '''
@@ -40,7 +24,7 @@ class Invitelog(commands.Cog):
         print('InviteLog module is online')
     
     async def update_invites(self):
-        async with aiosqlite.connect(invitelog_database) as con:
+        async with aiosqlite.connect(INVITELOG_DATABASE) as con:
             async with con.cursor() as cur:
                 # Loop through each server
                 for server in self.bot.guilds:
@@ -83,7 +67,7 @@ class Invitelog(commands.Cog):
         # Get the current invites for the server
         current_server_invites = await member.guild.invites()
         
-        async with aiosqlite.connect(invitelog_database) as con:
+        async with aiosqlite.connect(INVITELOG_DATABASE) as con:
             async with con.cursor() as cur:
                 # Get all the invites for the server from the database
                 await cur.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID FROM invitelog WHERE SERVER_ID = ?", (member.guild.id,))
@@ -140,7 +124,7 @@ class Invitelog(commands.Cog):
         - `invite kick` Kicks all users who joined the server using a specific invite.
         '''
         embed = discord.Embed(title='Invitelog usage', description=f'', color=0x00ff00, timestamp=datetime.utcnow())
-        embed.set_footer(text=botversion)
+        embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
     
     
@@ -160,7 +144,7 @@ class Invitelog(commands.Cog):
         - Invite expiration date and time (or "No expiration" if the invite doesn't expire)
         - Current uses of the invite / Maximum uses (or "Infinite" if the invite has no use limit)
         '''
-        async with aiosqlite.connect(invitelog_database) as con:
+        async with aiosqlite.connect(INVITELOG_DATABASE) as con:
             async with con.cursor() as cur:
                 # Get all the active invites for the server
                 await cur.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX FROM invitelog WHERE SERVER_ID = ?", (ctx.guild.id,))
@@ -248,7 +232,7 @@ class Invitelog(commands.Cog):
         - Current uses of the invite / Maximum uses (or "Infinite" if the invite has no use limit)
         - A list of users who joined the server using the invite
         '''
-        async with aiosqlite.connect(invitelog_database) as con:
+        async with aiosqlite.connect(INVITELOG_DATABASE) as con:
             async with con.cursor() as cur:
                 # Get the invite information from the database
                 await cur.execute("SELECT INVITE_CODE, CURRENT_USES, MAX_USES, INVITER_ID, INVITER_NAME, INVITE_CHANNEL_ID, EXPIRATION_DATE_UNIX FROM invitelog WHERE INVITE_CODE = ?", (invite_code,))
@@ -298,7 +282,7 @@ class Invitelog(commands.Cog):
         '''
         This command kicks all users who joined the server using a specific invite.
         '''
-        async with aiosqlite.connect(invitelog_database) as con:
+        async with aiosqlite.connect(INVITELOG_DATABASE) as con:
             async with con.cursor() as cur:
                 await cur.execute("SELECT USED_BY_NAME, USED_BY_ID FROM users WHERE SERVER_ID = ? AND INVITE_CODE = ?", (ctx.guild.id, invite_code))
                 users = await cur.fetchall()

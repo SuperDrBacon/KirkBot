@@ -2,19 +2,15 @@ import os
 import re
 import sqlite3
 import time
-from pathlib import Path
-from urllib import request
-
+import aiosqlite
 import numpy
 
-ospath = os.path.abspath(os.getcwd())
-archive_database = rf'{ospath}/cogs/archive_data.db'
-economy_database = rf'{ospath}/cogs/economy_data.db'
-autodelete_database = rf'{ospath}/cogs/autodelete_data.db'
-autorole_database = rf'{ospath}/cogs/autorole_data.db'
-invitelog_database = rf'{ospath}/cogs/invitelog_data.db'
-permissions_database = rf'{ospath}/cogs/permissions_data.db'
-command_logs_database = rf'{ospath}/cogs/command_logs.db'
+from pathlib import Path
+from urllib import request
+from .constants import (ARCHIVE_DATABASE, AUTODELETE_DATABASE,
+                        AUTOROLE_DATABASE, COMMAND_LOGS_DATABASE,
+                        ECONOMY_DATABASE, INVITELOG_DATABASE,
+                        PERMISSIONS_DATABASE)
 
 setup_table_archive_database = '''
                 CREATE TABLE IF NOT EXISTS archive_data(
@@ -129,7 +125,121 @@ setup_table_command_logs = '''
                     channel_id TEXT,
                     timestamp TEXT);'''
 
-def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
+async def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
+    """
+    Checks for the existence of a file or database and creates it if necessary.
+    If 'database' is True, it creates a SQLite database using aiosqlite based on the 'dbtype' if one does not exist.
+    
+    Args:
+        filepath (str): The path where the file should be located.
+        filename (str): The name of the file to be checked or created.
+        database (bool, optional): Flag indicating whether a database should be checked. Defaults to False.
+        dbtype (str, optional): The type of the database to be checked. Defaults to None.
+    
+    Returns:
+        None
+    """
+    if os.path.isfile(os.path.join(filepath, filename)):
+        # File already exists
+        print(f"{filename} exists")
+    elif not database:
+        # Create a regular file
+        try:
+            open(f'{os.path.join(filepath, filename)}', "x").close()
+        except FileExistsError:
+            # Failed to create file that already exists
+            print("Somehow tried to create a file that already exists while failing os.path.isfile. Something is definitely broken.")
+        else:
+            print(f"{filename} created")
+    elif database:
+        # Create a database
+        if dbtype == 'archive':
+            try:
+                # Create a connection to the archive database
+                async with aiosqlite.connect(ARCHIVE_DATABASE) as con:
+                    await con.execute(setup_table_archive_database)
+                    await con.commit()
+                print("aiosqlite archive database created")
+            except Exception as error:
+                # Failed to create the archive database
+                print("Failed to make aiosqlite archive database:", error)
+        
+        elif dbtype == 'economy':
+            try:
+                # Create a connection to the economy database
+                async with aiosqlite.connect(ECONOMY_DATABASE) as con:
+                    await con.execute(setup_table_economy_database)
+                    await con.commit()
+                print("aiosqlite economy database created")
+            except Exception as error:
+                # Failed to create the economy database
+                print("Failed to make aiosqlite economy database:", error)
+        
+        elif dbtype == 'autodelete':
+            try:
+                # Create a connection to the autodelete database
+                async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
+                    await con.executescript(setup_table_autodelete_database)
+                    await con.commit()
+                print("aiosqlite autodelete database created")
+            except Exception as error:
+                # Failed to create the autodelete database
+                print("Failed to make aiosqlite autodelete database:", error)
+        
+        elif dbtype == 'autorole':
+            try:
+                # Create a connection to the autorole database
+                async with aiosqlite.connect(AUTOROLE_DATABASE) as con:
+                    await con.execute(setup_table_autorole_database)
+                    await con.commit()
+                print("aiosqlite autorole database created")
+            except Exception as error:
+                # Failed to create the autorole database
+                print("Failed to make aiosqlite autorole database:", error)
+        
+        elif dbtype == 'invitelog':
+            try:
+                # Create a connection to the invitelog database
+                async with aiosqlite.connect(INVITELOG_DATABASE) as con:
+                    await con.executescript(setup_table_invitelog_database)
+                    await con.commit()
+                print("aiosqlite invitelog database created")
+            except Exception as error:
+                # Failed to create the invitelog database
+                print("Failed to make aiosqlite invitelog database:", error)
+        
+        elif dbtype == 'permissions':
+            try:
+                # Create a connection to the permissions database
+                async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
+                    await con.executescript(setup_table_permissions_database)
+                    await con.commit()
+                print("aiosqlite permissions database created")
+            except Exception as error:
+                # Failed to create the permissions database
+                print("Failed to make aiosqlite permissions database:", error)
+        
+        elif dbtype == 'command_logs':
+            try:
+                # Create a connection to the command logs database
+                async with aiosqlite.connect(COMMAND_LOGS_DATABASE) as con:
+                    await con.executescript(setup_table_command_logs)
+                    await con.commit()
+                print("aiosqlite command logs database created")
+            except Exception as error:
+                # Failed to create the command logs database
+                print("Failed to make aiosqlite command logs database:", error)
+        
+        else:
+            # Invalid database type
+            print("Database is True but dbtype is not one of the present options.")
+    else:
+        # Invalid function condition
+        print("Something is wrong with the checkForFile function.")
+
+
+
+def old_checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
     """
     Checks for the existence of a file or database and creates it if necessary.
     If 'database' is True, it creates a SQLite database based on the 'dbtype' if one does not exist.
@@ -160,7 +270,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         if dbtype == 'archive':
             try:
                 # Create a connection to the archive database
-                con = sqlite3.connect(archive_database)
+                con = sqlite3.connect(ARCHIVE_DATABASE)
                 cur = con.cursor()
                 # Execute setup_table_archive_database query to create necessary tables
                 cur.execute(setup_table_archive_database)
@@ -177,7 +287,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         elif dbtype == 'economy':
             try:
                 # Create a connection to the economy database
-                con = sqlite3.connect(economy_database)
+                con = sqlite3.connect(ECONOMY_DATABASE)
                 cur = con.cursor()
                 # Execute setup_table_economy_database query to create necessary tables
                 cur.execute(setup_table_economy_database)
@@ -194,7 +304,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         elif dbtype == 'autodelete':
             try:
                 # Create a connection to the autodelete database
-                con = sqlite3.connect(autodelete_database)
+                con = sqlite3.connect(AUTODELETE_DATABASE)
                 cur = con.cursor()
                 # Execute setup_table_autodelete_database query to create necessary tables
                 cur.executescript(setup_table_autodelete_database)
@@ -211,7 +321,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         elif dbtype == 'autorole':
             try:
                 # Create a connection to the autorole database
-                con = sqlite3.connect(autorole_database)
+                con = sqlite3.connect(AUTOROLE_DATABASE)
                 cur = con.cursor()
                 # Execute setup_table_autorole_database query to create necessary tables
                 cur.execute(setup_table_autorole_database)
@@ -228,7 +338,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         elif dbtype == 'invitelog':
             try:
                 # Create a connection to the invitelog database
-                con = sqlite3.connect(invitelog_database)
+                con = sqlite3.connect(INVITELOG_DATABASE)
                 cur = con.cursor()
                 # Execute setup_table_invitelog_database query to create necessary tables
                 cur.executescript(setup_table_invitelog_database)
@@ -245,7 +355,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         elif dbtype == 'permissions':
             try:
                 # Create a connection to the permissions database
-                con = sqlite3.connect(permissions_database)
+                con = sqlite3.connect(PERMISSIONS_DATABASE)
                 cur = con.cursor()
                 # Execute setup_table_permissions_database query to create necessary tables
                 cur.executescript(setup_table_permissions_database)  # Changed from execute to executescript
@@ -262,7 +372,7 @@ def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=Non
         elif dbtype == 'command_logs':
             try:
                 # Create a connection to the command logs database
-                con = sqlite3.connect(command_logs_database)
+                con = sqlite3.connect(COMMAND_LOGS_DATABASE)
                 cur = con.cursor()
                 # Execute setup_table_command_logs query to create necessary tables
                 cur.executescript(setup_table_command_logs)

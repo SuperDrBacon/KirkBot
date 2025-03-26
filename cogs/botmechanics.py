@@ -1,15 +1,9 @@
-import sys
 import os
+import sys
 import git
+
 from discord.ext import commands
-from configparser import ConfigParser
-
-ospath = os.path.abspath(os.getcwd())
-config = ConfigParser()
-config.read(rf'{ospath}/config.ini')
-owner_id = int(config['BOTCONFIG']['ownerid'])
-
-MSG_DEL_DELAY = 10
+from cogs.utils.constants import MSG_DEL_DELAY, OSPATH, OWNER_ID
 
 class BotMechanics(commands.Cog):
     '''This module is used to load or unload different modules to update the bot without having to take it offline'''
@@ -27,8 +21,8 @@ class BotMechanics(commands.Cog):
         If the bot is already up to date, no action is taken. 
         This command is hidden and can only be used by the bot owner.
         '''
-        if ctx.author.id == owner_id:
-            repo = git.Repo(ospath)
+        if ctx.author.id == OWNER_ID:
+            repo = git.Repo(OSPATH)
             repo.remotes.origin.fetch()
             commits_behind = len(list(repo.iter_commits('master..origin/master')))
             commits_ahead = len(list(repo.iter_commits('origin/master..master')))
@@ -52,7 +46,7 @@ class BotMechanics(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def load(self, ctx, name:str):
         '''Loads a module.'''
-        if ctx.author.id == owner_id:
+        if ctx.author.id == OWNER_ID:
             try:
                 await self.bot.load_extension(f"cogs.{name}")
             except Exception as e:
@@ -67,7 +61,7 @@ class BotMechanics(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def un(self, ctx, name:str):
         '''Unloads a module.'''
-        if ctx.author.id == owner_id:
+        if ctx.author.id == OWNER_ID:
             try:
                 await self.bot.unload_extension(f"cogs.{name}")
             except Exception as e:
@@ -82,7 +76,7 @@ class BotMechanics(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def re(self, ctx, name:str):
         '''Reloads a module.'''
-        if ctx.author.id == owner_id:
+        if ctx.author.id == OWNER_ID:
             try:
                 await self.bot.reload_extension(f"cogs.{name}")
             except Exception as e:
@@ -97,9 +91,9 @@ class BotMechanics(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def reall(self, ctx):
         '''Reloads all modules.'''
-        if ctx.author.id == owner_id:
+        if ctx.author.id == OWNER_ID:
             msg = await ctx.send("Trying to reload all modules...")
-            for filename in os.listdir(rf'{ospath}/cogs'):
+            for filename in os.listdir(rf'{OSPATH}/cogs'):
                 if filename.endswith(".py"):
                     name = filename[:-3]
                     try:
@@ -119,9 +113,9 @@ class BotMechanics(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def loadall(self, ctx):
         '''Loads all modules.'''
-        if ctx.author.id == owner_id:
+        if ctx.author.id == OWNER_ID:
             msg = await ctx.send("Trying to load all modules...")
-            for filename in os.listdir(rf'{ospath}/cogs'):
+            for filename in os.listdir(rf'{OSPATH}/cogs'):
                 if filename.endswith(".py"):
                     name = filename[:-3]
                     try:
@@ -140,9 +134,9 @@ class BotMechanics(commands.Cog):
     @commands.command(hidden=True)
     async def stop(self, ctx):
         '''Unloads all modules.'''
-        if ctx.author.id == owner_id:
+        if ctx.author.id == OWNER_ID:
             msg = await ctx.send(f"Unloading modules")
-            for filename in os.listdir(rf'{ospath}/cogs'):
+            for filename in os.listdir(rf'{OSPATH}/cogs'):
                 if filename.endswith(".py"):
                     name = filename[:-3]
                     try:

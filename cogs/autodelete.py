@@ -4,11 +4,9 @@ import aiosqlite
 import discord
 import cogs.utils.functions as functions
 
-from datetime import datetime, timedelta, timezone
 from discord.ext import commands
-from cogs.utils.constants import (
-    MSG_DEL_DELAY, SECOND_LOOP_DELAY, TIME_UNITS,
-    command_prefix, botversion, autodelete_database)
+from datetime import datetime, timedelta, timezone
+from cogs.utils.constants import AUTODELETE_DATABASE, BOTVERSION, COMMAND_PREFIX, MSG_DEL_DELAY, SECOND_LOOP_DELAY, TIME_UNITS
 
 class Autodelete(commands.Cog):
     '''
@@ -31,7 +29,7 @@ class Autodelete(commands.Cog):
         return int(seconds)
     
     async def fetch_missed_messages(self):
-        async with aiosqlite.connect(autodelete_database) as con:
+        async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
             async with con.execute("SELECT server_id, channel_id FROM channels") as cursor:
                 server_channels = await cursor.fetchall()
             
@@ -87,7 +85,7 @@ class Autodelete(commands.Cog):
         if messages_to_database:
             print('Inserting messages to database in delete_before_command_start function')
             try:
-                async with aiosqlite.connect(autodelete_database) as con:
+                async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
                     data_to_insert = [(ctx.guild.id, ctx.channel.id, message.id, functions.get_unix_time()) for message in messages_to_database]
                     print(f'Length of data_to_insert: {len(data_to_insert)}')
                     
@@ -122,7 +120,7 @@ class Autodelete(commands.Cog):
                 await asyncio.sleep(1)  # Wait for 1 second to avoid rate limit
     
     async def remove_deleted_item(self, server:bool=False, channel:bool=False, message:bool=False, server_id:int=None, channel_id:int=None, message_id:int=None):
-        async with aiosqlite.connect(autodelete_database) as con:
+        async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
             await con.execute("PRAGMA foreign_keys = ON")
             
             # #servers
@@ -175,7 +173,7 @@ class Autodelete(commands.Cog):
     async def get_expired_messages(self):
         current_time = functions.get_unix_time()
         expired_messages = []
-        async with aiosqlite.connect(autodelete_database) as con:
+        async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
             async with con.execute("SELECT channel_id, del_after_time, del_after_count FROM channels") as cursor:
                 channels_time_count = await cursor.fetchall()
             
@@ -205,7 +203,7 @@ class Autodelete(commands.Cog):
             message_id = ctx.id
             current_time = functions.get_unix_time()
             
-            async with aiosqlite.connect(autodelete_database) as con:
+            async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
                 async with con.execute("SELECT channel_id FROM channels WHERE channel_id = ?", (channel_id,)) as cursor:
                     channel_in_database = await cursor.fetchone()
                 
@@ -222,10 +220,10 @@ class Autodelete(commands.Cog):
         `help autodelete <command>`
         
         '''
-        embed = discord.Embed(title='Autodelete usage', description=f'To see how to start the autodelete module use:\n`{command_prefix}help autodelete start`\n\n\
-            To see how to stop the autodelete module use:\n`{command_prefix}help autodelete stop`\n\n\
-            To see all the channels the autodelete module is active in use:\n`{command_prefix}help autodelete list`', color=0x00ff00, timestamp=datetime.now(timezone.utc))
-        embed.set_footer(text=botversion)
+        embed = discord.Embed(title='Autodelete usage', description=f'To see how to start the autodelete module use:\n`{COMMAND_PREFIX}help autodelete start`\n\n\
+            To see how to stop the autodelete module use:\n`{COMMAND_PREFIX}help autodelete stop`\n\n\
+            To see all the channels the autodelete module is active in use:\n`{COMMAND_PREFIX}help autodelete list`', color=0x00ff00, timestamp=datetime.now(timezone.utc))
+        embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
     
     @autodelete_base.command(name='start')
@@ -283,7 +281,7 @@ class Autodelete(commands.Cog):
         if index_time == 0 and index_count == 1:
             try:
                 #only remove by message count in channel
-                async with aiosqlite.connect(autodelete_database) as con:
+                async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
                     async with con.execute("SELECT server_id FROM servers WHERE server_id = ?", (server_id,)) as cursor:
                         existing_server = await cursor.fetchone()
                     if existing_server:
@@ -294,7 +292,7 @@ class Autodelete(commands.Cog):
                     await con.commit()
                 
                 embed = discord.Embed(title='Autodelete preparing channel', description=f'Autodelete has been started in {ctx.channel.mention} and will delete all previous messages.', color=0xFF7518, timestamp=datetime.now(timezone.utc))
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 msg = await ctx.send(embed=embed)
                 await msg.add_reaction("🔄")
                 
@@ -306,20 +304,20 @@ class Autodelete(commands.Cog):
                 
                 get_channel = self.bot.get_channel(channel_id)
                 done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {count} messages.', color=0x00ff00, timestamp=datetime.now(timezone.utc))
-                done_embed.set_footer(text=botversion)
+                done_embed.set_footer(text=BOTVERSION)
                 msg1 = await get_channel.send(embed=done_embed)
                 await msg1.add_reaction("✅")
             
             except aiosqlite.Error as e:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=datetime.now(timezone.utc))
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.send(embed=embed, mention_author=False)
                 print(f'Error in autodelete startup count: \n\n {e} \n\n')
         
         elif index_time == 1 and index_count == 0:
             try:
                 #only remove by time in channel
-                async with aiosqlite.connect(autodelete_database) as con:
+                async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
                     async with con.execute("SELECT server_id FROM servers WHERE server_id = ?", (server_id,)) as cursor:
                         existing_server = await cursor.fetchone()
                     if existing_server:
@@ -330,7 +328,7 @@ class Autodelete(commands.Cog):
                     await con.commit()
                 
                 embed = discord.Embed(title='Autodelete preparing channel', description=f'Autodelete has been started in {ctx.channel.mention} and will delete all previous messages.', color=0xFF7518, timestamp=datetime.now(timezone.utc))
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 msg = await ctx.send(embed=embed)
                 await msg.add_reaction("🔄")
                 
@@ -342,20 +340,20 @@ class Autodelete(commands.Cog):
                 
                 get_channel = self.bot.get_channel(channel_id)
                 done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {numeric_part} {unit_name}.', color=0x00ff00, timestamp=datetime.now(timezone.utc))
-                done_embed.set_footer(text=botversion)
+                done_embed.set_footer(text=BOTVERSION)
                 msg1 = await get_channel.send(embed=done_embed)
                 await msg1.add_reaction("✅")
             
             except aiosqlite.Error as e:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=datetime.now(timezone.utc))
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.send(embed=embed)
                 print(f'Error in autodelete startup time: \n\n {e} \n\n')
         
         elif index_time == 1 and index_count == 1:
             try:
                 #remove by message count and time in channel which ever comes first
-                async with aiosqlite.connect(autodelete_database) as con:
+                async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
                     async with con.execute("SELECT server_id FROM servers WHERE server_id = ?", (server_id,)) as cursor:
                         existing_server = await cursor.fetchone()
                     if existing_server:
@@ -366,7 +364,7 @@ class Autodelete(commands.Cog):
                     await con.commit()
                 
                 embed = discord.Embed(title='Autodelete preparing channel', description=f'Autodelete has been started in {ctx.channel.mention} and will delete all previous messages.', color=0xFF7518, timestamp=datetime.now(timezone.utc))
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 msg = await ctx.send(embed=embed)
                 await msg.add_reaction("🔄")
                 
@@ -378,13 +376,13 @@ class Autodelete(commands.Cog):
                 
                 get_channel = self.bot.get_channel(channel_id)
                 done_embed = discord.Embed(title='Autodelete started', description=f'Autodelete has been started in {get_channel.mention} and will delete messages after {count} messages or {numeric_part} {unit_name} which ever comes first.', color=0x00ff00, timestamp=datetime.now(timezone.utc))
-                done_embed.set_footer(text=botversion)
+                done_embed.set_footer(text=BOTVERSION)
                 msg1 = await get_channel.send(embed=done_embed)
                 await msg1.add_reaction("✅")
             
             except aiosqlite.Error as e:
                 embed = discord.Embed(title='Autodelete already running', description=f'Autodelete is already running in {ctx.channel.mention}.\n\nTo change autodelete settings the current autodelete needs to be stopped and a new one needs to be started', color=0xff0000, timestamp=datetime.now(timezone.utc))
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.send(embed=embed)
                 print(f'Error in autodelete startup time and count: \n\n {e} \n\n')
         
@@ -410,7 +408,7 @@ class Autodelete(commands.Cog):
         '''
         List all channels with autodelete activated in this server.
         '''
-        async with aiosqlite.connect(autodelete_database) as con:
+        async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
             async with con.execute("SELECT CHANNEL_ID, DEL_AFTER_TIME, DEL_AFTER_COUNT FROM channels WHERE SERVER_ID = ?", (ctx.guild.id,)) as cursor:
                 channel_data = await cursor.fetchall()
             
@@ -425,8 +423,8 @@ class Autodelete(commands.Cog):
                     elif del_after_count:
                         embed.add_field(name=f"Channel: {channel.mention if channel else 'No channel found but how?'}", value=f"Autodelete Count: {del_after_count} messages", inline=False)                        
             else:
-                embed.add_field(name=f"No channels with autodelete activated in this server.", value=f"Use {command_prefix}help autodelete to get more info on how to start autodelete", inline=False)
-            embed.set_footer(text=botversion)
+                embed.add_field(name=f"No channels with autodelete activated in this server.", value=f"Use {COMMAND_PREFIX}help autodelete to get more info on how to start autodelete", inline=False)
+            embed.set_footer(text=BOTVERSION)
             await ctx.send(embed=embed)
     
     @autodelete_base.command(name='stop')
@@ -444,7 +442,7 @@ class Autodelete(commands.Cog):
         #wait for on_message to add the stop command to the database otherwise it will remain in the database
         await asyncio.sleep(1)
         
-        async with aiosqlite.connect(autodelete_database) as con:
+        async with aiosqlite.connect(AUTODELETE_DATABASE) as con:
                 async with con.execute("SELECT channel_id FROM channels WHERE channel_id = ?", (channel_id,)) as cursor:
                     channel_in_database = await cursor.fetchone()
                 
@@ -466,14 +464,14 @@ class Autodelete(commands.Cog):
         if isinstance(error, commands.UserInputError):
             if ctx._wrong_start_format_:
                 reason = ctx._error_reason_
-                embed = discord.Embed(title=f'{reason}', description=f'Please use the following format for start:\n`{command_prefix}autodelete start <[count] [time]>`\n\n\
+                embed = discord.Embed(title=f'{reason}', description=f'Please use the following format for start:\n`{COMMAND_PREFIX}autodelete start <[count] [time]>`\n\n\
                                     If `[count]` is set, messages are deleted after this amount of messages.\n\
                                     If `[time]` is set, messages are deleted after this amount of time.\n\
                                     If both `[count]` and `[time]` are set, messages are deleted after which ever comes first.\n\
                                     At least one of `[count]` or `[time]` must be set.\n\n\
-                                    Examples:\n`{command_prefix}autodelete start 1000 3h`\n`{command_prefix}autodelete start 1000`\n`{command_prefix}autodelete start 3h`\n\n\
+                                    Examples:\n`{COMMAND_PREFIX}autodelete start 1000 3h`\n`{COMMAND_PREFIX}autodelete start 1000`\n`{COMMAND_PREFIX}autodelete start 3h`\n\n\
                                     Valid time formats are:\n`s, sec, secs, second, seconds`\n`m, min, mins, minute, minutes`\n`h, hr, hrs, hour, hours`\n`d, day, days`\n`w, week, weeks`\n`month, months`', color=0xFFFF00, timestamp=datetime.now(timezone.utc))
-                embed.set_footer(text=botversion)
+                embed.set_footer(text=BOTVERSION)
                 await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY*3)
                 ctx._ignore_ = True
     
