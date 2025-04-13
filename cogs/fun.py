@@ -385,7 +385,7 @@ class Fun(commands.Cog):
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
             
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            driver = webdriver.Chrome(options=options)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
@@ -469,7 +469,7 @@ class Fun(commands.Cog):
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-extensions")
             
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            driver = webdriver.Chrome(options=options)
             driver.get("https://gcpdot.com/gcpchart.php")
             time.sleep(GCP_DELAY)
             
