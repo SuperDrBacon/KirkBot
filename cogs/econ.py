@@ -1,22 +1,24 @@
-import aiosqlite
-import discord
 import asyncio
-import cogs.utils.functions as functions
-
 from datetime import datetime, timezone
 from typing import Union
+
+import aiosqlite
+import discord
 from discord.ext import commands
 
+import cogs.utils.functions as functions
 # Import game command handlers
-from cogs.games.blackjack   import blackjack_command
-from cogs.games.coinflip    import coinflip_command
-from cogs.games.dicepoker   import dicepoker_command
-from cogs.games.slots       import slots_command
-from cogs.games.tictactoe   import tictactoe_command
+from cogs.games.blackjack import blackjack_command
+from cogs.games.coinflip import coinflip_command
 from cogs.games.connectfour import connectfour_command
-from cogs.utils.constants import (
-    BOTVERSION, CURRENCY_PLURAL, CURRENCY_SINGULAR, ECONOMY_DATABASE,
-    MSG_DEL_DELAY, ONE_DAY, PERMISSIONS_DATABASE, STARTING_BALANCE, STARTING_BANK)
+from cogs.games.dicepoker import dicepoker_command
+from cogs.games.minesweeper import minesweeper_command
+from cogs.games.slots import slots_command
+from cogs.games.tictactoe import tictactoe_command
+from cogs.utils.constants import (BOTVERSION, CURRENCY_PLURAL,
+                                  CURRENCY_SINGULAR, ECONOMY_DATABASE,
+                                  MSG_DEL_DELAY, ONE_DAY, PERMISSIONS_DATABASE,
+                                  STARTING_BALANCE, STARTING_BANK)
 
 
 class Economy(commands.Cog):
@@ -111,8 +113,10 @@ class Economy(commands.Cog):
                 TTT_TIES,
                 C4_WINS,
                 C4_LOSSES,
-                C4_TIES
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                C4_TIES,
+                MS_WINS,
+                MS_LOSSES
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
 
         data_tuple = (user_id, user_name, server_id, unix_time, STARTING_BALANCE, STARTING_BANK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         
@@ -160,12 +164,12 @@ class Economy(commands.Cog):
                 columns = [info[1] for info in await cur.fetchall()]
                 
                 # Add columns if they don't exist
-                if "C4_WINS" not in columns:
-                    await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_WINS INTEGER DEFAULT 0")
-                if "C4_LOSSES" not in columns:
-                    await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_LOSSES INTEGER DEFAULT 0")
-                if "C4_TIES" not in columns:
-                    await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_TIES INTEGER DEFAULT 0")
+                if "MS_WINS" not in columns:
+                    await cur.execute("ALTER TABLE economy_data ADD COLUMN MS_WINS INTEGER DEFAULT 0")
+                if "MS_LOSSES" not in columns:
+                    await cur.execute("ALTER TABLE economy_data ADD COLUMN MS_LOSSES INTEGER DEFAULT 0")
+                # if "C4_TIES" not in columns:
+                #     await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_TIES INTEGER DEFAULT 0")
                     
             await con.commit()
         await ctx.reply("Database columns updated.")
@@ -478,6 +482,37 @@ class Economy(commands.Cog):
         """
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
         await dicepoker_command(ctx, bet)
+
+    @commands.command(name="minesweeper", aliases=["ms"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @economy_commands_enabled()
+    async def minesweeper(self, ctx, difficulty_or_bet: Union[str, int]='easy', bet: int=10):
+        r"""
+        Difficulties:
+        - easy: 5x5 grid with 4 mines (2x payout)
+        - medium: 6x6 grid with 7 mines (3x payout)
+        - hard: 7x7 grid with 12 mines (5x payout)
+        
+        You win by revealing all safe cells without hitting a mine.
+        
+        Examples:
+        minesweeper          - Play on easy difficulty with 10 bet
+        minesweeper medium   - Play on medium difficulty with 10 bet
+        minesweeper 50       - Play on easy difficulty with 50 bet
+        minesweeper hard 100 - Play on hard difficulty with 100 bet
+        
+        This command has a shorthand alias `ms`.
+        """
+        await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
+        
+        # Handle flexible parameter order
+        difficulty = 'easy'
+        if isinstance(difficulty_or_bet, str):
+            difficulty = difficulty_or_bet.lower()
+        elif isinstance(difficulty_or_bet, int):
+            bet = difficulty_or_bet
+        
+        await minesweeper_command(self, ctx, difficulty, bet)
 
 
 
