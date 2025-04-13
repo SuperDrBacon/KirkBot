@@ -381,21 +381,15 @@ class Economy(commands.Cog):
     @economy_commands_enabled()
     async def slots(self, ctx, bet:float=10):
         r'''
-        - The `slots` command allows users to play a slot machine game. The user bets a certain amount, and if the slots line up in a certain way, they win a multiple of their bet. 
-        - The possible slot outcomes depend on their corresponding multipliers, which are defined as follows:
-         - "🍒": 2x multiplier
-         - "🍊": 3x multiplier
-         - "🍋": 4x multiplier
-         - "🍉": 5x multiplier
-         - "🍇": 6x multiplier
-         - "🍎": 7x multiplier
-         - "🍓": 8x multiplier
-         - "🍍": 10x multiplier
-         - "💰": 20x multiplier
-        
-        1. If all 3 symbols in the top, middle or bottom row match, the payout is the multiplier for that symbol times the bet amount.
-        2. If all 3 symbols in the left, middle or right column match, the payout is the multiplier for that symbol times the bet amount.
-        3. If all 3 symbols in the either diagonal match, the payout is the multiplier for that symbol times 1/2 the bet amount.
+        - "🍒": 2x multiplier
+        - "🍊": 3x multiplier
+        - "🍋": 4x multiplier
+        - "🍉": 5x multiplier
+        - "🍇": 6x multiplier
+        - "🍎": 7x multiplier
+        - "🍓": 8x multiplier
+        - "🍍": 10x multiplier
+        - "💰": 20x multiplier
         '''
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
         await slots_command(ctx, bet)
@@ -416,13 +410,6 @@ class Economy(commands.Cog):
     @economy_commands_enabled()
     async def blackjack(self, ctx, bet:int=10):
         r'''
-        Play a game of blackjack against the bot.
-        This command allows you to play the classic card game blackjack (21) with the bot as the dealer.
-        You can bet your credits and try to win more by getting a better hand than the dealer.
-        Parameters:
-        -----------
-        bet : int, optional
-            The amount of credits you want to bet, default is 10.
         Rules:
         - Get closer to 21 than the dealer without going over
         - Face cards are worth 10, Aces are worth 1 or 11
@@ -492,16 +479,6 @@ class Economy(commands.Cog):
         - easy: 5x5 grid with 4 mines (2x payout)
         - medium: 6x6 grid with 7 mines (3x payout)
         - hard: 7x7 grid with 12 mines (5x payout)
-        
-        You win by revealing all safe cells without hitting a mine.
-        
-        Examples:
-        minesweeper          - Play on easy difficulty with 10 bet
-        minesweeper medium   - Play on medium difficulty with 10 bet
-        minesweeper 50       - Play on easy difficulty with 50 bet
-        minesweeper hard 100 - Play on hard difficulty with 100 bet
-        
-        This command has a shorthand alias `ms`.
         """
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
         
