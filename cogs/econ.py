@@ -1,5 +1,6 @@
 import aiosqlite
 import discord
+import asyncio
 import cogs.utils.functions as functions
 
 from datetime import datetime, timezone
@@ -12,6 +13,7 @@ from cogs.games.coinflip    import coinflip_command
 from cogs.games.dicepoker   import dicepoker_command
 from cogs.games.slots       import slots_command
 from cogs.games.tictactoe   import tictactoe_command
+from cogs.games.connectfour import connectfour_command
 from cogs.utils.constants import (
     BOTVERSION, CURRENCY_PLURAL, CURRENCY_SINGULAR, ECONOMY_DATABASE,
     MSG_DEL_DELAY, ONE_DAY, PERMISSIONS_DATABASE, STARTING_BALANCE, STARTING_BANK)
@@ -23,24 +25,6 @@ class Economy(commands.Cog):
     '''
     def __init__(self, bot):
         self.bot = bot
-        # asyncio.create_task(self.add_ttt_columns())  # Add new columns when cog loads
-    
-    # async def add_ttt_columns(self):
-    #     async with aiosqlite.connect(ECONOMY_DATABASE) as con:
-    #         async with con.cursor() as cur:
-    #             # Check if columns already exist to avoid errors
-    #             await cur.execute("PRAGMA table_info(economy_data)")
-    #             columns = [info[1] for info in await cur.fetchall()]
-                
-    #             # Add columns if they don't exist
-    #             if "TTT_WINS" not in columns:
-    #                 await cur.execute("ALTER TABLE economy_data ADD COLUMN TTT_WINS INTEGER DEFAULT 0")
-    #             if "TTT_LOSSES" not in columns:
-    #                 await cur.execute("ALTER TABLE economy_data ADD COLUMN TTT_LOSSES INTEGER DEFAULT 0")
-    #             if "TTT_TIES" not in columns:
-    #                 await cur.execute("ALTER TABLE economy_data ADD COLUMN TTT_TIES INTEGER DEFAULT 0")
-                    
-    #         await con.commit()
     
     def economy_commands_enabled():
         """
@@ -54,7 +38,7 @@ class Economy(commands.Cog):
         return commands.check(predicate)
     
     async def check_channel_permissions(self, ctx):
-        """
+        r"""
         Check if economy commands are enabled in the current channel.
         
         Args:
@@ -82,7 +66,7 @@ class Economy(commands.Cog):
         return True
     
     async def check_user(self, user_id:int, user_name:str, server_id:int, unix_time:int):
-        '''
+        r'''
         Checks if the user exists in the database and adds them if they don't.
         
         Args:
@@ -99,7 +83,7 @@ class Economy(commands.Cog):
             await self.add_user(user_id, user_name, server_id, unix_time)
     
     async def add_user(self, user_id:int, user_name:str, server_id:int, unix_time:int):
-        '''
+        r'''
         Adds a new user to the database.
         
         Args:
@@ -124,10 +108,13 @@ class Economy(commands.Cog):
                 CF_LOSSES,
                 TTT_WINS,
                 TTT_LOSSES,
-                TTT_TIES
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                TTT_TIES,
+                C4_WINS,
+                C4_LOSSES,
+                C4_TIES
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
 
-        data_tuple = (user_id, user_name, server_id, unix_time, STARTING_BALANCE, STARTING_BANK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        data_tuple = (user_id, user_name, server_id, unix_time, STARTING_BALANCE, STARTING_BANK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         
         async with aiosqlite.connect(ECONOMY_DATABASE) as con:
             async with con.cursor() as cur:
@@ -135,7 +122,7 @@ class Economy(commands.Cog):
             await con.commit()
     
     async def get_user_balance(self, user_id:int):
-        '''
+        r'''
         Retrieves the balance of a user from the database.
         
         Args:
@@ -161,11 +148,34 @@ class Economy(commands.Cog):
     async def on_message(self, ctx):
         pass
     
+    @commands.command(name='adddb', hidden=True)
+    async def add_db_columns(self, ctx):
+        r'''
+        Adds new columns to the economy database if they do not exist.
+        '''
+        async with aiosqlite.connect(ECONOMY_DATABASE) as con:
+            async with con.cursor() as cur:
+                # Check if columns already exist to avoid errors
+                await cur.execute("PRAGMA table_info(economy_data)")
+                columns = [info[1] for info in await cur.fetchall()]
+                
+                # Add columns if they don't exist
+                if "C4_WINS" not in columns:
+                    await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_WINS INTEGER DEFAULT 0")
+                if "C4_LOSSES" not in columns:
+                    await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_LOSSES INTEGER DEFAULT 0")
+                if "C4_TIES" not in columns:
+                    await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_TIES INTEGER DEFAULT 0")
+                    
+            await con.commit()
+        await ctx.reply("Database columns updated.")
+    
+    
     @commands.command(name='balance', aliases=["bal"])
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def balance(self, ctx):
-        '''
+        r'''
         Checks the balance of the user.
         '''
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
@@ -182,7 +192,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def leaderboard(self, ctx):
-        '''
+        r'''
         Make a list of the top 10 richest players.
         '''
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
@@ -237,7 +247,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def daily(self, ctx):
-        '''
+        r'''
         Claim your daily reward of 100 coins.
         '''
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
@@ -267,7 +277,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def undaily(self, ctx, member:Union[discord.Member, int]=None):
-        '''
+        r'''
         Resets the daily timer for the specified member or for the command invoker if no member is specified.
         Can also set all gamba scores (slots, blackjack, coinflip) to 0 for the specified member or for the command invoker if no member is specified.
         '''
@@ -366,7 +376,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def slots(self, ctx, bet:float=10):
-        '''
+        r'''
         - The `slots` command allows users to play a slot machine game. The user bets a certain amount, and if the slots line up in a certain way, they win a multiple of their bet. 
         - The possible slot outcomes depend on their corresponding multipliers, which are defined as follows:
          - "🍒": 2x multiplier
@@ -390,7 +400,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def coinflip(self, ctx, guess:str, bet:float=10):
-        '''
+        r'''
         - Flips a coin and gives you a chance to double your bet.
         - Guess either `heads / head / h`, `tails / tail / t`.
         '''
@@ -401,7 +411,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def blackjack(self, ctx, bet:int=10):
-        '''
+        r'''
         Play a game of blackjack against the bot.
         This command allows you to play the classic card game blackjack (21) with the bot as the dealer.
         You can bet your credits and try to win more by getting a better hand than the dealer.
@@ -422,8 +432,9 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def tictactoe(self, ctx, player_or_bet: Union[discord.Member, int]=None, bet:int=10):
-        """Play a game of Tic-Tac-Toe against another user or the AI with a bet."""
-        # Parse arguments - handle flexible command syntax
+        '''
+        Play a game of Tic-Tac-Toe against another user or the AI with a bet.
+        '''
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
         playertwo = None
         if isinstance(player_or_bet, discord.Member):
@@ -432,21 +443,37 @@ class Economy(commands.Cog):
         elif isinstance(player_or_bet, int):
             bet = player_or_bet
         await tictactoe_command(self, ctx, playertwo, bet)
+
+    @commands.command(name="connectfour", aliases=["c4", "connect4"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @economy_commands_enabled()
+    async def connectfour(self, ctx, player_or_bet: Union[discord.Member, int]=None, bet:int=10):
+        '''
+        Play a game of Connect four against another user or the AI with a bet.
+        '''
+        await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
+        playertwo = None
+        if isinstance(player_or_bet, discord.Member):
+            playertwo = player_or_bet
+            await self.check_user(playertwo.id, playertwo.name, ctx.guild.id, functions.get_unix_time())
+        elif isinstance(player_or_bet, int):
+            bet = player_or_bet
+        await connectfour_command(self, ctx, playertwo, bet)
     
     @commands.command(name="dicepoker", aliases=["dice"])
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def dicepoker(self, ctx, bet: int = 10):
-        """
+        r"""
         Play Dice Poker - Roll 5 dice and get paid based on your hand.
         Payout table:
-        - Five of a kind: 10x bet   was 50
-        - Four of a kind: 5x bet    was 10
-        - Full house: 4x bet        was 7
-        - Straight: 3x bet          was 5
-        - Three of a kind: 1.5x bet   was 3
-        - Two pair: 0x bet        was 2
-        - Pair: 1x bet 
+        - Five of a kind: 10x bet
+        - Four of a kind: 5x bet
+        - Full house: 4x bet
+        - Straight: 3x bet
+        - Three of a kind: 1.5x bet
+        - Two pair: 0x bet
+        - Pair: 1x bet
         - No win: lose bet
         """
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
