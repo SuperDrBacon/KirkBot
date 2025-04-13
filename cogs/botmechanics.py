@@ -1,9 +1,50 @@
+import importlib
 import os
 import sys
+import pkgutil
+import inspect
 import git
 
 from discord.ext import commands
 from cogs.utils.constants import MSG_DEL_DELAY, OSPATH, OWNER_ID
+
+def reload_module_recursive(module_name):
+    r"""
+    Recursively reload a module and all its submodules.
+    
+    Args:
+        module_name (str): The name of the module to reload
+    
+    Returns:
+        list: Names of all reloaded modules
+    """
+    reloaded = []
+    
+    # If it's not loaded yet, just return
+    if module_name not in sys.modules:
+        return reloaded
+    
+    # Get the module object
+    module = sys.modules[module_name]
+    
+    # Reload the module itself
+    importlib.reload(module)
+    reloaded.append(module_name)
+    
+    # If it's a package, reload all submodules
+    if hasattr(module, '__path__'):
+        # Get all submodules recursively
+        for _, submodule_name, is_pkg in pkgutil.walk_packages(module.__path__, module.__name__ + '.'):
+            if submodule_name in sys.modules:
+                importlib.reload(sys.modules[submodule_name])
+                reloaded.append(submodule_name)
+    
+    # Also reload any modules that were imported from this module
+    for name, obj in inspect.getmembers(module):
+        if inspect.ismodule(obj) and obj.__name__ not in reloaded and obj.__name__ in sys.modules:
+            sub_reloaded = reload_module_recursive(obj.__name__)
+            reloaded.extend(sub_reloaded)
+    return reloaded
 
 class BotMechanics(commands.Cog):
     '''This module is used to load or unload different modules to update the bot without having to take it offline'''
@@ -75,24 +116,45 @@ class BotMechanics(commands.Cog):
     @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def re(self, ctx, name:str):
-        '''Reloads a module.'''
+        '''Reloads a module and its dependencies.'''
         if ctx.author.id == OWNER_ID:
             try:
+                response = f"Reloaded module **{name}**"
+                
+                # Recursively reload utility and game modules
+                if name == "econ":
+                    reloaded_games = reload_module_recursive("cogs.games")
+                    response += f" + {len(reloaded_games)} game modules"
+                
+                reloaded_utils = reload_module_recursive("cogs.utils")
+                response += f" + {len(reloaded_utils)} utility modules"
+                
+                # Standard extension reload
                 await self.bot.reload_extension(f"cogs.{name}")
+            
             except Exception as e:
                 await ctx.reply(f"Error when reloading module: {e}", mention_author=False, delete_after=MSG_DEL_DELAY)
                 await ctx.message.delete(delay=MSG_DEL_DELAY)
                 return print(f"Error when reloading module: {e}")
             
-            await ctx.reply(f"Reloaded module **{name}**", mention_author=False, delete_after=MSG_DEL_DELAY)
+            await ctx.reply(response, mention_author=False, delete_after=MSG_DEL_DELAY)
             await ctx.message.delete(delay=MSG_DEL_DELAY)
     
     @commands.command(hidden=True)
     @commands.has_permissions(administrator=True)
     async def reall(self, ctx):
-        '''Reloads all modules.'''
+        '''Reloads all modules and their dependencies.'''
         if ctx.author.id == OWNER_ID:
             msg = await ctx.send("Trying to reload all modules...")
+            
+            # recursively reload utilities and games
+            await msg.edit(content="Reloading utility modules...")
+            utils_reloaded = reload_module_recursive("cogs.utils")
+            
+            await msg.edit(content="Reloading game modules...")
+            games_reloaded = reload_module_recursive("cogs.games")
+            
+            # reload all standard extensions
             for filename in os.listdir(rf'{OSPATH}/cogs'):
                 if filename.endswith(".py"):
                     name = filename[:-3]
@@ -103,9 +165,10 @@ class BotMechanics(commands.Cog):
                         await ctx.reply(f"Error when reloading module: {e}", mention_author=False, delete_after=MSG_DEL_DELAY)
                         await ctx.message.delete(delay=MSG_DEL_DELAY)
                         await msg.delete(delay=MSG_DEL_DELAY)
-                        return print(f"Error when unloading module: {e}")
+                        return print(f"Error when reloading module: {e}")
             
-            await msg.edit(content="Successfully reloaded all modules")
+            # Final message with stats
+            await msg.edit(content=f"Successfully reloaded all modules, including {len(utils_reloaded)} utility modules and {len(games_reloaded)} game modules")
             await ctx.message.delete(delay=MSG_DEL_DELAY)
             await msg.delete(delay=MSG_DEL_DELAY)
     
