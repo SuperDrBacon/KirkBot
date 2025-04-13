@@ -1,10 +1,12 @@
 import asyncio
 import random
+from datetime import datetime, timezone
+
 import aiosqlite
 import discord
 
-from datetime import datetime, timezone
-from cogs.utils.constants import BOTVERSION, COMMAND_PREFIX, CURRENCY_PLURAL, CURRENCY_SINGULAR, ECONOMY_DATABASE
+from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, CURRENCY_PLURAL, CURRENCY_SINGULAR, ECONOMY_DATABASE)
+
 
 class TicTacToeAIView(discord.ui.View):
     def __init__(self, ctx, ai_player, bet, p1_wins, p1_losses, p1_ties):
@@ -288,10 +290,24 @@ class ChallengeView(discord.ui.View):
     '''
     A view for accepting or declining a Tic-Tac-Toe challenge.
     '''
-    def __init__(self, *, timeout=30):
+    def __init__(self, challenger, challenged_user, *, timeout=30):
         super().__init__(timeout=timeout)
         self.value = None
         self.message = None
+        self.challenger = challenger
+        self.challenged_user = challenged_user
+        
+    async def interaction_check(self, interaction):
+        # Only the challenged player can interact with this view
+        if interaction.user.id == self.challenged_user.id:
+            return True
+        
+        # Tell other users they can't interact with this
+        await interaction.response.send_message(
+            f"Only {self.challenged_user.display_name} can respond to this challenge.", 
+            ephemeral=True
+        )
+        return False
         
     async def on_timeout(self):
         # Change the message to show it timed out
@@ -474,8 +490,8 @@ class TicTacToeView(discord.ui.View):
             title="Tic-Tac-Toe - Game Over",
             description=f"**{winner.display_name}** ({winner_symbol}) wins!\n\n"
                         f"**{winner.display_name}** wins {self.bet} {CURRENCY_PLURAL} from **{loser.display_name}**\n\n"
-                        f"Player 1 Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
-                        f"Player 2 Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
+                        f"{self.player1.display_name}'s Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
+                        f"{self.player2.display_name}'s Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
             color=0x00FF00,
             timestamp=datetime.now(timezone.utc)
         )
@@ -502,8 +518,8 @@ class TicTacToeView(discord.ui.View):
         embed = discord.Embed(
             title="Tic-Tac-Toe - Game Over",
             description=f"It's a tie! Both players keep their {CURRENCY_PLURAL}.\n\n"
-                        f"Player 1 Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
-                        f"Player 2 Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
+                        f"{self.player1.display_name}'s Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
+                        f"{self.player2.display_name}'s Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
             color=0x0000FF,  # Blue for tie
             timestamp=datetime.now(timezone.utc)
         )
@@ -590,6 +606,10 @@ async def tictactoe_command(self, ctx, playertwo, bet):
         await ctx.reply("You can't play against yourself!")
         return
     
+    if bet <= 0:
+        await ctx.reply(f"You can't bet {bet} {CURRENCY_PLURAL}.")
+        return
+    
     # Check if player2 is a bot and not intentionally playing with AI
     if playertwo and playertwo.bot:
         await ctx.reply(f"If you want to play against the AI, just use `{COMMAND_PREFIX}tictactoe` or `{COMMAND_PREFIX}ttt` without mentioning a user.")
@@ -604,10 +624,6 @@ async def tictactoe_command(self, ctx, playertwo, bet):
             # Check if user has enough currency
             if player1_balance < bet:
                 await ctx.reply(f"You don't have enough {CURRENCY_PLURAL} to play Tic-Tac-Toe with a bet of {bet}.")
-                return
-            
-            if bet <= 0:
-                await ctx.reply(f"You can't bet {bet} {CURRENCY_PLURAL}.")
                 return
             
             # If playing against another user
@@ -630,7 +646,7 @@ async def tictactoe_command(self, ctx, playertwo, bet):
                 challenge_embed.set_footer(text=BOTVERSION)
                 
                 # Create the challenge view
-                view = ChallengeView(timeout=30)
+                view = ChallengeView(ctx.author, playertwo, timeout=30)
                 challenge_message = await ctx.reply(embed=challenge_embed, view=view)
                 view.message = challenge_message
                 
