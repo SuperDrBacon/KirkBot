@@ -12,7 +12,7 @@ from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, CURRENCY_PLURAL,
 
 class MinesweeperGame:
     def __init__(self, difficulty):
-        """Initialize a minesweeper game with the given difficulty.
+        r"""Initialize a minesweeper game with the given difficulty.
         
         Difficulty levels:
         - 'easy': 5x5 grid with 4 mines (16% mine density)
@@ -109,12 +109,6 @@ class MinesweeperGame:
         self.check_win()
         return True
     
-    def toggle_flag(self, row, col):
-        """Toggle flag on a cell."""
-        if not self.revealed[row][col]:
-            self.flagged[row][col] = not self.flagged[row][col]
-        self.check_win()
-    
     def check_win(self):
         """Check if the player has won by revealing all non-mine cells."""
         for r in range(self.rows):
@@ -135,7 +129,7 @@ class MinesweeperGame:
                 self.revealed[r][c] = True
 
 class MinesweeperButton(discord.ui.Button):
-    def __init__(self, row, col, game_cols, style=discord.ButtonStyle.secondary, disabled=False):
+    def __init__(self, row, col, style=discord.ButtonStyle.secondary, disabled=False):
         # Since we're using a 5x5 grid, button position is straightforward
         super().__init__(style=style, label="‎", row=row, disabled=disabled)
         self.row_pos = row
@@ -196,7 +190,7 @@ class MinesweeperView(discord.ui.View):
         # Add the minesweeper buttons
         for r in range(self.game.rows):
             for c in range(self.game.cols):
-                self.add_item(MinesweeperButton(r, c, self.game.cols))
+                self.add_item(MinesweeperButton(r, c))
     
     async def interaction_check(self, interaction):
         # Only the player can interact with this view
