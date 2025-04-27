@@ -454,7 +454,7 @@ class Economy(commands.Cog):
     @commands.command(name="dicepoker", aliases=["dice"])
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
-    async def dicepoker(self, ctx, bet: int = 10):
+    async def dicepoker(self, ctx, bet:int=10):
         r"""
         Play Dice Poker - Roll 5 dice and get paid based on your hand.
         Payout table:
@@ -463,7 +463,7 @@ class Economy(commands.Cog):
         - Full house: 4x bet
         - Straight: 3x bet
         - Three of a kind: 1.5x bet
-        - Two pair: 0x bet
+        - Two pair: 1x bet
         - Pair: 1x bet
         - No win: lose bet
         """
@@ -473,12 +473,12 @@ class Economy(commands.Cog):
     @commands.command(name="minesweeper", aliases=["ms"])
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
-    async def minesweeper(self, ctx, difficulty_or_bet: Union[str, int]='easy', bet: int=10):
+    async def minesweeper(self, ctx, difficulty_or_bet: Union[str, int]='easy', bet:int=10):
         r"""
         Difficulties:
         - easy: 5x5 grid with 4 mines (2x payout)
-        - medium: 6x6 grid with 7 mines (3x payout)
-        - hard: 7x7 grid with 12 mines (5x payout)
+        - medium: 5x5 grid with 6 mines (3x payout)
+        - hard: 5x5 grid with 8 mines (5x payout)
         """
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
         
@@ -495,3 +495,25 @@ class Economy(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Economy(bot))
+
+
+#* Game Ideas
+#! Single-Player Games
+# Rock Paper Scissors
+# Hangman
+# Higher/Lower Card Game
+# Minesweeper
+# Wheel of Fortune
+
+#! 1v1 Games
+# Battleship
+# Uno
+# Chess/Checkers
+# Memory Match
+
+#! More Complex Options
+# Poker
+# Trivia Duels
+# Wordchain
+# ---Each player must provide a word starting with the last letter of the previous word
+# ---Players lose if they repeat a word or fail to respond in time
