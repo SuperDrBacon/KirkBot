@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 
+import discord
 import asyncio
 import os
 import traceback
 import cogs.utils.functions as functions
-import discord
 
 from discord.ext import commands
-from cogs.utils.helpcommand import NewHelpCommand
 from cogs.utils.helpcommand import ButtonHelpCommand
-from cogs.utils.constants import (
-    COMMAND_PREFIX, BOTVERSION, OSPATH, TOKEN, FLAGPATH, EMOJIPATH,OSPATH,EMOJIPATH,
-    ARCHIVE_DATABASE,AUTODELETE_DATABASE,AUTOROLE_DATABASE,COMMAND_LOGS_DATABASE,
-    ECONOMY_DATABASE,INVITELOG_DATABASE,PERMISSIONS_DATABASE,CARDSPATH,DICEPATH,IMAGEPATH)
+from cogs.utils.constants import (ARCHIVE_DATABASE, AUTODELETE_DATABASE,
+                                AUTOROLE_DATABASE, BOTVERSION, CARDSPATH,
+                                COMMAND_LOGS_DATABASE, COMMAND_PREFIX,
+                                DICEPATH, ECONOMY_DATABASE, EMOJIPATH,
+                                FLAGPATH, IMAGEPATH, INVITELOG_DATABASE,
+                                OSPATH, PERMISSIONS_DATABASE, TOKEN)
 
 def main_program():
     print('Logging in...')
     
     intents = discord.Intents().all()
-    bot = commands.Bot(command_prefix=COMMAND_PREFIX, help_command=NewHelpCommand(), case_insensitive=True, intents=intents)
+    bot = commands.Bot(command_prefix=COMMAND_PREFIX, help_command=ButtonHelpCommand(), case_insensitive=True, intents=intents)
     
     @bot.event
     async def on_ready():
