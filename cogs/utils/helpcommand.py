@@ -733,7 +733,7 @@ class ButtonHelpCommand(commands.HelpCommand):
             if filtered_commands:
                 command_names = [f'{COMMAND_PREFIX}{command.name}' for command in filtered_commands if not command.hidden]
                 formatted_command_names = '\n'.join(command_names)
-                embed.add_field(name=f"{index}. {cog_name}", value=formatted_command_names, inline=True)
+                embed.add_field(name=f"{index}  {cog_name}", value=formatted_command_names, inline=True)
                 index += 1
         
         # Add footer with version info
@@ -758,7 +758,7 @@ class ButtonHelpCommand(commands.HelpCommand):
                 aliases = [alias for alias in command.aliases]
                 aliases_text = f"{'No aliases' if len(aliases) == 0 else ('Alias: ' + ', '.join(aliases) if len(aliases) == 1 else 'Aliases: ' + ', '.join(aliases))}"
                 embed.add_field(
-                    name=f"{command_index}. {command.name}",
+                    name=f"{command_index}  {command.name}",
                     value=f"{aliases_text}\n{command.help or 'No description available.'}",
                     inline=True
                 )
