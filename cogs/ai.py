@@ -174,7 +174,7 @@ class Ai(commands.Cog):
                     await ctx.reply('I am sorry, I am unable to generate a response at this time. -God')
         
         #replies to messages in channels that have the AI enabled
-        if random.randint(1, 60) == 1 and channel_enabled == 1 and not ctx.author.bot:
+        if random.randint(1, 600) == 1 and channel_enabled == 1 and not ctx.author.bot:
             '''
             get the last 15 messages from the channel and generate a response
             '''
