@@ -37,7 +37,7 @@ MSG_DEL_DELAY = 10
 
 #! Websocket url
 # WebSocket notification endpoint - used to notify the admin portal
-ADMIN_PORTAL_WS_URL = "http://localhost:5000/api/new_message"
+ADMIN_PORTAL_WS_URL = "http://localhost:5005/api/new_message"
 
 #! Bot status update delay
 STATUS_LOOP_DELAY = 10
