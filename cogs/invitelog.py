@@ -117,7 +117,7 @@ class Invitelog(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_base(self, ctx):
-        '''
+        r'''
         All commands related to the invite group.
         - `invite list` Displays a list of all the active invites for the current server.
         - `invite show` Displays information about a specific invite.
@@ -132,7 +132,7 @@ class Invitelog(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_list(self, ctx):
-        '''
+        r'''
         This command displays a list of all the active invites for the current server.
         
         The invites are displayed in a paginated embed, with 4 invites per page. Users can navigate through the pages using the "◀️" and "▶️" reactions.
@@ -221,7 +221,7 @@ class Invitelog(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def invitelog_show(self, ctx, invite_code:str):
-        '''
+        r'''
         This command displays information about a specific invite.
         
         The information displayed includes:
