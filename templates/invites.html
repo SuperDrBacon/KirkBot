@@ -403,7 +403,6 @@
             if (filterStatus) {
                 filterStatus.addEventListener('change', filterInvites);
             }
-            
             // Format dates for better display
             const timestamps = document.querySelectorAll('[data-timestamp]');
             timestamps.forEach(el => {
@@ -413,6 +412,9 @@
                     el.textContent = date.toLocaleString();
                 }
             });
+            
+            // Apply default filter on page load
+            filterInvites();
         });
     </script>
 </body>
