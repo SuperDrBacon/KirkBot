@@ -1,10 +1,12 @@
 import os
 import sqlite3
-import requests
-
-from discord.ext import commands
 from datetime import datetime
+
+import requests
+from discord.ext import commands
+
 from cogs.utils.constants import COMMAND_LOGS_DATABASE
+
 
 class Log(commands.Cog):
     def __init__(self, bot):
@@ -88,7 +90,7 @@ class Log(commands.Cog):
             con.close()
             
             # Notify admin portal
-            admin_portal_url = "http://localhost:5000/api/new_command"
+            admin_portal_url = "http://localhost:5005/api/new_command"
             command_data = {
                 "command_name": command_name,
                 "args": args,
