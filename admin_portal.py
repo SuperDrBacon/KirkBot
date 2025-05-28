@@ -4,12 +4,15 @@ import os
 import sqlite3
 import sys
 import time
-import aiosqlite
-
 from datetime import datetime
+
+import aiosqlite
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO
-from cogs.utils.constants import ARCHIVE_DATABASE, COMMAND_LOGS_DATABASE, INVITELOG_DATABASE
+
+from cogs.utils.constants import (ARCHIVE_DATABASE, COMMAND_LOGS_DATABASE,
+                                  INVITELOG_DATABASE)
+
 # Disable Flask's built-in logging
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 logging.getLogger('socketio').setLevel(logging.ERROR)
@@ -182,12 +185,23 @@ def index():
 
 @app.route('/stats')
 def stats():
-    # Placeholder for stats data until you implement it
-    stats_data = {"servers": 0, "users": 0, "messages": 0}
+    # Initialize stats data structure
+    stats_data = {
+        "servers": 0, 
+        "users": 0, 
+        "messages": 0,
+        "top_servers": [],
+        "top_users": [],
+        "message_timeline": [],
+        "channel_activity": [],
+        "commands_today": 0,
+        "active_invites": 0
+    }
     
     # Get actual statistics from database
     try:
         con = sqlite3.connect(ARCHIVE_DATABASE)
+        con.row_factory = sqlite3.Row
         cur = con.cursor()
         
         # Count unique servers
@@ -202,7 +216,83 @@ def stats():
         cur.execute("SELECT COUNT(*) FROM archive_data")
         stats_data["messages"] = cur.fetchone()[0]
         
+        # Get top 5 servers by message count
+        cur.execute("""
+            SELECT server_name, COUNT(*) as message_count
+            FROM archive_data 
+            GROUP BY server_id, server_name
+            ORDER BY message_count DESC 
+            LIMIT 5
+        """)
+        stats_data["top_servers"] = [dict(row) for row in cur.fetchall()]
+        
+        # Get top 5 users by message count
+        cur.execute("""
+            SELECT username, COUNT(*) as message_count
+            FROM archive_data 
+            GROUP BY user_id, username
+            ORDER BY message_count DESC 
+            LIMIT 5
+        """)
+        stats_data["top_users"] = [dict(row) for row in cur.fetchall()]
+        
+        # Get message activity over the last 30 days (or available data)
+        cur.execute("""
+            SELECT DATE(timestamp) as date, COUNT(*) as count
+            FROM archive_data 
+            WHERE timestamp IS NOT NULL
+            GROUP BY DATE(timestamp)
+            ORDER BY date DESC
+            LIMIT 30
+        """)
+        timeline_data = cur.fetchall()
+        stats_data["message_timeline"] = [dict(row) for row in reversed(timeline_data)]
+        
+        # Get top channels by message count
+        cur.execute("""
+            SELECT channel_name, server_name, COUNT(*) as message_count
+            FROM archive_data 
+            GROUP BY channel_name, server_name
+            ORDER BY message_count DESC 
+            LIMIT 10
+        """)
+        stats_data["channel_activity"] = [dict(row) for row in cur.fetchall()]
+        
         con.close()
+        
+        # Get command statistics
+        try:
+            con = sqlite3.connect(COMMAND_LOGS_DATABASE)
+            cur = con.cursor()
+            
+            # Commands used today
+            cur.execute("""
+                SELECT COUNT(*) FROM command_logs 
+                WHERE DATE(timestamp) = DATE('now')
+            """)
+            result = cur.fetchone()
+            if result:
+                stats_data["commands_today"] = result[0]
+            
+            con.close()
+        except Exception as e:
+            print(f"Error getting command stats: {e}")
+            
+        # Get invite statistics
+        try:
+            con = sqlite3.connect(INVITELOG_DATABASE)
+            cur = con.cursor()
+            
+            current_time = int(time.time())
+            cur.execute("SELECT COUNT(*) FROM invitelog WHERE EXPIRATION_DATE_UNIX > ? OR EXPIRATION_DATE_UNIX = 0", (current_time,))
+            result = cur.fetchone()
+            if result:
+                stats_data["active_invites"] = result[0]
+            
+            con.close()
+        except Exception as e:
+            print(f"Error getting invite stats: {e}")
+            
     except Exception as e:
         print(f"Error getting stats: {e}")
     
