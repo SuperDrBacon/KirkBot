@@ -414,7 +414,7 @@ def checkForDir(filepath):
             print (f"{filepath} created")
 
 def get_unix_time():
-    return float(time.time())
+    return int(time.time())
 
 
 def filter(message):
