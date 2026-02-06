@@ -47,6 +47,15 @@ ORDER = 4
 TEXT_WORD_COUNT = ORDER * 15 
 MEME_WORD_COUNT = ORDER * 5
 
+#! Image screening constants
+# HuggingFace model for image-to-text (downloaded automatically on first use)
+IMAGE_SCREEN_MODEL = 'Salesforce/blip-image-captioning-base'
+# Keywords in generated captions that trigger a flag (add your own)
+IMAGE_SCREEN_FLAGGED_KEYWORDS = [
+    'weapon', 'gun', 'knife', 'blood', 'nude', 'naked', 'drug',
+    'gore', 'violence', 'nsfw', 'pornography', 'explicit'
+]
+
 #! Fun cog constants
 IMAGE_SIZE = 854, 480
 GCP_DELAY = 1

@@ -2,11 +2,12 @@ import os
 import re
 import sqlite3
 import time
+from pathlib import Path
+from urllib import request
+
 import aiosqlite
 import numpy
 
-from pathlib import Path
-from urllib import request
 from .constants import (ARCHIVE_DATABASE, AUTODELETE_DATABASE,
                         AUTOROLE_DATABASE, COMMAND_LOGS_DATABASE,
                         ECONOMY_DATABASE, INVITELOG_DATABASE,
@@ -107,6 +108,12 @@ setup_table_permissions_database = '''
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID));
                 
                 CREATE TABLE IF NOT EXISTS economy (
+                    SERVER_ID           INTEGER     NOT NULL,
+                    CHANNEL_ID          INTEGER     NOT NULL,
+                    ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
+                    PRIMARY KEY         (SERVER_ID, CHANNEL_ID));
+
+                CREATE TABLE IF NOT EXISTS imagescreen (
                     SERVER_ID           INTEGER     NOT NULL,
                     CHANNEL_ID          INTEGER     NOT NULL,
                     ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
