@@ -10,4 +10,6 @@ Pillow==12.1.0
 python-mpv==1.0.8
 Requests==2.32.5
 selenium==4.40.0
+torch
+transformers
 webdriver_manager==4.0.2

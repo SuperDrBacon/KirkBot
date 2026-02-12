@@ -2,11 +2,12 @@ import os
 import re
 import sqlite3
 import time
+from pathlib import Path
+from urllib import request
+
 import aiosqlite
 import numpy
 
-from pathlib import Path
-from urllib import request
 from .constants import (ARCHIVE_DATABASE, AUTODELETE_DATABASE,
                         AUTOROLE_DATABASE, COMMAND_LOGS_DATABASE,
                         DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS, ECONOMY_DATABASE,
