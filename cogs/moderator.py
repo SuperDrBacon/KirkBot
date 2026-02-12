@@ -92,13 +92,13 @@ class ModCommands(commands.Cog):
         await ctx.reply(f'Economy commands {action}d for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
-    @commands_base.command(name='imagemod', description='Enable or disable image screening in the channel.')
+    @commands_base.command(name='imagemod', description='Enable or disable image screening.')
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def commands_imagemod(self, ctx, action: str):
         '''
-        Enable or disable image screening for the current channel.
-        When enabled, images posted in this channel will be automatically
+        Enable or disable image screening for this server.
+        When enabled, images posted in this server will be automatically
         analysed by a local AI model and flagged if inappropriate.
         Use the following format for the command:
         `commands imagemod <'enable' or 'disable'>`
@@ -111,13 +111,12 @@ class ModCommands(commands.Cog):
 
         channel_permission = (action == "enable")
         guild_id = ctx.guild.id
-        channel_id = ctx.channel.id
 
         async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
-            async with con.execute('INSERT OR REPLACE INTO imagemod (server_id, channel_id, enabled) VALUES (?, ?, ?)', (guild_id, channel_id, channel_permission)) as cursor:
+            async with con.execute('INSERT OR REPLACE INTO imagemod (server_id, enabled) VALUES (?, ?)', (guild_id, channel_permission)) as cursor:
                 await con.commit()
 
-        await ctx.reply(f'Image screening {action}d for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.reply(f'Image screening {action}d.', mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
     @commands_base.command(name='show', description='Show the current command settings for this server.')
@@ -171,24 +170,15 @@ class ModCommands(commands.Cog):
         else:
             embed.add_field(name='Economy Enabled Channels', value="None", inline=False)
 
-        # Get Image Screening permissions
+        # Get Image Screening status (server-wide, not per-channel)
         async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
-            async with con.execute('SELECT enabled, channel_id FROM imagemod WHERE server_id = ?', (guild_id, )) as cursor:
-                imagemod_channels = await cursor.fetchall()
+            async with con.execute('SELECT enabled FROM imagemod WHERE server_id = ?', (guild_id,)) as cursor:
+                imagemod_row = await cursor.fetchone()
 
-        imagemod_list = []
-        if imagemod_channels:
-            for enabled, channel_id in imagemod_channels:
-                if enabled:
-                    channel = ctx.guild.get_channel(channel_id)
-                    if channel:
-                        imagemod_list.append(f"#{channel.name}")
-            if imagemod_list:
-                embed.add_field(name='Image Screening Enabled Channels', value='\n'.join(imagemod_list) or "None", inline=False)
-            else:
-                embed.add_field(name='Image Screening Enabled Channels', value="None", inline=False)
+        if imagemod_row and imagemod_row[0]:
+            embed.add_field(name='Image Screening', value='✅ Enabled', inline=False)
         else:
-            embed.add_field(name='Image Screening Enabled Channels', value="None", inline=False)
+            embed.add_field(name='Image Screening', value='❌ Disabled', inline=False)
 
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
@@ -221,7 +211,7 @@ class ModCommands(commands.Cog):
     async def init_permissions_table(self, ctx, table_name: str = None):
         r'''
         Create a new permissions table in the permissions database.
-        Owner-only hidden command. Creates the standard (server_id, channel_id, enabled) schema.
+        Owner-only hidden command. Creates the standard (server_id, enabled) schema.
         Usage: `initdb <table_name>` or `initdb` to list existing tables.
         '''
         if ctx.author.id != OWNER_ID:
@@ -244,10 +234,8 @@ class ModCommands(commands.Cog):
             # Create the table
             await con.execute(f'''
                 CREATE TABLE IF NOT EXISTS {table_name} (
-                    SERVER_ID   INTEGER NOT NULL,
-                    CHANNEL_ID  INTEGER NOT NULL,
-                    ENABLED     BOOLEAN NOT NULL DEFAULT FALSE,
-                    PRIMARY KEY (SERVER_ID, CHANNEL_ID))
+                    SERVER_ID   INTEGER PRIMARY KEY,
+                    ENABLED     BOOLEAN NOT NULL DEFAULT FALSE)
             ''')
             await con.commit()
 
