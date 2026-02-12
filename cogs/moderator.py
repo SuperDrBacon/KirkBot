@@ -42,7 +42,7 @@ class ModCommands(commands.Cog):
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
     @commands_base.command(name='chatai', description='Enable or disable the chatbot AI in the channel.')
-    @commands.has_permissions(manage_messages=True)
+    @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def commands_chatai(self, ctx, action: str):
         '''
@@ -68,7 +68,7 @@ class ModCommands(commands.Cog):
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
     @commands_base.command(name='economy', description='Enable or disable economy commands in the channel.')
-    @commands.has_permissions(manage_messages=True)
+    @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def commands_economy(self, ctx, action: str):
         '''
@@ -94,7 +94,7 @@ class ModCommands(commands.Cog):
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
     @commands_base.command(name='imagemod', description='Enable or disable image screening in the channel.')
-    @commands.has_permissions(manage_messages=True)
+    @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def commands_imagemod(self, ctx, action: str):
         '''
@@ -219,6 +219,7 @@ class ModCommands(commands.Cog):
     #     ...
     
     @commands.command(name='initdb', hidden=True)
+    @commands.is_owner()
     async def init_permissions_table(self, ctx, table_name: str = None):
         r'''
         Create a new permissions table in the permissions database.
