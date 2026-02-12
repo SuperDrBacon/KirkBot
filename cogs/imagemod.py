@@ -277,7 +277,7 @@ class Imagemod(commands.Cog):
     # ─── Per-guild settings DB helpers ───────────────────────────────────
 
     async def load_guild_settings(self, guild_id: int) -> dict[str, str]:
-        """Load per-guild settings (e.g. classification_threshold)."""
+        """Load per-guild settings (e.g. classification_threshold). Seeds defaults if empty."""
         settings: dict[str, str] = {}
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
             async with con.execute(
@@ -286,6 +286,16 @@ class Imagemod(commands.Cog):
             ) as cur:
                 async for row in cur:
                     settings[row[0]] = row[1]
+        # Seed default threshold if not present
+        if 'classification_threshold' not in settings:
+            default = str(IMAGEMOD_CLASSIFICATION_THRESHOLD)
+            async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+                await con.execute(
+                    'INSERT OR IGNORE INTO settings (SERVER_ID, KEY, VALUE) VALUES (?, ?, ?)',
+                    (guild_id, 'classification_threshold', default)
+                )
+                await con.commit()
+            settings['classification_threshold'] = default
         self.settings_cache[guild_id] = settings
         return settings
 
@@ -773,12 +783,16 @@ class Imagemod(commands.Cog):
         await ctx.reply(embed=embed, mention_author=False)
 
     @keyword.command(name='clear', hidden=True)
-    @commands.is_owner()
+    @commands.has_permissions(administrator=True)
     async def keyword_clear(self, ctx, category: str = None):
         '''
         Clear all flagged keywords, or all keywords in a specific category.
         Usage: keyword clear [category]
         '''
+        if ctx.author.id != OWNER_ID:
+            await ctx.reply('Only the bot owner can use this command.', mention_author=False, delete_after=MSG_DEL_DELAY)
+            return
+
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
             guild_id = ctx.guild.id
             if category:
@@ -806,7 +820,6 @@ class Imagemod(commands.Cog):
     # ─── Model management command ────────────────────────────────────────
 
     @commands.group(name='setmodel', invoke_without_command=True, hidden=True)
-    @commands.is_owner()
     async def setmodel(self, ctx, model_type: str = None, *, model_name: str = None):
         '''
         Switch a captioning or classification model (global, bot-owner only).
@@ -815,6 +828,10 @@ class Imagemod(commands.Cog):
         Example: setmodel captioning Salesforce/blip-image-captioning-large
         Omit arguments to see both models.
         '''
+        if ctx.author.id != OWNER_ID:
+            await ctx.reply('Only the bot owner can use this command.', mention_author=False, delete_after=MSG_DEL_DELAY)
+            return
+
         if model_type is None:
             # Show current status of both models
             await model_manager.load_global_settings()

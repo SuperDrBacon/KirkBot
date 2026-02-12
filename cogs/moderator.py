@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import aiosqlite
 import discord
-from datetime import datetime, timezone
 from discord.ext import commands
 
 from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, MSG_DEL_DELAY,
@@ -219,7 +218,6 @@ class ModCommands(commands.Cog):
     #     ...
     
     @commands.command(name='initdb', hidden=True)
-    @commands.is_owner()
     async def init_permissions_table(self, ctx, table_name: str = None):
         r'''
         Create a new permissions table in the permissions database.
@@ -227,6 +225,7 @@ class ModCommands(commands.Cog):
         Usage: `initdb <table_name>` or `initdb` to list existing tables.
         '''
         if ctx.author.id != OWNER_ID:
+            await ctx.reply('Only the bot owner can use this command.', mention_author=False, delete_after=MSG_DEL_DELAY)
             return
 
         async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
