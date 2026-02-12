@@ -1,9 +1,12 @@
+from datetime import datetime, timezone
+
 import aiosqlite
 import discord
-
 from discord.ext import commands
-from datetime import datetime, timezone
-from cogs.utils.constants import BOTVERSION, COMMAND_PREFIX, MSG_DEL_DELAY,PERMISSIONS_DATABASE
+
+from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, MSG_DEL_DELAY,
+                                  PERMISSIONS_DATABASE)
+
 
 class ModCommands(commands.Cog):
     '''
@@ -29,9 +32,10 @@ class ModCommands(commands.Cog):
         Current modules:
         - chatai
         - economy
+        - imagescreen
         '''
         embed = discord.Embed(title='Commands Module', description=f'To see how to use the Commands module use:\n`{COMMAND_PREFIX}help commands`\n\n\
-            Current modules:\n- chatai\n- economy\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
+            Current modules:\n- chatai\n- economy\n- imagescreen\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
         embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
@@ -88,6 +92,34 @@ class ModCommands(commands.Cog):
         await ctx.reply(f'Economy commands {action}d for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
+    @commands_base.command(name='imagescreen', description='Enable or disable image screening in the channel.')
+    @commands.has_permissions(manage_messages=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def commands_imagescreen(self, ctx, action: str):
+        '''
+        Enable or disable image screening for the current channel.
+        When enabled, images posted in this channel will be automatically
+        analysed by a local AI model and flagged if inappropriate.
+        Use the following format for the command:
+        `commands imagescreen <'enable' or 'disable'>`
+        '''
+        action = action.lower()
+        if action not in ["enable", "disable"]:
+            await ctx.reply("Invalid action. Use 'enable' or 'disable'.", mention_author=False, delete_after=MSG_DEL_DELAY)
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            return
+
+        channel_permission = (action == "enable")
+        guild_id = ctx.guild.id
+        channel_id = ctx.channel.id
+
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
+            async with con.execute('INSERT OR REPLACE INTO imagescreen (server_id, channel_id, enabled) VALUES (?, ?, ?)', (guild_id, channel_id, channel_permission)) as cursor:
+                await con.commit()
+
+        await ctx.reply(f'Image screening {action}d for this channel.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
+
     @commands_base.command(name='show', description='Show the current command settings for this server.')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -138,7 +170,26 @@ class ModCommands(commands.Cog):
                 embed.add_field(name='Economy Enabled Channels', value="None", inline=False)
         else:
             embed.add_field(name='Economy Enabled Channels', value="None", inline=False)
-        
+
+        # Get Image Screening permissions
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
+            async with con.execute('SELECT enabled, channel_id FROM imagescreen WHERE server_id = ?', (guild_id, )) as cursor:
+                imagescreen_channels = await cursor.fetchall()
+
+        imagescreen_list = []
+        if imagescreen_channels:
+            for enabled, channel_id in imagescreen_channels:
+                if enabled:
+                    channel = ctx.guild.get_channel(channel_id)
+                    if channel:
+                        imagescreen_list.append(f"#{channel.name}")
+            if imagescreen_list:
+                embed.add_field(name='Image Screening Enabled Channels', value='\n'.join(imagescreen_list) or "None", inline=False)
+            else:
+                embed.add_field(name='Image Screening Enabled Channels', value="None", inline=False)
+        else:
+            embed.add_field(name='Image Screening Enabled Channels', value="None", inline=False)
+
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
     

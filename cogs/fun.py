@@ -8,28 +8,27 @@ import re
 import time
 import urllib.parse
 import urllib.request
-import aiosqlite
-import discord
-import mpv
-
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from io import BytesIO
 from multiprocessing import Pool, cpu_count
 from typing import Union
+
+import aiosqlite
+import discord
 from discord.ext import commands
 from numpy import interp
 from PIL import Image, ImageDraw
 from selenium import webdriver
-from selenium.common.exceptions import InvalidSessionIdException, TimeoutException
+from selenium.common.exceptions import (InvalidSessionIdException,
+                                        TimeoutException)
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-from cogs.utils.constants import (
-    ARCHIVE_DATABASE, BOTVERSION, COMMAND_PREFIX,
-    EMOJIPATH, FLAGPATH, GCP_DELAY, IMAGE_SIZE,
-    MSG_DEL_DELAY, NUM_OF_RANKED_WORDS)
+from cogs.utils.constants import (ARCHIVE_DATABASE, BOTVERSION, COMMAND_PREFIX,
+                                  EMOJIPATH, FLAGPATH, GCP_DELAY, IMAGE_SIZE,
+                                  MSG_DEL_DELAY, NUM_OF_RANKED_WORDS)
 
 flagInit = {
     "flags": [],
@@ -125,31 +124,6 @@ class Fun(commands.Cog):
         
         return embed
 
-    def mpv_screenshot(self, stream):
-        player = mpv.MPV(screenshot_format='jpeg', vo='null', hwdec='yes', screenshot_sw='yes')
-        player.play(stream)
-        player.wait_until_playing()
-        screenshot = player.screenshot_raw()
-        player.terminate()
-        return screenshot
-    
-    def mpv_screenshots(self, streams):
-        streams_matrix = BytesIO()
-        count = len(streams)
-        srw = math.ceil(math.sqrt(count))
-        result_image = Image.new('RGB', (IMAGE_SIZE[0] * srw, IMAGE_SIZE[1] * (srw-1)))
-        
-        with Pool(cpu_count()//2) as pool:
-            screenshots = pool.map(self.mpv_screenshot, streams)
-        
-        for i, screenshot in enumerate(screenshots):
-            screenshot.thumbnail(IMAGE_SIZE, Image.Resampling.LANCZOS)
-            result_image.paste(screenshot, (IMAGE_SIZE[0] * (i % srw), IMAGE_SIZE[1] * (i // srw)))
-            result_image.save(streams_matrix, format='JPeG', quality=100)
-            streams_matrix.seek(0)
-        
-        return streams_matrix
-    
     #events
     @commands.Cog.listener()
     async def on_ready(self):
@@ -252,35 +226,22 @@ class Fun(commands.Cog):
         '''
         async with ctx.typing():
             number = random.randint(100000000, 999999999)
-            numlist = list(map(int, str(number)))
+            digits = str(number)
             
-            if numlist[8] != numlist[7]:
-                result = 'nothing, try again'
-                colour = discord.Colour.red()
-            if numlist[8] == numlist[7]:
-                result = 'dubs congrats'
-                colour = discord.Colour.green()
-            if numlist[8] == numlist[7] ==  numlist[6]:
-                result = 'trips congrats'
-                colour = discord.Colour.green()
-            if numlist[8] == numlist[7] == numlist[6] == numlist[5]:
-                result = 'quads congrats'
-                colour = discord.Colour.green()
-            if numlist[8] == numlist[7] == numlist[6] == numlist[5] == numlist[4]:
-                result = 'quints congrats'
-                colour = discord.Colour.green()
-            if numlist[8] == numlist[7] == numlist[6] == numlist[5] == numlist[4] == numlist[3]:
-                result = 'sexts congrats'
-                colour = discord.Colour.green()
-            if numlist[8] == numlist[7] == numlist[6] == numlist[5] == numlist[4] == numlist[3] == numlist[2]:
-                result = 'septs congrats'
-                colour = discord.Colour.green()
-            if numlist[8] == numlist[7] == numlist[6] == numlist[5] == numlist[4] == numlist[3] == numlist[2] == numlist[1]:
-                result = 'octs congrats'
-                colour = discord.Colour.green()
-            if numlist[8] == numlist[7] == numlist[6] == numlist[5] == numlist[4] == numlist[3] == numlist[2] == numlist[1] == numlist[0]:
-                result = 'nons congrats'
-                colour = discord.Colour.green()
+            # Count consecutive matching digits from the end
+            match_count = 1
+            for i in range(len(digits) - 1, 0, -1):
+                if digits[i] == digits[i - 1]:
+                    match_count += 1
+                else:
+                    break
+            
+            labels = {1: 'nothing, try again', 2: 'dubs congrats', 3: 'trips congrats',
+                      4: 'quads congrats', 5: 'quints congrats', 6: 'sexts congrats',
+                      7: 'septs congrats', 8: 'octs congrats', 9: 'nons congrats'}
+            
+            result = labels[match_count]
+            colour = discord.Colour.red() if match_count == 1 else discord.Colour.green()
             
             valuefield1 = f'You got {result}.'         
             embedVar = discord.Embed(color=colour, timestamp=datetime.now(timezone.utc))
@@ -316,7 +277,9 @@ class Fun(commands.Cog):
         Convert the given input text to a string of Braille characters and send it as a message to the channel. 
         '''
         async with ctx.typing():
-            braille = input.lower().replace("a", "⠁").replace("b", "⠃").replace("c", "⠉").replace("d", "⠙").replace("e", "⠑").replace("f", "⠋").replace("g", "⠛").replace("h", "⠓").replace("i", "⠊").replace("j", "⠚").replace("k", "⠅").replace("l", "⠅").replace("m", "⠍").replace("n", "⠝").replace("o", "⠕").replace("p", "⠏").replace("q", "⠟").replace("r", "⠗").replace("s", "⠎").replace("t", "⠞").replace("u", "⠥").replace("v", "⠧").replace("w", "⠺").replace("x", "⠭").replace("y", "⠽").replace("z", "⠵")
+            braille_table = str.maketrans('abcdefghijklmnopqrstuvwxyz',
+                                          '⠁⠃⠉⠙⠑⠋⠛⠓⠊⠚⠅⠇⠍⠝⠕⠏⠟⠗⠎⠞⠥⠧⠺⠭⠽⠵')
+            braille = input.lower().translate(braille_table)
             await ctx.send(f'For the blind: {braille}')
     
     @commands.command(name='youtube', aliases=['yt'])
