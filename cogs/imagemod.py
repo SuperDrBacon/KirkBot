@@ -1,5 +1,6 @@
 import asyncio
 import io
+from datetime import timedelta
 
 import aiosqlite
 import discord
@@ -10,9 +11,58 @@ from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX,
                                   IMAGEMOD_DATABASE, MSG_DEL_DELAY, OWNER_ID,
                                   PERMISSIONS_DATABASE)
 
+# ─── Mute buttons view ──────────────────────────────────────────────────
+
+class MuteView(discord.ui.View):
+    """Persistent view with buttons to mute the flagged user for 1 / 5 / 30 minutes."""
+
+    def __init__(self, member: discord.Member):
+        super().__init__(timeout=300)  # buttons expire after 5 minutes
+        self.member = member
+
+    async def _do_mute(self, interaction: discord.Interaction, minutes: int):
+        """Apply a timeout to the member and update the embed."""
+        # Only allow server members with moderate_members permission
+        if not interaction.user.guild_permissions.moderate_members:
+            await interaction.response.send_message(
+                'You do not have permission to mute members.', ephemeral=True
+            )
+            return
+
+        try:
+            await self.member.timeout(timedelta(minutes=minutes), reason=f'Flagged image — muted for {minutes}min by {interaction.user}')
+            await interaction.response.send_message(
+                f'🔇 **{self.member.display_name}** has been muted for **{minutes} minute{"s" if minutes != 1 else ""}**.',
+                ephemeral=True
+            )
+            # Disable all buttons after use
+            for child in self.children:
+                child.disabled = True
+            await interaction.message.edit(view=self)
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                'I don\'t have permission to mute that member. Check my role hierarchy.',
+                ephemeral=True
+            )
+        except Exception as e:
+            await interaction.response.send_message(f'Failed to mute: {e}', ephemeral=True)
+
+    @discord.ui.button(label='Mute 1 min', style=discord.ButtonStyle.secondary, emoji='🔇')
+    async def mute_1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._do_mute(interaction, 1)
+
+    @discord.ui.button(label='Mute 5 min', style=discord.ButtonStyle.primary, emoji='🔇')
+    async def mute_5(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._do_mute(interaction, 5)
+
+    @discord.ui.button(label='Mute 30 min', style=discord.ButtonStyle.danger, emoji='🔇')
+    async def mute_30(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._do_mute(interaction, 30)
+
+
 # ─── Dynamic model manager ──────────────────────────────────────────────
 
-class _ModelManager:
+class ModelManager:
     """
     Manages two HuggingFace models that can run simultaneously:
       - captioning      : image-to-text (e.g. BLIP) → generates a caption → keyword flagging
@@ -131,7 +181,7 @@ class _ModelManager:
             await asyncio.gather(*tasks)
 
 
-_manager = _ModelManager()
+model_manager = ModelManager()
 
 
 class Imagemod(commands.Cog):
@@ -160,7 +210,7 @@ class Imagemod(commands.Cog):
             await self.load_keywords()
         return self._keywords_cache
 
-    async def _get_keyword_list(self) -> list[str]:
+    async def get_keyword_list(self) -> list[str]:
         """Return just the keyword strings."""
         keywords = await self.get_keywords()
         return [kw for kw, _ in keywords]
@@ -188,7 +238,7 @@ class Imagemod(commands.Cog):
         # Pre-load keywords cache
         await self.load_keywords()
         # Pre-load both models in the background
-        asyncio.create_task(_manager.ensure_all_loaded())
+        asyncio.create_task(model_manager.ensure_all_loaded())
 
     # ─── Automatic image screening on message ───────────────────────────
 
@@ -243,13 +293,13 @@ class Imagemod(commands.Cog):
             desc_parts.append(f'**Channel:** {message.channel.mention}')
             desc_parts.append(f'**[Jump to message]({message.jump_url})**')
 
-            # Build footer showing active models
-            model_names = []
-            if _manager.captioning_enabled and _manager.captioning_model_name:
-                model_names.append(_manager.captioning_model_name)
-            if _manager.classification_enabled and _manager.classification_model_name:
-                model_names.append(_manager.classification_model_name)
-            footer = ' + '.join(model_names) + f' • {BOTVERSION}' if model_names else BOTVERSION
+            # # Build footer showing active models
+            # model_names = []
+            # if model_manager.captioning_enabled and model_manager.captioning_model_name:
+            #     model_names.append(model_manager.captioning_model_name)
+            # if model_manager.classification_enabled and model_manager.classification_model_name:
+            #     model_names.append(model_manager.classification_model_name)
+            # footer = ' + '.join(model_names) + f' • {BOTVERSION}' if model_names else BOTVERSION
 
             if flagged:
                 embed = discord.Embed(
@@ -258,12 +308,14 @@ class Imagemod(commands.Cog):
                     color=discord.Color.red()
                 )
                 embed.set_thumbnail(url=attachment.url)
-                embed.set_footer(text=footer)
+                embed.set_footer(text=BOTVERSION)
+
+                view = MuteView(member=message.author)
 
                 if log_channel:
-                    await log_channel.send(embed=embed)
+                    await log_channel.send(embed=embed, view=view)
                 else:
-                    await message.channel.send(embed=embed, delete_after=30)
+                    await message.channel.send(embed=embed, view=view, delete_after=30)
             else:
                 embed = discord.Embed(
                     title='✅ Image Screened — No Flags',
@@ -271,7 +323,7 @@ class Imagemod(commands.Cog):
                     color=discord.Color.green()
                 )
                 embed.set_thumbnail(url=attachment.url)
-                embed.set_footer(text=footer)
+                embed.set_footer(text=BOTVERSION)
 
                 if log_channel:
                     await log_channel.send(embed=embed)
@@ -279,7 +331,7 @@ class Imagemod(commands.Cog):
 
     # ─── Manual describe command ─────────────────────────────────────────
 
-    @commands.command(name='describe', aliases=['imgdesc'])
+    @commands.command(name='describe')
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def describe_image(self, ctx):
         '''
@@ -322,11 +374,11 @@ class Imagemod(commands.Cog):
                 label_str = ', '.join(f'{l["label"]} ({l["score"]:.1%})' for l in result['labels'])
                 desc_parts.append(f'**Classification:** {label_str}')
 
-            model_names = []
-            if _manager.captioning_enabled and _manager.captioning_model_name:
-                model_names.append(_manager.captioning_model_name)
-            if _manager.classification_enabled and _manager.classification_model_name:
-                model_names.append(_manager.classification_model_name)
+            # model_names = []
+            # if model_manager.captioning_enabled and model_manager.captioning_model_name:
+            #     model_names.append(model_manager.captioning_model_name)
+            # if model_manager.classification_enabled and model_manager.classification_model_name:
+            #     model_names.append(model_manager.classification_model_name)
 
             embed = discord.Embed(
                 title='Image Description',
@@ -334,7 +386,7 @@ class Imagemod(commands.Cog):
                 color=discord.Color.blurple()
             )
             embed.set_thumbnail(url=attachment.url)
-            embed.set_footer(text=f'Models: {" + ".join(model_names)}')
+            embed.set_footer(text=BOTVERSION)
             await ctx.reply(embed=embed, mention_author=False)
         else:
             await ctx.reply(
@@ -345,6 +397,7 @@ class Imagemod(commands.Cog):
     # ─── Model status command ────────────────────────────────────────────
 
     @commands.command(name='screeninfo')
+    @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def screen_info(self, ctx):
         '''
@@ -353,23 +406,23 @@ class Imagemod(commands.Cog):
         embed = discord.Embed(title='Image Screening Info', color=discord.Color.blurple())
 
         # Captioning model
-        cap_status = '✅ Loaded' if _manager.captioning_ready else ('⏳ Loading...' if _manager.captioning_loading else '❌ Not loaded')
-        cap_state = f'**{_manager.captioning_model_name or "Not set"}**\n'
+        cap_status = '✅ Loaded' if model_manager.captioning_ready else ('⏳ Loading...' if model_manager.captioning_loading else '❌ Not loaded')
+        cap_state = f'**{model_manager.captioning_model_name or "Not set"}**\n'
         cap_state += f'Status: {cap_status}\n'
-        cap_state += f'Enabled: {"Yes" if _manager.captioning_enabled else "No"}'
+        cap_state += f'Enabled: {"Yes" if model_manager.captioning_enabled else "No"}'
         embed.add_field(name='📝 Captioning Model', value=cap_state, inline=False)
 
         # Classification model
-        cls_status = '✅ Loaded' if _manager.classification_ready else ('⏳ Loading...' if _manager.classification_loading else '❌ Not loaded')
-        cls_state = f'**{_manager.classification_model_name or "Not set"}**\n'
+        cls_status = '✅ Loaded' if model_manager.classification_ready else ('⏳ Loading...' if model_manager.classification_loading else '❌ Not loaded')
+        cls_state = f'**{model_manager.classification_model_name or "Not set"}**\n'
         cls_state += f'Status: {cls_status}\n'
-        cls_state += f'Enabled: {"Yes" if _manager.classification_enabled else "No"}\n'
-        cls_state += f'Threshold: {_manager.threshold:.0%}'
+        cls_state += f'Enabled: {"Yes" if model_manager.classification_enabled else "No"}\n'
+        cls_state += f'Threshold: {model_manager.threshold:.0%}'
         embed.add_field(name='🏷️ Classification Model', value=cls_state, inline=False)
 
         # Keywords (only relevant for captioning)
-        if _manager.captioning_enabled:
-            keywords = await self._get_keyword_list()
+        if model_manager.captioning_enabled:
+            keywords = await self.get_keyword_list()
             kw_display = ', '.join(keywords[:50]) or 'None'
             if len(keywords) > 50:
                 kw_display += f' ... and {len(keywords) - 50} more'
@@ -390,8 +443,8 @@ class Imagemod(commands.Cog):
           - 'labels'           : list[dict] | None (from classification model, [{label, score}, ...])
         Returns None on total failure.
         """
-        await _manager.ensure_all_loaded()
-        if not _manager.captioning_ready and not _manager.classification_ready:
+        await model_manager.ensure_all_loaded()
+        if not model_manager.captioning_ready and not model_manager.classification_ready:
             return None
 
         try:
@@ -405,10 +458,10 @@ class Imagemod(commands.Cog):
             caption_task = None
             classify_task = None
 
-            if _manager.captioning_enabled and _manager.captioning_ready:
-                caption_task = asyncio.create_task(self._run_captioning(image, loop))
-            if _manager.classification_enabled and _manager.classification_ready:
-                classify_task = asyncio.create_task(self._run_classification(image, loop))
+            if model_manager.captioning_enabled and model_manager.captioning_ready:
+                caption_task = asyncio.create_task(self.run_captioning(image, loop))
+            if model_manager.classification_enabled and model_manager.classification_ready:
+                classify_task = asyncio.create_task(self.run_classification(image, loop))
 
             caption_result = await caption_task if caption_task else None
             classify_result = await classify_task if classify_task else None
@@ -439,10 +492,10 @@ class Imagemod(commands.Cog):
         except Exception:
             return None
 
-    async def _run_captioning(self, image, loop) -> dict:
+    async def run_captioning(self, image, loop) -> dict:
         """Run a captioning model and check caption against flagged keywords."""
-        processor = _manager.captioning_processor
-        model = _manager.captioning_model
+        processor = model_manager.captioning_processor
+        model = model_manager.captioning_model
 
         def run_inference():
             inputs = processor(images=image, return_tensors='pt')
@@ -458,10 +511,10 @@ class Imagemod(commands.Cog):
             'flagged_keywords': flagged_kws,
         }
 
-    async def _run_classification(self, image, loop) -> dict:
+    async def run_classification(self, image, loop) -> dict:
         """Run a classification model and flag based on threshold."""
-        pipe = _manager.classification_pipeline
-        threshold = _manager.threshold
+        pipe = model_manager.classification_pipeline
+        threshold = model_manager.threshold
 
         def run_inference():
             return pipe(image)
@@ -482,7 +535,7 @@ class Imagemod(commands.Cog):
     async def check_flagged(self, description: str) -> list[str]:
         """Check if the description contains any flagged keywords from the database."""
         description_lower = description.lower()
-        keywords = await self._get_keyword_list()
+        keywords = await self.get_keyword_list()
         return [kw for kw in keywords if kw.lower() in description_lower]
 
     # ─── Admin keyword management commands ───────────────────────────────
@@ -545,7 +598,7 @@ class Imagemod(commands.Cog):
         embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False)
 
-    @keyword.command(name='remove', aliases=['rm', 'delete', 'del'])
+    @keyword.command(name='remove', aliases=['rm'])
     @commands.has_permissions(administrator=True)
     async def keyword_remove(self, ctx, *, keywords: str = None):
         '''
@@ -591,7 +644,7 @@ class Imagemod(commands.Cog):
         embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False)
 
-    @keyword.command(name='list', aliases=['ls', 'show'])
+    @keyword.command(name='list')
     @commands.has_permissions(administrator=True)
     async def keyword_list(self, ctx, category: str = None):
         '''
@@ -623,8 +676,8 @@ class Imagemod(commands.Cog):
         embed.set_footer(text=f'{len(keywords)} keywords total • {BOTVERSION}')
         await ctx.reply(embed=embed, mention_author=False)
 
-    @keyword.command(name='clear')
-    @commands.has_permissions(administrator=True)
+    @keyword.command(name='clear', hidden=True)
+    @commands.is_owner()
     async def keyword_clear(self, ctx, category: str = None):
         '''
         Clear all flagged keywords, or all keywords in a specific category.
@@ -652,8 +705,8 @@ class Imagemod(commands.Cog):
 
     # ─── Model management command ────────────────────────────────────────
 
-    @commands.group(name='setmodel', aliases=['model'], invoke_without_command=True)
-    @commands.has_permissions(administrator=True)
+    @commands.group(name='setmodel', invoke_without_command=True, hidden=True)
+    @commands.is_owner()
     async def setmodel(self, ctx, model_type: str = None, *, model_name: str = None):
         '''
         Switch a captioning or classification model.
@@ -664,20 +717,20 @@ class Imagemod(commands.Cog):
         '''
         if model_type is None:
             # Show current status of both models
-            await _manager.load_settings()
+            await model_manager.load_settings()
             embed = discord.Embed(title='Current Models', color=discord.Color.blurple())
 
-            cap_status = '✅ Loaded' if _manager.captioning_ready else '❌ Not loaded'
-            cap_val = f'**{_manager.captioning_model_name or "Not set"}**\n'
+            cap_status = '✅ Loaded' if model_manager.captioning_ready else '❌ Not loaded'
+            cap_val = f'**{model_manager.captioning_model_name or "Not set"}**\n'
             cap_val += f'Status: {cap_status}\n'
-            cap_val += f'Enabled: {"Yes" if _manager.captioning_enabled else "No"}'
+            cap_val += f'Enabled: {"Yes" if model_manager.captioning_enabled else "No"}'
             embed.add_field(name='📝 Captioning', value=cap_val, inline=False)
 
-            cls_status = '✅ Loaded' if _manager.classification_ready else '❌ Not loaded'
-            cls_val = f'**{_manager.classification_model_name or "Not set"}**\n'
+            cls_status = '✅ Loaded' if model_manager.classification_ready else '❌ Not loaded'
+            cls_val = f'**{model_manager.classification_model_name or "Not set"}**\n'
             cls_val += f'Status: {cls_status}\n'
-            cls_val += f'Enabled: {"Yes" if _manager.classification_enabled else "No"}\n'
-            cls_val += f'Threshold: {_manager.threshold:.0%}'
+            cls_val += f'Enabled: {"Yes" if model_manager.classification_enabled else "No"}\n'
+            cls_val += f'Threshold: {model_manager.threshold:.0%}'
             embed.add_field(name='🏷️ Classification', value=cls_val, inline=False)
 
             embed.set_footer(text=BOTVERSION)
@@ -718,13 +771,13 @@ class Imagemod(commands.Cog):
         embed.set_footer(text=BOTVERSION)
         status_msg = await ctx.reply(embed=embed, mention_author=False)
 
-        await _manager.load_settings()
+        await model_manager.load_settings()
         if model_type == 'captioning':
-            await _manager.reload_captioning()
-            success = _manager.captioning_ready
+            await model_manager.reload_captioning()
+            success = model_manager.captioning_ready
         else:
-            await _manager.reload_classification()
-            success = _manager.classification_ready
+            await model_manager.reload_classification()
+            success = model_manager.classification_ready
 
         if success:
             embed = discord.Embed(
@@ -743,7 +796,7 @@ class Imagemod(commands.Cog):
         await status_msg.edit(embed=embed)
 
     @setmodel.command(name='enable', aliases=['on'])
-    @commands.has_permissions(administrator=True)
+    @commands.is_owner()
     async def setmodel_enable(self, ctx, model_type: str = None):
         '''
         Enable a model type.
@@ -766,11 +819,11 @@ class Imagemod(commands.Cog):
             await con.commit()
 
         if model_type == 'captioning':
-            _manager.captioning_enabled = True
-            asyncio.create_task(_manager.ensure_captioning_loaded())
+            model_manager.captioning_enabled = True
+            asyncio.create_task(model_manager.ensure_captioning_loaded())
         else:
-            _manager.classification_enabled = True
-            asyncio.create_task(_manager.ensure_classification_loaded())
+            model_manager.classification_enabled = True
+            asyncio.create_task(model_manager.ensure_classification_loaded())
 
         embed = discord.Embed(
             title=f'{model_type.capitalize()} Model Enabled ✅',
@@ -781,7 +834,7 @@ class Imagemod(commands.Cog):
         await ctx.reply(embed=embed, mention_author=False)
 
     @setmodel.command(name='disable', aliases=['off'])
-    @commands.has_permissions(administrator=True)
+    @commands.is_owner()
     async def setmodel_disable(self, ctx, model_type: str = None):
         '''
         Disable a model type (the other model will still run).
@@ -804,9 +857,9 @@ class Imagemod(commands.Cog):
             await con.commit()
 
         if model_type == 'captioning':
-            _manager.captioning_enabled = False
+            model_manager.captioning_enabled = False
         else:
-            _manager.classification_enabled = False
+            model_manager.classification_enabled = False
 
         embed = discord.Embed(
             title=f'{model_type.capitalize()} Model Disabled',
@@ -817,7 +870,7 @@ class Imagemod(commands.Cog):
         await ctx.reply(embed=embed, mention_author=False)
 
     @setmodel.command(name='threshold')
-    @commands.has_permissions(administrator=True)
+    @commands.is_owner()
     async def setmodel_threshold(self, ctx, threshold: float = None):
         '''
         Set the confidence threshold for the classification model (0.0 - 1.0).
@@ -826,7 +879,7 @@ class Imagemod(commands.Cog):
         '''
         if threshold is None:
             await ctx.reply(
-                f'Current classification threshold: **{_manager.threshold:.0%}**\n'
+                f'Current classification threshold: **{model_manager.threshold:.0%}**\n'
                 f'Usage: `{COMMAND_PREFIX}setmodel threshold <0.0 - 1.0>`',
                 mention_author=False
             )
@@ -844,7 +897,7 @@ class Imagemod(commands.Cog):
             )
             await con.commit()
 
-        _manager.threshold = threshold
+        model_manager.threshold = threshold
 
         embed = discord.Embed(
             title='Threshold Updated',
@@ -856,7 +909,7 @@ class Imagemod(commands.Cog):
 
     # ─── Log channel command ────────────────────────────────────────────
 
-    @commands.command(name='setlogchannel', aliases=['slc', 'logchannel'])
+    @commands.command(name='setlogchannel', aliases=['slc'])
     @commands.has_permissions(administrator=True)
     async def set_log_channel(self, ctx, channel: discord.TextChannel = None):
         '''
