@@ -234,7 +234,7 @@ class ModCommands(commands.Cog):
             # Create the table
             await con.execute(f'''
                 CREATE TABLE IF NOT EXISTS {table_name} (
-                    SERVER_ID   INTEGER PRIMARY KEY,
+                    SERVER_ID   INTEGER NOT NULL PRIMARY KEY,
                     ENABLED     BOOLEAN NOT NULL DEFAULT FALSE)
             ''')
             await con.commit()

@@ -118,8 +118,8 @@ setup_table_permissions_database = '''
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID));
 
                 CREATE TABLE IF NOT EXISTS imagemod (
-                    SERVER_ID           INTEGER     NOT NULL PRIMARY KEY,
-                    ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE;'''
+                    SERVER_ID           INTEGER     NOT NULL    PRIMARY KEY,
+                    ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE);'''
 
 setup_table_command_logs = '''
                 CREATE TABLE IF NOT EXISTS command_logs (
