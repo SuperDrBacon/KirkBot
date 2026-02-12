@@ -1,12 +1,16 @@
 import random
-import aiosqlite
-import discord
-
 from datetime import datetime, timezone
 from io import BytesIO
+
+import aiosqlite
+import discord
 from discord.ui import View
 from PIL import Image, ImageDraw, ImageFont
-from cogs.utils.constants import BOTVERSION, CARD_RANKS, CARD_SUITS, CARD_VALUES, CARDS, CURRENCY_PLURAL, CURRENCY_SINGULAR, ECONOMY_DATABASE, MSG_DEL_DELAY
+
+from cogs.utils.constants import (BOTVERSION, CARD_RANKS, CARD_SUITS,
+                                  CARD_VALUES, CARDS, CURRENCY_PLURAL,
+                                  CURRENCY_SINGULAR, ECONOMY_DATABASE,
+                                  MSG_DEL_DELAY)
 
 
 class BlackjackView(View):
@@ -329,66 +333,110 @@ def dealer_play(deck, dealer_hand):
 def create_hand_image(player_hand, dealer_hand, hide_dealer_card=True):
         """Create a combined image of all cards in player's and dealer's hands."""
         # Set up image dimensions
-        card_width = 100  # We'll resize the card images
+        card_width = 100
         card_height = 145
         card_spacing = 10
-        vertical_spacing = 40
-        
+        padding = 15
+        label_height = 30        # Space reserved for each label
+        section_gap = 20         # Gap between dealer and player sections
+        divider_thickness = 2
+
         # Calculate total width needed
         max_cards = max(len(player_hand), len(dealer_hand))
-        total_width = (max_cards * card_width) + ((max_cards - 1) * card_spacing)
-        total_height = (2 * card_height) + vertical_spacing
-        
-        # Create a new blank image
-        combined_image = Image.new('RGBA', (total_width, total_height), (0, 0, 0, 0))
+        cards_width = (max_cards * card_width) + ((max_cards - 1) * card_spacing)
+        total_width = cards_width + (2 * padding)
+
+        # Layout: padding + label + cards + section_gap + divider + section_gap + label + cards + padding
+        total_height = (
+            padding
+            + label_height + card_height        # Dealer section
+            + section_gap + divider_thickness + section_gap
+            + label_height + card_height        # Player section
+            + padding
+        )
+
+        # Card-table green background
+        bg_color = (30, 71, 36, 255)
+        combined_image = Image.new('RGBA', (total_width, total_height), bg_color)
         draw = ImageDraw.Draw(combined_image)
-        
-        # Load a font
+
+        # Load fonts
         try:
-            font = ImageFont.truetype("arial.ttf", 14)
+            label_font = ImageFont.truetype("impact.ttf", 20)
         except IOError:
-            font = ImageFont.load_default()
-        
-        # Add labels
-        draw.text((10, 5), "Dealer", fill=(255, 255, 255), font=font)
-        draw.text((10, card_height + vertical_spacing - 20), "Player", fill=(255, 255, 255), font=font)
-        
-        # Add player cards at the bottom
-        x_offset = 0
-        for card in player_hand:
-            rank, suit = card
-            card_key = get_card_key(rank, suit)
-            
-            if card_key in CARDS:
-                card_path = CARDS[card_key][4]
-                try:
-                    card_image = Image.open(card_path)
-                    card_image = card_image.resize((card_width, card_height))
-                    combined_image.paste(card_image, (x_offset, total_height - card_height))
-                    x_offset += card_width + card_spacing
-                except Exception as e:
-                    print(f"Error loading card image: {e}")
-        
-        # Add dealer cards at the top
-        x_offset = 0
+            label_font = ImageFont.load_default()
+
+        # --- Y positions ---
+        dealer_label_y = padding
+        dealer_cards_y = padding + label_height
+        divider_y = dealer_cards_y + card_height + section_gap
+        player_label_y = divider_y + divider_thickness + section_gap
+        player_cards_y = player_label_y + label_height
+
+        # --- Draw labels with subtle background pill ---
+        def draw_label(text, y):
+            bbox = label_font.getbbox(text)
+            text_w = bbox[2] - bbox[0]
+            text_h = bbox[3] - bbox[1]
+            pill_x = padding
+            pill_y = y
+            pill_w = text_w + 16
+            pill_h = text_h + 8
+            draw.rounded_rectangle(
+                [pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
+                radius=6,
+                fill=(0, 0, 0, 120)
+            )
+            # Center text within the pill (account for bbox top offset)
+            text_x = pill_x + (pill_w - text_w) // 2 - bbox[0]
+            text_y = pill_y + (pill_h - text_h) // 2 - bbox[1]
+            draw.text((text_x, text_y), text, fill=(255, 255, 255), font=label_font)
+
+        draw_label("DEALER", dealer_label_y)
+        draw_label("PLAYER", player_label_y)
+
+        # --- Draw divider line ---
+        draw.line(
+            [(padding, divider_y), (total_width - padding, divider_y)],
+            fill=(255, 255, 255, 100),
+            width=divider_thickness
+        )
+
+        # --- Paste dealer cards ---
+        x_offset = padding
         for i, card in enumerate(dealer_hand):
-            # If hiding the second card, use card back
             if i > 0 and hide_dealer_card:
                 card_key = 'card_back'
             else:
                 rank, suit = card
                 card_key = get_card_key(rank, suit)
-                
+
             if card_key in CARDS:
                 card_path = CARDS[card_key][4]
                 try:
-                    card_image = Image.open(card_path)
+                    card_image = Image.open(card_path).convert('RGBA')
                     card_image = card_image.resize((card_width, card_height))
-                    combined_image.paste(card_image, (x_offset, 0))
+                    combined_image.paste(card_image, (x_offset, dealer_cards_y), card_image)
                     x_offset += card_width + card_spacing
                 except Exception as e:
                     print(f"Error loading card image: {e}")
-        
+
+        # --- Paste player cards ---
+        x_offset = padding
+        for card in player_hand:
+            rank, suit = card
+            card_key = get_card_key(rank, suit)
+
+            if card_key in CARDS:
+                card_path = CARDS[card_key][4]
+                try:
+                    card_image = Image.open(card_path).convert('RGBA')
+                    card_image = card_image.resize((card_width, card_height))
+                    combined_image.paste(card_image, (x_offset, player_cards_y), card_image)
+                    x_offset += card_width + card_spacing
+                except Exception as e:
+                    print(f"Error loading card image: {e}")
+
         return combined_image
 
 def get_card_key(rank, suit):

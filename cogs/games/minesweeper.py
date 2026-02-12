@@ -314,12 +314,15 @@ class MinesweeperView(discord.ui.View):
                     else:
                         result = f"💥 BOOM! You hit a mine and lost your bet of {self.bet} {CURRENCY_PLURAL}."
                     color = 0xFF0000  # Red
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player.id,))
+                new_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create final embed
         embed = discord.Embed(
             title=f"Minesweeper - {self.difficulty.capitalize()} - Game Over",
             description=f"{result}\n\n"
+                        f"Balance: {new_balance} {CURRENCY_PLURAL}\n"
                         f"Stats: {self.ms_wins}W/{self.ms_losses}L",
             color=color,
             timestamp=datetime.now(timezone.utc)
@@ -332,8 +335,25 @@ class MinesweeperView(discord.ui.View):
         await self.message.edit(embed=embed, view=self)
         self.stop()
 
-async def minesweeper_command(self, ctx, difficulty='easy', bet=10):
+async def minesweeper_command(self, ctx, difficulty=None, bet=10):
     """Play a game of Minesweeper with betting."""
+    # If no difficulty specified, show selection screen
+    if difficulty is None:
+        view = DifficultySelectView(self, ctx, bet)
+        embed = discord.Embed(
+            title="Minesweeper - Choose Difficulty",
+            description=f"Bet: {bet} {CURRENCY_PLURAL}\n\n"
+                        f"🟢 **Easy** — 4 mines, 2x payout\n"
+                        f"🟡 **Medium** — 6 mines, 3x payout\n"
+                        f"🔴 **Hard** — 8 mines, 5x payout\n\n"
+                        f"Tip: {COMMAND_PREFIX}minesweeper or {COMMAND_PREFIX}ms [difficulty] [bet] to skip this screen",
+            color=0x00ff00,
+            timestamp=datetime.now(timezone.utc)
+        )
+        embed.set_footer(text=BOTVERSION)
+        view.message = await ctx.reply(embed=embed, view=view)
+        return
+
     # Validate difficulty
     if difficulty.lower() not in ['easy', 'medium', 'hard']:
         if difficulty.isdigit():
@@ -375,3 +395,51 @@ async def minesweeper_command(self, ctx, difficulty='easy', bet=10):
         
         # Send the message with the game board
         view.message = await ctx.reply(embed=embed, view=view)
+
+
+class DifficultySelectView(discord.ui.View):
+    """View that lets the user pick a minesweeper difficulty before starting."""
+    def __init__(self, cog_self, ctx, bet):
+        super().__init__(timeout=30)
+        self.cog_self = cog_self
+        self.ctx = ctx
+        self.bet = bet
+        self.message = None
+
+    async def interaction_check(self, interaction):
+        if interaction.user.id == self.ctx.author.id:
+            return True
+        await interaction.response.send_message("This isn't your game!", ephemeral=True)
+        return False
+
+    async def on_timeout(self):
+        self.clear_items()
+        if self.message:
+            embed = discord.Embed(
+                title="Minesweeper",
+                description="Selection timed out.",
+                color=0xFF0000,
+                timestamp=datetime.now(timezone.utc)
+            )
+            embed.set_footer(text=BOTVERSION)
+            await self.message.edit(embed=embed, view=self)
+
+    async def start_game(self, interaction, difficulty):
+        self.stop()
+        await self.message.delete()
+        await minesweeper_command(self.cog_self, self.ctx, difficulty, self.bet)
+
+    @discord.ui.button(label="Easy (2x)", style=discord.ButtonStyle.success)
+    async def easy_button(self, interaction, button):
+        await interaction.response.defer()
+        await self.start_game(interaction, 'easy')
+
+    @discord.ui.button(label="Medium (3x)", style=discord.ButtonStyle.primary)
+    async def medium_button(self, interaction, button):
+        await interaction.response.defer()
+        await self.start_game(interaction, 'medium')
+
+    @discord.ui.button(label="Hard (5x)", style=discord.ButtonStyle.danger)
+    async def hard_button(self, interaction, button):
+        await interaction.response.defer()
+        await self.start_game(interaction, 'hard')

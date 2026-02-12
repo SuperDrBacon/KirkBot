@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 import aiosqlite
 import discord
 
-from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, CURRENCY_PLURAL, CURRENCY_SINGULAR, ECONOMY_DATABASE)
+from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, CURRENCY_PLURAL,
+                                  CURRENCY_SINGULAR, ECONOMY_DATABASE)
 
 
 class TicTacToeAIView(discord.ui.View):
@@ -203,6 +204,8 @@ class TicTacToeAIView(discord.ui.View):
                     "UPDATE economy_data SET balance = balance + ?, ttt_wins = ? WHERE user_id = ?",
                     (self.bet, self.p1_wins, self.player.id)
                 )
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player.id,))
+                new_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create the win embed
@@ -210,6 +213,7 @@ class TicTacToeAIView(discord.ui.View):
             title="Tic-Tac-Toe - Game Over",
             description=f"**{self.player.display_name}** (❌) wins!\n\n"
                         f"You win {self.bet} {CURRENCY_PLURAL}!\n\n"
+                        f"Balance: {new_balance} {CURRENCY_PLURAL}\n"
                         f"Your Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T",
             color=0x00FF00,
             timestamp=datetime.now(timezone.utc)
@@ -226,6 +230,8 @@ class TicTacToeAIView(discord.ui.View):
                     "UPDATE economy_data SET balance = balance - ?, ttt_losses = ? WHERE user_id = ?",
                     (self.bet, self.p1_losses, self.player.id)
                 )
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player.id,))
+                new_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create the loss embed
@@ -233,6 +239,7 @@ class TicTacToeAIView(discord.ui.View):
             title="Tic-Tac-Toe - Game Over",
             description=f"**{self.ai_player.name}** (⭕) wins!\n\n"
                         f"You lose {self.bet} {CURRENCY_PLURAL}.\n\n"
+                        f"Balance: {new_balance} {CURRENCY_PLURAL}\n"
                         f"Your Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T",
             color=0xFF0000,
             timestamp=datetime.now(timezone.utc)
@@ -249,12 +256,15 @@ class TicTacToeAIView(discord.ui.View):
                     "UPDATE economy_data SET ttt_ties = ? WHERE user_id = ?",
                     (self.p1_ties, self.player.id)
                 )
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player.id,))
+                new_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create the tie embed
         embed = discord.Embed(
             title="Tic-Tac-Toe - Game Over",
             description=f"It's a tie! You keep your {CURRENCY_PLURAL}.\n\n"
+                        f"Balance: {new_balance} {CURRENCY_PLURAL}\n"
                         f"Your Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T",
             color=0x0000FF,  # Blue for tie
             timestamp=datetime.now(timezone.utc)
@@ -482,6 +492,11 @@ class TicTacToeView(discord.ui.View):
                         "UPDATE economy_data SET balance = balance - ?, ttt_losses = ? WHERE user_id = ?",
                         (self.bet, self.p1_losses, loser.id)
                     )
+                # Fetch updated balances
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player1.id,))
+                p1_balance = (await cur.fetchone())[0]
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player2.id,))
+                p2_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create the win embed
@@ -490,8 +505,8 @@ class TicTacToeView(discord.ui.View):
             title="Tic-Tac-Toe - Game Over",
             description=f"**{winner.display_name}** ({winner_symbol}) wins!\n\n"
                         f"**{winner.display_name}** wins {self.bet} {CURRENCY_PLURAL} from **{loser.display_name}**\n\n"
-                        f"{self.player1.display_name}'s Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
-                        f"{self.player2.display_name}'s Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
+                        f"{self.player1.display_name}: {p1_balance} {CURRENCY_PLURAL} | {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
+                        f"{self.player2.display_name}: {p2_balance} {CURRENCY_PLURAL} | {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
             color=0x00FF00,
             timestamp=datetime.now(timezone.utc)
         )
@@ -512,14 +527,19 @@ class TicTacToeView(discord.ui.View):
                     "UPDATE economy_data SET ttt_ties = ? WHERE user_id = ?",
                     (self.p2_ties, self.player2.id)
                 )
+                # Fetch updated balances
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player1.id,))
+                p1_balance = (await cur.fetchone())[0]
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player2.id,))
+                p2_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create the tie embed
         embed = discord.Embed(
             title="Tic-Tac-Toe - Game Over",
             description=f"It's a tie! Both players keep their {CURRENCY_PLURAL}.\n\n"
-                        f"{self.player1.display_name}'s Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
-                        f"{self.player2.display_name}'s Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
+                        f"{self.player1.display_name}: {p1_balance} {CURRENCY_PLURAL} | {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T\n"
+                        f"{self.player2.display_name}: {p2_balance} {CURRENCY_PLURAL} | {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T",
             color=0x0000FF,  # Blue for tie
             timestamp=datetime.now(timezone.utc)
         )

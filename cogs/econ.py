@@ -115,10 +115,12 @@ class Economy(commands.Cog):
                 C4_LOSSES,
                 C4_TIES,
                 MS_WINS,
-                MS_LOSSES
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                MS_LOSSES,
+                DP_WINS,
+                DP_LOSSES
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
 
-        data_tuple = (user_id, user_name, server_id, unix_time, STARTING_BALANCE, STARTING_BANK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        data_tuple = (user_id, user_name, server_id, unix_time, STARTING_BALANCE, STARTING_BANK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         
         async with aiosqlite.connect(ECONOMY_DATABASE) as con:
             async with con.cursor() as cur:
@@ -164,12 +166,14 @@ class Economy(commands.Cog):
                 columns = [info[1] for info in await cur.fetchall()]
                 
                 # Add columns if they don't exist
-                if "MS_WINS" not in columns:
-                    await cur.execute("ALTER TABLE economy_data ADD COLUMN MS_WINS INTEGER DEFAULT 0")
-                if "MS_LOSSES" not in columns:
-                    await cur.execute("ALTER TABLE economy_data ADD COLUMN MS_LOSSES INTEGER DEFAULT 0")
-                # if "C4_TIES" not in columns:
-                #     await cur.execute("ALTER TABLE economy_data ADD COLUMN C4_TIES INTEGER DEFAULT 0")
+                # if "MS_WINS" not in columns:
+                #     await cur.execute("ALTER TABLE economy_data ADD COLUMN MS_WINS INTEGER DEFAULT 0")
+                # if "MS_LOSSES" not in columns:
+                #     await cur.execute("ALTER TABLE economy_data ADD COLUMN MS_LOSSES INTEGER DEFAULT 0")
+                if "DP_WINS" not in columns:
+                    await cur.execute("ALTER TABLE economy_data ADD COLUMN DP_WINS INTEGER DEFAULT 0")
+                if "DP_LOSSES" not in columns:
+                    await cur.execute("ALTER TABLE economy_data ADD COLUMN DP_LOSSES INTEGER DEFAULT 0")
                     
             await con.commit()
         await ctx.reply("Database columns updated.")
@@ -313,14 +317,17 @@ class Economy(commands.Cog):
         async with aiosqlite.connect(ECONOMY_DATABASE) as con:
             async with con.cursor() as cur:
                 await cur.execute(
-                    "SELECT slots_wins, slots_losses, bj_wins, bj_losses, bj_ties, cf_wins, cf_losses, ttt_wins, ttt_losses, ttt_ties " +
-                    "FROM economy_data WHERE user_id = ?", 
+                    "SELECT slots_wins, slots_losses, bj_wins, bj_losses, bj_ties, cf_wins, cf_losses, " +
+                    "ttt_wins, ttt_losses, ttt_ties, c4_wins, c4_losses, c4_ties, ms_wins, ms_losses, " +
+                    "dp_wins, dp_losses FROM economy_data WHERE user_id = ?", 
                     (user_id,)
                 )
                 stats = await cur.fetchone()
                 
         if stats:
-            slots_wins, slots_losses, bj_wins, bj_losses, bj_ties, cf_wins, cf_losses, ttt_wins, ttt_losses, ttt_ties = stats
+            (slots_wins, slots_losses, bj_wins, bj_losses, bj_ties, cf_wins, cf_losses, 
+             ttt_wins, ttt_losses, ttt_ties, c4_wins, c4_losses, c4_ties, ms_wins, ms_losses,
+             dp_wins, dp_losses) = stats
             
             embed = discord.Embed(
                 title="Game Statistics",
@@ -340,6 +347,15 @@ class Economy(commands.Cog):
             
             ttt_total = ttt_wins + ttt_losses + ttt_ties
             ttt_rate = f"{(ttt_wins / (ttt_total - ttt_ties) * 100) if (ttt_total - ttt_ties) > 0 else 0:.1f}%"
+            
+            c4_total = c4_wins + c4_losses + c4_ties
+            c4_rate = f"{(c4_wins / (c4_total - c4_ties) * 100) if (c4_total - c4_ties) > 0 else 0:.1f}%"
+            
+            ms_total = ms_wins + ms_losses
+            ms_rate = f"{(ms_wins / ms_total * 100) if ms_total > 0 else 0:.1f}%"
+            
+            dp_total = dp_wins + dp_losses
+            dp_rate = f"{(dp_wins / dp_total * 100) if dp_total > 0 else 0:.1f}%"
             
             # Add slots stats
             embed.add_field(
@@ -361,12 +377,35 @@ class Economy(commands.Cog):
                 value=f"Wins: {cf_wins}\nLosses: {cf_losses}\nWin Rate: {cf_rate}",
                 inline=True
             )
+            
             # Add tic-tac-toe stats
             embed.add_field(
                 name="❌⭕ Tic-Tac-Toe",
                 value=f"Wins: {ttt_wins}\nLosses: {ttt_losses}\nTies: {ttt_ties}\nWin Rate: {ttt_rate}",
                 inline=True
             )
+            
+            # Add connect four stats
+            embed.add_field(
+                name="🔴 Connect Four",
+                value=f"Wins: {c4_wins}\nLosses: {c4_losses}\nTies: {c4_ties}\nWin Rate: {c4_rate}",
+                inline=True
+            )
+            
+            # Add minesweeper stats
+            embed.add_field(
+                name="💣 Minesweeper",
+                value=f"Wins: {ms_wins}\nLosses: {ms_losses}\nWin Rate: {ms_rate}",
+                inline=True
+            )
+            
+            # Add dice poker stats
+            embed.add_field(
+                name="🎲 Dice Poker",
+                value=f"Wins: {dp_wins}\nLosses: {dp_losses}\nWin Rate: {dp_rate}",
+                inline=True
+            )
+            
             embed.set_footer(text=BOTVERSION)
             await ctx.reply(embed=embed)
         else:
@@ -451,7 +490,7 @@ class Economy(commands.Cog):
             bet = player_or_bet
         await connectfour_command(self, ctx, playertwo, bet)
     
-    @commands.command(name="dicepoker", aliases=["dice"])
+    @commands.command(name="dicepoker", aliases=["dice", "dp"])
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
     async def dicepoker(self, ctx, bet:int=10):
@@ -473,7 +512,7 @@ class Economy(commands.Cog):
     @commands.command(name="minesweeper", aliases=["ms"])
     @commands.cooldown(1, 5, commands.BucketType.user)
     @economy_commands_enabled()
-    async def minesweeper(self, ctx, difficulty_or_bet: Union[str, int]='easy', bet:int=10):
+    async def minesweeper(self, ctx, difficulty_or_bet: Union[str, int]=None, bet:int=10):
         r"""
         Difficulties:
         - easy: 5x5 grid with 4 mines (2x payout)
@@ -483,11 +522,15 @@ class Economy(commands.Cog):
         await self.check_user(ctx.author.id, ctx.author.name, ctx.guild.id, functions.get_unix_time())
         
         # Handle flexible parameter order
-        difficulty = 'easy'
-        if isinstance(difficulty_or_bet, str):
+        difficulty = None
+        if difficulty_or_bet is None:
+            # No args — show difficulty selection
+            difficulty = None
+        elif isinstance(difficulty_or_bet, str):
             difficulty = difficulty_or_bet.lower()
         elif isinstance(difficulty_or_bet, int):
             bet = difficulty_or_bet
+            difficulty = None
         
         await minesweeper_command(self, ctx, difficulty, bet)
 
@@ -502,7 +545,7 @@ async def setup(bot):
 # Rock Paper Scissors
 # Hangman
 # Higher/Lower Card Game
-# Minesweeper
+# -- Minesweeper -- DONE
 # Wheel of Fortune
 
 #! 1v1 Games

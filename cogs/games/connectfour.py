@@ -1,10 +1,12 @@
 import asyncio
 import random
+from datetime import datetime, timezone
+
 import aiosqlite
 import discord
 
-from datetime import datetime, timezone
-from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, CURRENCY_PLURAL, CURRENCY_SINGULAR, ECONOMY_DATABASE)
+from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX, CURRENCY_PLURAL,
+                                  CURRENCY_SINGULAR, ECONOMY_DATABASE)
 
 
 class ConnectFourView(discord.ui.View):
@@ -218,6 +220,11 @@ class ConnectFourView(discord.ui.View):
                         "UPDATE economy_data SET balance = balance - ?, c4_losses = ? WHERE user_id = ?",
                         (self.bet, self.p1_losses, loser.id)
                     )
+                # Fetch updated balances
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player1.id,))
+                p1_balance = (await cur.fetchone())[0]
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player2.id,))
+                p2_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create the win embed
@@ -228,11 +235,11 @@ class ConnectFourView(discord.ui.View):
         description = (f"**{winner.display_name}** ({winner_piece}) wins!\n\n"
                         f"{board_display}\n"
                         f"**{winner.display_name}** wins {self.bet} {CURRENCY_PLURAL} from **{loser.display_name}**\n\n"
-                        f"{self.player1.display_name}'s Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T")
+                        f"{self.player1.display_name}: {p1_balance} {CURRENCY_PLURAL} | {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T")
         
         # Add player2 stats only for human opponents
         if not self.player2.bot:
-            description += f"\n{self.player2.display_name}'s Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T"
+            description += f"\n{self.player2.display_name}: {p2_balance} {CURRENCY_PLURAL} | {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T"
         
         embed = discord.Embed(
             title="Connect Four - Game Over",
@@ -257,6 +264,11 @@ class ConnectFourView(discord.ui.View):
                     "UPDATE economy_data SET c4_ties = ? WHERE user_id = ?",
                     (self.p2_ties, self.player2.id)
                 )
+                # Fetch updated balances
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player1.id,))
+                p1_balance = (await cur.fetchone())[0]
+                await cur.execute("SELECT balance FROM economy_data WHERE user_id = ?", (self.player2.id,))
+                p2_balance = (await cur.fetchone())[0]
             await con.commit()
         
         # Create the tie embed
@@ -265,11 +277,11 @@ class ConnectFourView(discord.ui.View):
         # Build description with conditional player2 stats
         description = (f"It's a tie! Both players keep their {CURRENCY_PLURAL}.\n\n"
                         f"{board_display}\n\n"
-                        f"{self.player1.display_name}'s Stats: {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T")
+                        f"{self.player1.display_name}: {p1_balance} {CURRENCY_PLURAL} | {self.p1_wins}W/{self.p1_losses}L/{self.p1_ties}T")
         
         # Add player2 stats only for human opponents
         if not self.player2.bot:
-            description += f"\n{self.player2.display_name}'s Stats: {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T"
+            description += f"\n{self.player2.display_name}: {p2_balance} {CURRENCY_PLURAL} | {self.p2_wins}W/{self.p2_losses}L/{self.p2_ties}T"
         
         embed = discord.Embed(
             title="Connect Four - Game Over",
