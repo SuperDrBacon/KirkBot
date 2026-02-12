@@ -10,8 +10,7 @@ import numpy
 
 from .constants import (ARCHIVE_DATABASE, AUTODELETE_DATABASE,
                         AUTOROLE_DATABASE, COMMAND_LOGS_DATABASE,
-                        DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS, ECONOMY_DATABASE,
-                        IMAGEMOD_CLASSIFICATION_THRESHOLD, IMAGEMOD_DATABASE,
+                        ECONOMY_DATABASE, IMAGEMOD_DATABASE,
                         IMAGEMOD_DEFAULT_CAPTIONING_MODEL,
                         IMAGEMOD_DEFAULT_CLASSIFICATION_MODEL,
                         INVITELOG_DATABASE, PERMISSIONS_DATABASE)
@@ -120,9 +119,8 @@ setup_table_permissions_database = '''
 
                 CREATE TABLE IF NOT EXISTS imagemod (
                     SERVER_ID           INTEGER     NOT NULL,
-                    CHANNEL_ID          INTEGER     NOT NULL,
                     ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
-                    PRIMARY KEY         (SERVER_ID, CHANNEL_ID));'''
+                    PRIMARY KEY         SERVER_ID);'''
 
 setup_table_command_logs = '''
                 CREATE TABLE IF NOT EXISTS command_logs (
@@ -140,16 +138,20 @@ setup_table_command_logs = '''
 setup_table_imagemod_database = '''
                 CREATE TABLE IF NOT EXISTS keywords (
                     ID          INTEGER     PRIMARY KEY AUTOINCREMENT,
-                    KEYWORD     TEXT        NOT NULL    UNIQUE,
-                    CATEGORY    TEXT);
+                    SERVER_ID   INTEGER     NOT NULL,
+                    KEYWORD     TEXT        NOT NULL,
+                    CATEGORY    TEXT,
+                    UNIQUE(SERVER_ID, KEYWORD));
 
                 CREATE TABLE IF NOT EXISTS log_channels (
                     SERVER_ID   INTEGER     PRIMARY KEY,
                     CHANNEL_ID  INTEGER     NOT NULL);
 
                 CREATE TABLE IF NOT EXISTS settings (
-                    KEY         TEXT        PRIMARY KEY,
-                    VALUE       TEXT        NOT NULL);'''
+                    SERVER_ID   INTEGER     NOT NULL,
+                    KEY         TEXT        NOT NULL,
+                    VALUE       TEXT        NOT NULL,
+                    PRIMARY KEY (SERVER_ID, KEY));'''
 
 async def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
     """
@@ -261,57 +263,17 @@ async def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:s
                 # Create a connection to the imagemod database
                 async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
                     await con.executescript(setup_table_imagemod_database)
-                    # Seed default keywords if the table is empty
-                    async with con.execute('SELECT COUNT(*) FROM keywords') as cursor:
-                        count = (await cursor.fetchone())[0]
-                    if count == 0:
-                        # Map keywords to categories based on the constant list sections
-                        category_map = {
-                            'sexual': [
-                                'nude', 'naked', 'nsfw', 'pornography', 'explicit', 'topless',
-                                'lingerie', 'underwear', 'bikini', 'bra', 'panties', 'thong',
-                                'breasts', 'breast', 'tits', 'boobs', 'nipple', 'nipples',
-                                'genitalia', 'penis', 'vagina', 'buttocks', 'butt', 'ass',
-                                'sex', 'sexual', 'intercourse', 'fucked', 'fucking', 'fuck',
-                                'blowjob', 'handjob', 'masturbat', 'orgasm', 'erotic',
-                                'porn', 'hentai', 'bondage', 'fetish', 'stripper', 'stripping',
-                            ],
-                            'violence': [
-                                'weapon', 'gun', 'rifle', 'pistol', 'shotgun', 'firearm',
-                                'knife', 'sword', 'machete', 'axe',
-                                'blood', 'bloody', 'bleeding', 'gore', 'gory',
-                                'violence', 'violent', 'murder', 'kill', 'dead body', 'corpse',
-                                'wound', 'injury', 'mutilat', 'dismember', 'decapitat',
-                            ],
-                            'drugs': [
-                                'drug', 'drugs', 'cocaine', 'heroin', 'meth', 'marijuana',
-                                'syringe', 'needle', 'pills', 'overdose',
-                            ],
-                            'hate': [
-                                'swastika', 'nazi', 'noose', 'lynching',
-                            ],
-                        }
-                        rows = []
-                        for category, keywords in category_map.items():
-                            for kw in keywords:
-                                rows.append((kw, category))
-                        await con.executemany(
-                            'INSERT OR IGNORE INTO keywords (KEYWORD, CATEGORY) VALUES (?, ?)',
-                            rows
-                        )
-                    # Seed default settings if not present
-                    default_settings = [
-                        ('captioning_model', IMAGEMOD_DEFAULT_CAPTIONING_MODEL),
-                        ('captioning_enabled', '1'),
-                        ('classification_model', IMAGEMOD_DEFAULT_CLASSIFICATION_MODEL),
-                        ('classification_enabled', '1'),
-                        ('classification_threshold', str(IMAGEMOD_CLASSIFICATION_THRESHOLD)),
+                    # Seed global model names (SERVER_ID=0) if not present
+                    global_settings = [
+                        (0, 'captioning_model', IMAGEMOD_DEFAULT_CAPTIONING_MODEL),
+                        (0, 'classification_model', IMAGEMOD_DEFAULT_CLASSIFICATION_MODEL),
                     ]
                     await con.executemany(
-                        'INSERT OR IGNORE INTO settings (KEY, VALUE) VALUES (?, ?)',
-                        default_settings
+                        'INSERT OR IGNORE INTO settings (SERVER_ID, KEY, VALUE) VALUES (?, ?, ?)',
+                        global_settings
                     )
                     await con.commit()
+                    # Note: per-server keywords are seeded on first use from DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS
                 print("aiosqlite imagemod database created")
             except Exception as error:
                 # Failed to create the imagemod database

@@ -8,37 +8,50 @@ import requests
 from discord.ext import commands
 
 from cogs.utils.constants import (BOTVERSION, COMMAND_PREFIX,
+                                  DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS,
+                                  IMAGEMOD_CLASSIFICATION_THRESHOLD,
                                   IMAGEMOD_DATABASE, MSG_DEL_DELAY, OWNER_ID,
                                   PERMISSIONS_DATABASE)
 
-# ─── Mute buttons view ──────────────────────────────────────────────────
+# ─── Image action buttons view ───────────────────────────────────────────
 
-class MuteView(discord.ui.View):
-    """Persistent view with buttons to mute the flagged user for 1 / 5 / 30 minutes."""
+class ImageActionView(discord.ui.View):
+    """View with buttons to mute the flagged user and/or delete the flagged message."""
 
-    def __init__(self, member: discord.Member):
+    def __init__(self, member: discord.Member, flagged_message: discord.Message):
         super().__init__(timeout=300)  # buttons expire after 5 minutes
         self.member = member
+        self.flagged_message = flagged_message
 
-    async def _do_mute(self, interaction: discord.Interaction, minutes: int):
-        """Apply a timeout to the member and update the embed."""
-        # Only allow server members with moderate_members permission
-        if not interaction.user.guild_permissions.moderate_members:
+    async def _check_perms(self, interaction: discord.Interaction, perm: str) -> bool:
+        """Check that the moderator has the required permission."""
+        if not getattr(interaction.user.guild_permissions, perm, False):
             await interaction.response.send_message(
-                'You do not have permission to mute members.', ephemeral=True
+                f'You do not have the `{perm}` permission.', ephemeral=True
             )
+            return False
+        return True
+
+    async def _disable_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Disable a single button and update the message."""
+        button.disabled = True
+        await interaction.message.edit(view=self)
+
+    async def do_mute(self, interaction: discord.Interaction, button: discord.ui.Button, minutes: int):
+        """Apply a timeout to the member."""
+        if not await self._check_perms(interaction, 'moderate_members'):
             return
 
         try:
-            await self.member.timeout(timedelta(minutes=minutes), reason=f'Flagged image — muted for {minutes}min by {interaction.user}')
+            await self.member.timeout(
+                timedelta(minutes=minutes),
+                reason=f'Flagged image — muted for {minutes}min by {interaction.user}'
+            )
             await interaction.response.send_message(
                 f'🔇 **{self.member.display_name}** has been muted for **{minutes} minute{"s" if minutes != 1 else ""}**.',
                 ephemeral=True
             )
-            # Disable all buttons after use
-            for child in self.children:
-                child.disabled = True
-            await interaction.message.edit(view=self)
+            await self._disable_button(interaction, button)
         except discord.Forbidden:
             await interaction.response.send_message(
                 'I don\'t have permission to mute that member. Check my role hierarchy.',
@@ -49,15 +62,38 @@ class MuteView(discord.ui.View):
 
     @discord.ui.button(label='Mute 1 min', style=discord.ButtonStyle.secondary, emoji='🔇')
     async def mute_1(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._do_mute(interaction, 1)
+        await self.do_mute(interaction, button, 1)
 
     @discord.ui.button(label='Mute 5 min', style=discord.ButtonStyle.primary, emoji='🔇')
     async def mute_5(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._do_mute(interaction, 5)
+        await self.do_mute(interaction, button, 5)
 
     @discord.ui.button(label='Mute 30 min', style=discord.ButtonStyle.danger, emoji='🔇')
     async def mute_30(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self._do_mute(interaction, 30)
+        await self.do_mute(interaction, button, 30)
+
+    @discord.ui.button(label='Delete Image', style=discord.ButtonStyle.danger, emoji='🗑️')
+    async def delete_image(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not await self._check_perms(interaction, 'manage_messages'):
+            return
+
+        try:
+            await self.flagged_message.delete()
+            await interaction.response.send_message(
+                f'🗑️ Flagged message by **{self.member.display_name}** has been deleted.',
+                ephemeral=True
+            )
+            await self._disable_button(interaction, button)
+        except discord.NotFound:
+            await interaction.response.send_message('Message was already deleted.', ephemeral=True)
+            await self._disable_button(interaction, button)
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                'I don\'t have permission to delete that message.',
+                ephemeral=True
+            )
+        except Exception as e:
+            await interaction.response.send_message(f'Failed to delete: {e}', ephemeral=True)
 
 
 # ─── Dynamic model manager ──────────────────────────────────────────────
@@ -67,12 +103,11 @@ class ModelManager:
     Manages two HuggingFace models that can run simultaneously:
       - captioning      : image-to-text (e.g. BLIP) → generates a caption → keyword flagging
       - classification  : image-classification (e.g. Falconsai/nsfw_image_detection) → label + score
-    Either or both can be enabled/disabled independently.
+    Models are loaded globally; per-server enable/disable/threshold is handled by the cog.
     """
     def __init__(self):
         # Captioning model
         self.captioning_model_name: str | None = None
-        self.captioning_enabled: bool = True
         self.captioning_processor = None
         self.captioning_model = None
         self.captioning_ready: bool = False
@@ -80,24 +115,21 @@ class ModelManager:
 
         # Classification model
         self.classification_model_name: str | None = None
-        self.classification_enabled: bool = True
         self.classification_pipeline = None
         self.classification_ready: bool = False
         self.classification_loading: bool = False
-        self.threshold: float = 0.5
 
-    async def load_settings(self):
-        """Read model config from the imagemod database."""
+    async def load_global_settings(self):
+        """Read global model names from the imagemod database (SERVER_ID=0)."""
         settings: dict[str, str] = {}
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
-            async with con.execute('SELECT KEY, VALUE FROM settings') as cur:
+            async with con.execute(
+                'SELECT KEY, VALUE FROM settings WHERE SERVER_ID = 0'
+            ) as cur:
                 async for row in cur:
                     settings[row[0]] = row[1]
         self.captioning_model_name = settings.get('captioning_model')
-        self.captioning_enabled = settings.get('captioning_enabled', '1') == '1'
         self.classification_model_name = settings.get('classification_model')
-        self.classification_enabled = settings.get('classification_enabled', '1') == '1'
-        self.threshold = float(settings.get('classification_threshold', '0.5'))
 
     # ── Captioning loader ────────────────────────────────────────────
 
@@ -108,7 +140,7 @@ class ModelManager:
         return processor, model
 
     async def ensure_captioning_loaded(self):
-        if self.captioning_ready or self.captioning_loading or not self.captioning_enabled:
+        if self.captioning_ready or self.captioning_loading:
             return
         if not self.captioning_model_name:
             return
@@ -143,7 +175,7 @@ class ModelManager:
         return hf_pipeline('image-classification', model=name)
 
     async def ensure_classification_loaded(self):
-        if self.classification_ready or self.classification_loading or not self.classification_enabled:
+        if self.classification_ready or self.classification_loading:
             return
         if not self.classification_model_name:
             return
@@ -171,11 +203,11 @@ class ModelManager:
     # ── Boot both ────────────────────────────────────────────────────
 
     async def ensure_all_loaded(self):
-        await self.load_settings()
+        await self.load_global_settings()
         tasks = []
-        if self.captioning_enabled and not self.captioning_ready:
+        if not self.captioning_ready:
             tasks.append(self.ensure_captioning_loaded())
-        if self.classification_enabled and not self.classification_ready:
+        if not self.classification_ready:
             tasks.append(self.ensure_classification_loaded())
         if tasks:
             await asyncio.gather(*tasks)
@@ -189,31 +221,95 @@ class Imagemod(commands.Cog):
     Image screening module using a local HuggingFace image-to-text model.
     Automatically describes images posted in enabled channels and flags
     potentially inappropriate content.
+    Keywords and settings are stored per-server.
     '''
+
     def __init__(self, bot):
         self.bot = bot
-        self._keywords_cache: list[tuple[str, str | None]] = []  # (keyword, category)
+        self.keywords_cache: dict[int, list[tuple[str, str | None]]] = {}   # guild_id → [(keyword, category)]
+        self.settings_cache: dict[int, dict[str, str]] = {}                 # guild_id → {key: value}
 
-    # ─── Keyword DB helpers ──────────────────────────────────────────────
+    # ─── Per-guild keyword DB helpers ────────────────────────────────────
 
-    async def load_keywords(self) -> list[tuple[str, str | None]]:
-        """Load flagged keywords from the imagemod database and refresh cache."""
+    async def seed_keywords(self, guild_id: int):
+        """Seed the default keywords for a guild if it has none."""
+        rows = []
+        for category, keywords in DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS.items():
+            for kw in keywords:
+                rows.append((guild_id, kw, category))
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
-            async with con.execute('SELECT KEYWORD, CATEGORY FROM keywords ORDER BY CATEGORY, KEYWORD') as cursor:
+            await con.executemany(
+                'INSERT OR IGNORE INTO keywords (SERVER_ID, KEYWORD, CATEGORY) VALUES (?, ?, ?)',
+                rows
+            )
+            await con.commit()
+
+    async def load_keywords(self, guild_id: int) -> list[tuple[str, str | None]]:
+        """Load flagged keywords for a guild from the DB and refresh cache. Seeds defaults if empty."""
+        async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+            async with con.execute(
+                'SELECT KEYWORD, CATEGORY FROM keywords WHERE SERVER_ID = ? ORDER BY CATEGORY, KEYWORD',
+                (guild_id,)
+            ) as cursor:
                 rows = await cursor.fetchall()
-        self._keywords_cache = rows
+        if not rows:
+            await self.seed_keywords(guild_id)
+            async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+                async with con.execute(
+                    'SELECT KEYWORD, CATEGORY FROM keywords WHERE SERVER_ID = ? ORDER BY CATEGORY, KEYWORD',
+                    (guild_id,)
+                ) as cursor:
+                    rows = await cursor.fetchall()
+        self.keywords_cache[guild_id] = rows
         return rows
 
-    async def get_keywords(self) -> list[tuple[str, str | None]]:
-        """Return cached keywords, loading from DB if cache is empty."""
-        if not self._keywords_cache:
-            await self.load_keywords()
-        return self._keywords_cache
+    async def get_keywords(self, guild_id: int) -> list[tuple[str, str | None]]:
+        """Return cached keywords for a guild, loading from DB if not cached."""
+        if guild_id not in self.keywords_cache:
+            await self.load_keywords(guild_id)
+        return self.keywords_cache[guild_id]
 
-    async def get_keyword_list(self) -> list[str]:
-        """Return just the keyword strings."""
-        keywords = await self.get_keywords()
+    async def get_keyword_list(self, guild_id: int) -> list[str]:
+        """Return just the keyword strings for a guild."""
+        keywords = await self.get_keywords(guild_id)
         return [kw for kw, _ in keywords]
+
+    # ─── Per-guild settings DB helpers ───────────────────────────────────
+
+    async def load_guild_settings(self, guild_id: int) -> dict[str, str]:
+        """Load per-guild settings (e.g. classification_threshold)."""
+        settings: dict[str, str] = {}
+        async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+            async with con.execute(
+                'SELECT KEY, VALUE FROM settings WHERE SERVER_ID = ?',
+                (guild_id,)
+            ) as cur:
+                async for row in cur:
+                    settings[row[0]] = row[1]
+        self.settings_cache[guild_id] = settings
+        return settings
+
+    async def get_guild_settings(self, guild_id: int) -> dict[str, str]:
+        """Return cached guild settings, loading if not cached."""
+        if guild_id not in self.settings_cache:
+            await self.load_guild_settings(guild_id)
+        return self.settings_cache[guild_id]
+
+    async def get_guild_threshold(self, guild_id: int) -> float:
+        """Return the classification threshold for a guild."""
+        settings = await self.get_guild_settings(guild_id)
+        return float(settings.get('classification_threshold', str(IMAGEMOD_CLASSIFICATION_THRESHOLD)))
+
+    async def set_guild_setting(self, guild_id: int, key: str, value: str):
+        """Write a single per-guild setting to DB and refresh cache."""
+        async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+            await con.execute(
+                'INSERT INTO settings (SERVER_ID, KEY, VALUE) VALUES (?, ?, ?) '
+                'ON CONFLICT(SERVER_ID, KEY) DO UPDATE SET VALUE = excluded.VALUE',
+                (guild_id, key, value)
+            )
+            await con.commit()
+        await self.load_guild_settings(guild_id)
 
     # ─── Log channel DB helpers ──────────────────────────────────────────
 
@@ -235,8 +331,6 @@ class Imagemod(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Image screening module online')
-        # Pre-load keywords cache
-        await self.load_keywords()
         # Pre-load both models in the background
         asyncio.create_task(model_manager.ensure_all_loaded())
 
@@ -258,22 +352,20 @@ class Imagemod(commands.Cog):
 
         # Check if image screening is enabled for this channel
         guild_id = message.guild.id
-        channel_id = message.channel.id
 
         async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
-            async with con.execute(
-                'SELECT enabled FROM imagemod WHERE server_id = ? AND channel_id = ?',
-                (guild_id, channel_id)
-            ) as cursor:
+            async with con.execute('SELECT enabled FROM imagemod WHERE server_id = ?', (guild_id,)) as cursor:
                 result = await cursor.fetchone()
                 enabled = result is not None and result[0]
 
         if not enabled:
             return
 
+        threshold = await self.get_guild_threshold(guild_id)
+
         # Screen every image attachment
         for attachment in image_attachments:
-            result = await self.screen_image(attachment.url)
+            result = await self.screen_image(attachment.url, guild_id, threshold)
             if result is None:
                 continue
 
@@ -310,24 +402,20 @@ class Imagemod(commands.Cog):
                 embed.set_thumbnail(url=attachment.url)
                 embed.set_footer(text=BOTVERSION)
 
-                view = MuteView(member=message.author)
+                view = ImageActionView(member=message.author, flagged_message=message)
 
-                if log_channel:
-                    await log_channel.send(embed=embed, view=view)
-                else:
-                    await message.channel.send(embed=embed, view=view, delete_after=30)
-            else:
-                embed = discord.Embed(
-                    title='✅ Image Screened — No Flags',
-                    description='\n'.join(desc_parts),
-                    color=discord.Color.green()
-                )
-                embed.set_thumbnail(url=attachment.url)
-                embed.set_footer(text=BOTVERSION)
+                await log_channel.send(embed=embed, view=view)
 
-                if log_channel:
-                    await log_channel.send(embed=embed)
-                
+            # else:
+            #     embed = discord.Embed(
+            #         title='✅ Image Screened — No Flags',
+            #         description='\n'.join(desc_parts),
+            #         color=discord.Color.green()
+            #     )
+            #     embed.set_thumbnail(url=attachment.url)
+            #     embed.set_footer(text=BOTVERSION)
+
+            #     await log_channel.send(embed=embed)
 
     # ─── Manual describe command ─────────────────────────────────────────
 
@@ -364,7 +452,9 @@ class Imagemod(commands.Cog):
             return
 
         async with ctx.typing():
-            result = await self.screen_image(attachment.url)
+            guild_id = ctx.guild.id
+            threshold = await self.get_guild_threshold(guild_id)
+            result = await self.screen_image(attachment.url, guild_id, threshold)
 
         if result:
             desc_parts = []
@@ -403,39 +493,41 @@ class Imagemod(commands.Cog):
         '''
         Show the current image screening model status and configuration.
         '''
+        guild_id = ctx.guild.id
+        threshold = await self.get_guild_threshold(guild_id)
+
         embed = discord.Embed(title='Image Screening Info', color=discord.Color.blurple())
 
         # Captioning model
         cap_status = '✅ Loaded' if model_manager.captioning_ready else ('⏳ Loading...' if model_manager.captioning_loading else '❌ Not loaded')
         cap_state = f'**{model_manager.captioning_model_name or "Not set"}**\n'
-        cap_state += f'Status: {cap_status}\n'
-        cap_state += f'Enabled: {"Yes" if model_manager.captioning_enabled else "No"}'
+        cap_state += f'Status: {cap_status}'
         embed.add_field(name='📝 Captioning Model', value=cap_state, inline=False)
 
         # Classification model
         cls_status = '✅ Loaded' if model_manager.classification_ready else ('⏳ Loading...' if model_manager.classification_loading else '❌ Not loaded')
         cls_state = f'**{model_manager.classification_model_name or "Not set"}**\n'
         cls_state += f'Status: {cls_status}\n'
-        cls_state += f'Enabled: {"Yes" if model_manager.classification_enabled else "No"}\n'
-        cls_state += f'Threshold: {model_manager.threshold:.0%}'
+        cls_state += f'Threshold: {threshold:.0%}'
         embed.add_field(name='🏷️ Classification Model', value=cls_state, inline=False)
 
-        # Keywords (only relevant for captioning)
-        if model_manager.captioning_enabled:
-            keywords = await self.get_keyword_list()
-            kw_display = ', '.join(keywords[:50]) or 'None'
-            if len(keywords) > 50:
-                kw_display += f' ... and {len(keywords) - 50} more'
-            embed.add_field(name='Flagged Keywords', value=kw_display, inline=False)
+        # Keywords
+        keywords = await self.get_keyword_list(guild_id)
+        kw_display = ', '.join(keywords[:50]) or 'None'
+        if len(keywords) > 50:
+            kw_display += f' ... and {len(keywords) - 50} more'
+        embed.add_field(name='Flagged Keywords', value=kw_display, inline=False)
 
         embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False)
 
     # ─── Internal helpers ────────────────────────────────────────────────
 
-    async def screen_image(self, url: str) -> dict | None:
+    async def screen_image(self, url: str, guild_id: int,
+                           threshold: float = 0.5) -> dict | None:
         """
-        Download an image and run it through all enabled models.
+        Download an image and run it through both models.
+        Both models always run if loaded; the on/off gate is in permissions_data.
         Returns a dict with keys:
           - 'flagged'          : bool  (True if EITHER model flags the image)
           - 'caption'          : str | None        (from captioning model)
@@ -454,14 +546,14 @@ class Imagemod(commands.Cog):
             from PIL import Image
             image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
 
-            # Run enabled models concurrently
+            # Run both models concurrently
             caption_task = None
             classify_task = None
 
-            if model_manager.captioning_enabled and model_manager.captioning_ready:
-                caption_task = asyncio.create_task(self.run_captioning(image, loop))
-            if model_manager.classification_enabled and model_manager.classification_ready:
-                classify_task = asyncio.create_task(self.run_classification(image, loop))
+            if model_manager.captioning_ready:
+                caption_task = asyncio.create_task(self.run_captioning(image, loop, guild_id))
+            if model_manager.classification_ready:
+                classify_task = asyncio.create_task(self.run_classification(image, loop, threshold))
 
             caption_result = await caption_task if caption_task else None
             classify_result = await classify_task if classify_task else None
@@ -492,8 +584,8 @@ class Imagemod(commands.Cog):
         except Exception:
             return None
 
-    async def run_captioning(self, image, loop) -> dict:
-        """Run a captioning model and check caption against flagged keywords."""
+    async def run_captioning(self, image, loop, guild_id: int) -> dict:
+        """Run a captioning model and check caption against the guild's flagged keywords."""
         processor = model_manager.captioning_processor
         model = model_manager.captioning_model
 
@@ -504,17 +596,16 @@ class Imagemod(commands.Cog):
 
         caption = await loop.run_in_executor(None, run_inference)
         caption = caption.strip() if caption else ''
-        flagged_kws = await self.check_flagged(caption)
+        flagged_kws = await self.check_flagged(caption, guild_id)
         return {
             'flagged': bool(flagged_kws),
             'caption': caption,
             'flagged_keywords': flagged_kws,
         }
 
-    async def run_classification(self, image, loop) -> dict:
-        """Run a classification model and flag based on threshold."""
+    async def run_classification(self, image, loop, threshold: float) -> dict:
+        """Run a classification model and flag based on the guild's threshold."""
         pipe = model_manager.classification_pipeline
-        threshold = model_manager.threshold
 
         def run_inference():
             return pipe(image)
@@ -532,10 +623,10 @@ class Imagemod(commands.Cog):
             'labels': results,
         }
 
-    async def check_flagged(self, description: str) -> list[str]:
-        """Check if the description contains any flagged keywords from the database."""
+    async def check_flagged(self, description: str, guild_id: int) -> list[str]:
+        """Check if the description contains any flagged keywords for the guild."""
         description_lower = description.lower()
-        keywords = await self.get_keyword_list()
+        keywords = await self.get_keyword_list(guild_id)
         return [kw for kw in keywords if kw.lower() in description_lower]
 
     # ─── Admin keyword management commands ───────────────────────────────
@@ -570,12 +661,13 @@ class Imagemod(commands.Cog):
 
         added = []
         duplicates = []
+        guild_id = ctx.guild.id
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
             for kw in kw_list:
                 try:
                     await con.execute(
-                        'INSERT INTO keywords (KEYWORD, CATEGORY) VALUES (?, ?)',
-                        (kw, category.lower())
+                        'INSERT INTO keywords (SERVER_ID, KEYWORD, CATEGORY) VALUES (?, ?, ?)',
+                        (guild_id, kw, category.lower())
                     )
                     added.append(kw)
                 except aiosqlite.IntegrityError:
@@ -583,7 +675,7 @@ class Imagemod(commands.Cog):
             await con.commit()
 
         # Refresh cache
-        await self.load_keywords()
+        await self.load_keywords(guild_id)
 
         parts = []
         if added:
@@ -619,9 +711,13 @@ class Imagemod(commands.Cog):
 
         removed = []
         not_found = []
+        guild_id = ctx.guild.id
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
             for kw in kw_list:
-                cursor = await con.execute('DELETE FROM keywords WHERE KEYWORD = ?', (kw,))
+                cursor = await con.execute(
+                    'DELETE FROM keywords WHERE SERVER_ID = ? AND KEYWORD = ?',
+                    (guild_id, kw)
+                )
                 if cursor.rowcount > 0:
                     removed.append(kw)
                 else:
@@ -629,7 +725,7 @@ class Imagemod(commands.Cog):
             await con.commit()
 
         # Refresh cache
-        await self.load_keywords()
+        await self.load_keywords(guild_id)
 
         parts = []
         if removed:
@@ -651,7 +747,7 @@ class Imagemod(commands.Cog):
         List all flagged keywords, optionally filtered by category.
         Usage: keyword list [category]
         '''
-        keywords = await self.load_keywords()
+        keywords = await self.load_keywords(ctx.guild.id)
 
         if category:
             keywords = [(kw, cat) for kw, cat in keywords if cat and cat.lower() == category.lower()]
@@ -684,16 +780,20 @@ class Imagemod(commands.Cog):
         Usage: keyword clear [category]
         '''
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+            guild_id = ctx.guild.id
             if category:
-                await con.execute('DELETE FROM keywords WHERE CATEGORY = ?', (category.lower(),))
+                await con.execute(
+                    'DELETE FROM keywords WHERE SERVER_ID = ? AND CATEGORY = ?',
+                    (guild_id, category.lower())
+                )
                 msg = f'All keywords in category **{category}** cleared.'
             else:
-                await con.execute('DELETE FROM keywords')
+                await con.execute('DELETE FROM keywords WHERE SERVER_ID = ?', (guild_id,))
                 msg = 'All flagged keywords cleared.'
             await con.commit()
 
         # Refresh cache
-        await self.load_keywords()
+        await self.load_keywords(guild_id)
 
         embed = discord.Embed(
             title='Keywords Cleared',
@@ -709,7 +809,7 @@ class Imagemod(commands.Cog):
     @commands.is_owner()
     async def setmodel(self, ctx, model_type: str = None, *, model_name: str = None):
         '''
-        Switch a captioning or classification model.
+        Switch a captioning or classification model (global, bot-owner only).
         Usage: setmodel <captioning|classification> <huggingface_model_name>
         Example: setmodel classification Falconsai/nsfw_image_detection
         Example: setmodel captioning Salesforce/blip-image-captioning-large
@@ -717,20 +817,20 @@ class Imagemod(commands.Cog):
         '''
         if model_type is None:
             # Show current status of both models
-            await model_manager.load_settings()
+            await model_manager.load_global_settings()
+            threshold = await self.get_guild_threshold(ctx.guild.id)
+
             embed = discord.Embed(title='Current Models', color=discord.Color.blurple())
 
             cap_status = '✅ Loaded' if model_manager.captioning_ready else '❌ Not loaded'
             cap_val = f'**{model_manager.captioning_model_name or "Not set"}**\n'
-            cap_val += f'Status: {cap_status}\n'
-            cap_val += f'Enabled: {"Yes" if model_manager.captioning_enabled else "No"}'
+            cap_val += f'Status: {cap_status}'
             embed.add_field(name='📝 Captioning', value=cap_val, inline=False)
 
             cls_status = '✅ Loaded' if model_manager.classification_ready else '❌ Not loaded'
             cls_val = f'**{model_manager.classification_model_name or "Not set"}**\n'
             cls_val += f'Status: {cls_status}\n'
-            cls_val += f'Enabled: {"Yes" if model_manager.classification_enabled else "No"}\n'
-            cls_val += f'Threshold: {model_manager.threshold:.0%}'
+            cls_val += f'Threshold (this server): {threshold:.0%}'
             embed.add_field(name='🏷️ Classification', value=cls_val, inline=False)
 
             embed.set_footer(text=BOTVERSION)
@@ -752,12 +852,12 @@ class Imagemod(commands.Cog):
             )
             return
 
-        # Save to DB
+        # Save to DB (global, SERVER_ID=0)
         db_key = 'captioning_model' if model_type == 'captioning' else 'classification_model'
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
             await con.execute(
-                'INSERT INTO settings (KEY, VALUE) VALUES (?, ?) '
-                'ON CONFLICT(KEY) DO UPDATE SET VALUE = excluded.VALUE',
+                'INSERT INTO settings (SERVER_ID, KEY, VALUE) VALUES (0, ?, ?) '
+                'ON CONFLICT(SERVER_ID, KEY) DO UPDATE SET VALUE = excluded.VALUE',
                 (db_key, model_name)
             )
             await con.commit()
@@ -771,7 +871,7 @@ class Imagemod(commands.Cog):
         embed.set_footer(text=BOTVERSION)
         status_msg = await ctx.reply(embed=embed, mention_author=False)
 
-        await model_manager.load_settings()
+        await model_manager.load_global_settings()
         if model_type == 'captioning':
             await model_manager.reload_captioning()
             success = model_manager.captioning_ready
@@ -795,91 +895,20 @@ class Imagemod(commands.Cog):
         embed.set_footer(text=BOTVERSION)
         await status_msg.edit(embed=embed)
 
-    @setmodel.command(name='enable', aliases=['on'])
-    @commands.is_owner()
-    async def setmodel_enable(self, ctx, model_type: str = None):
-        '''
-        Enable a model type.
-        Usage: setmodel enable <captioning|classification>
-        '''
-        if model_type not in ('captioning', 'classification'):
-            await ctx.reply(
-                f'Usage: `{COMMAND_PREFIX}setmodel enable <captioning|classification>`',
-                mention_author=False, delete_after=MSG_DEL_DELAY
-            )
-            return
-
-        db_key = f'{model_type}_enabled'
-        async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
-            await con.execute(
-                'INSERT INTO settings (KEY, VALUE) VALUES (?, ?) '
-                'ON CONFLICT(KEY) DO UPDATE SET VALUE = excluded.VALUE',
-                (db_key, '1')
-            )
-            await con.commit()
-
-        if model_type == 'captioning':
-            model_manager.captioning_enabled = True
-            asyncio.create_task(model_manager.ensure_captioning_loaded())
-        else:
-            model_manager.classification_enabled = True
-            asyncio.create_task(model_manager.ensure_classification_loaded())
-
-        embed = discord.Embed(
-            title=f'{model_type.capitalize()} Model Enabled ✅',
-            description=f'The {model_type} model is now enabled and will be used for screening.',
-            color=discord.Color.green()
-        )
-        embed.set_footer(text=BOTVERSION)
-        await ctx.reply(embed=embed, mention_author=False)
-
-    @setmodel.command(name='disable', aliases=['off'])
-    @commands.is_owner()
-    async def setmodel_disable(self, ctx, model_type: str = None):
-        '''
-        Disable a model type (the other model will still run).
-        Usage: setmodel disable <captioning|classification>
-        '''
-        if model_type not in ('captioning', 'classification'):
-            await ctx.reply(
-                f'Usage: `{COMMAND_PREFIX}setmodel disable <captioning|classification>`',
-                mention_author=False, delete_after=MSG_DEL_DELAY
-            )
-            return
-
-        db_key = f'{model_type}_enabled'
-        async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
-            await con.execute(
-                'INSERT INTO settings (KEY, VALUE) VALUES (?, ?) '
-                'ON CONFLICT(KEY) DO UPDATE SET VALUE = excluded.VALUE',
-                (db_key, '0')
-            )
-            await con.commit()
-
-        if model_type == 'captioning':
-            model_manager.captioning_enabled = False
-        else:
-            model_manager.classification_enabled = False
-
-        embed = discord.Embed(
-            title=f'{model_type.capitalize()} Model Disabled',
-            description=f'The {model_type} model is now disabled.',
-            color=discord.Color.orange()
-        )
-        embed.set_footer(text=BOTVERSION)
-        await ctx.reply(embed=embed, mention_author=False)
-
     @setmodel.command(name='threshold')
-    @commands.is_owner()
+    @commands.has_permissions(administrator=True)
     async def setmodel_threshold(self, ctx, threshold: float = None):
         '''
-        Set the confidence threshold for the classification model (0.0 - 1.0).
+        Set the classification confidence threshold for this server (0.0 - 1.0).
         Images with a non-safe label scoring above this are flagged.
         Usage: setmodel threshold 0.7
         '''
+        guild_id = ctx.guild.id
+        current_threshold = await self.get_guild_threshold(guild_id)
+
         if threshold is None:
             await ctx.reply(
-                f'Current classification threshold: **{model_manager.threshold:.0%}**\n'
+                f'Current classification threshold: **{current_threshold:.0%}**\n'
                 f'Usage: `{COMMAND_PREFIX}setmodel threshold <0.0 - 1.0>`',
                 mention_author=False
             )
@@ -889,19 +918,11 @@ class Imagemod(commands.Cog):
             await ctx.reply('Threshold must be between 0.0 and 1.0.', mention_author=False, delete_after=MSG_DEL_DELAY)
             return
 
-        async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
-            await con.execute(
-                'INSERT INTO settings (KEY, VALUE) VALUES (?, ?) '
-                'ON CONFLICT(KEY) DO UPDATE SET VALUE = excluded.VALUE',
-                ('classification_threshold', str(threshold))
-            )
-            await con.commit()
-
-        model_manager.threshold = threshold
+        await self.set_guild_setting(guild_id, 'classification_threshold', str(threshold))
 
         embed = discord.Embed(
             title='Threshold Updated',
-            description=f'Classification threshold set to **{threshold:.0%}**.',
+            description=f'Classification threshold set to **{threshold:.0%}** for this server.',
             color=discord.Color.green()
         )
         embed.set_footer(text=BOTVERSION)
