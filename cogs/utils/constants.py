@@ -14,6 +14,7 @@ AUTOROLE_DATABASE = rf'{OSPATH}/cogs/autorole_data.db'
 ARCHIVE_DATABASE = rf'{OSPATH}/cogs/archive_data.db'
 COMMAND_LOGS_DATABASE = rf'{OSPATH}/cogs/command_logs.db'
 ECONOMY_DATABASE = rf'{OSPATH}/cogs/economy_data.db'
+IMAGEMOD_DATABASE = rf'{OSPATH}/cogs/imagemod_data.db'
 INVITELOG_DATABASE = rf'{OSPATH}/cogs/invitelog_data.db'
 PERMISSIONS_DATABASE = rf'{OSPATH}/cogs/permissions_data.db'
 
@@ -46,6 +47,34 @@ STATUS_LOOP_DELAY = 10
 ORDER = 4
 TEXT_WORD_COUNT = ORDER * 15 
 MEME_WORD_COUNT = ORDER * 5
+
+#! Image screening constants
+# Default HuggingFace models (seeded into imagemod DB settings on first run)
+IMAGEMOD_DEFAULT_CAPTIONING_MODEL = 'Salesforce/blip-image-captioning-large'
+IMAGEMOD_DEFAULT_CLASSIFICATION_MODEL = 'Falconsai/nsfw_image_detection'
+IMAGEMOD_CLASSIFICATION_THRESHOLD = 0.5  # Confidence threshold for classification models
+# Default keywords seeded into the imagemod database on first run
+DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS = [
+    # Sexual / nudity
+    'nude', 'naked', 'nsfw', 'pornography', 'explicit', 'topless',
+    'lingerie', 'underwear', 'bikini', 'bra', 'panties', 'thong',
+    'breasts', 'breast', 'tits', 'boobs', 'nipple', 'nipples',
+    'genitalia', 'penis', 'vagina', 'buttocks', 'butt', 'ass',
+    'sex', 'sexual', 'intercourse', 'fucked', 'fucking', 'fuck',
+    'blowjob', 'handjob', 'masturbat', 'orgasm', 'erotic',
+    'porn', 'hentai', 'bondage', 'fetish', 'stripper', 'stripping',
+    # Violence / gore
+    'weapon', 'gun', 'rifle', 'pistol', 'shotgun', 'firearm',
+    'knife', 'sword', 'machete', 'axe',
+    'blood', 'bloody', 'bleeding', 'gore', 'gory',
+    'violence', 'violent', 'murder', 'kill', 'dead body', 'corpse',
+    'wound', 'injury', 'mutilat', 'dismember', 'decapitat',
+    # Drugs
+    'drug', 'drugs', 'cocaine', 'heroin', 'meth', 'marijuana',
+    'syringe', 'needle', 'pills', 'overdose',
+    # Hate / extremism
+    'swastika', 'nazi', 'noose', 'lynching',
+]
 
 #! Fun cog constants
 IMAGE_SIZE = 854, 480

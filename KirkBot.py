@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 
-import discord
 import asyncio
 import os
 import traceback
-import cogs.utils.functions as functions
 
+import discord
 from discord.ext import commands
-from cogs.utils.helpcommand import ButtonHelpCommand
+
+import cogs.utils.functions as functions
 from cogs.utils.constants import (ARCHIVE_DATABASE, AUTODELETE_DATABASE,
-                                AUTOROLE_DATABASE, BOTVERSION, CARDSPATH,
-                                COMMAND_LOGS_DATABASE, COMMAND_PREFIX,
-                                DICEPATH, ECONOMY_DATABASE, EMOJIPATH,
-                                FLAGPATH, IMAGEPATH, INVITELOG_DATABASE,
-                                OSPATH, PERMISSIONS_DATABASE, TOKEN)
+                                  AUTOROLE_DATABASE, BOTVERSION, CARDSPATH,
+                                  COMMAND_LOGS_DATABASE, COMMAND_PREFIX,
+                                  DICEPATH, ECONOMY_DATABASE, EMOJIPATH,
+                                  FLAGPATH, IMAGEMOD_DATABASE, IMAGEPATH,
+                                  INVITELOG_DATABASE, OSPATH,
+                                  PERMISSIONS_DATABASE, TOKEN)
+from cogs.utils.helpcommand import ButtonHelpCommand
+
 
 def main_program():
     print('Logging in...')
@@ -65,6 +68,7 @@ def main_program():
         await functions.checkForFile(filepath=os.path.dirname(AUTOROLE_DATABASE),    filename=os.path.basename(AUTOROLE_DATABASE),       database=True, dbtype='autorole')
         await functions.checkForFile(filepath=os.path.dirname(COMMAND_LOGS_DATABASE),filename=os.path.basename(COMMAND_LOGS_DATABASE),   database=True, dbtype='command_logs')
         await functions.checkForFile(filepath=os.path.dirname(ECONOMY_DATABASE),     filename=os.path.basename(ECONOMY_DATABASE),        database=True, dbtype='economy')
+        await functions.checkForFile(filepath=os.path.dirname(IMAGEMOD_DATABASE),     filename=os.path.basename(IMAGEMOD_DATABASE),      database=True, dbtype='imagemod')
         await functions.checkForFile(filepath=os.path.dirname(INVITELOG_DATABASE),   filename=os.path.basename(INVITELOG_DATABASE),      database=True, dbtype='invitelog')
         await functions.checkForFile(filepath=os.path.dirname(PERMISSIONS_DATABASE), filename=os.path.basename(PERMISSIONS_DATABASE),    database=True, dbtype='permissions')
     

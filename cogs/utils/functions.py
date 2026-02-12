@@ -9,8 +9,11 @@ from pathlib import Path
 from urllib import request
 from .constants import (ARCHIVE_DATABASE, AUTODELETE_DATABASE,
                         AUTOROLE_DATABASE, COMMAND_LOGS_DATABASE,
-                        ECONOMY_DATABASE, INVITELOG_DATABASE,
-                        PERMISSIONS_DATABASE)
+                        DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS, ECONOMY_DATABASE,
+                        IMAGEMOD_CLASSIFICATION_THRESHOLD, IMAGEMOD_DATABASE,
+                        IMAGEMOD_DEFAULT_CAPTIONING_MODEL,
+                        IMAGEMOD_DEFAULT_CLASSIFICATION_MODEL,
+                        INVITELOG_DATABASE, PERMISSIONS_DATABASE)
 
 setup_table_archive_database = '''
                 CREATE TABLE IF NOT EXISTS archive_data(
@@ -49,7 +52,9 @@ setup_table_economy_database = '''
                 CF_LOSSES               INTEGER,
                 TTT_WINS                INTEGER,
                 TTT_LOSSES              INTEGER,
-                TTT_TIES                INTEGER);'''
+                TTT_TIES                INTEGER,
+                DP_WINS                 INTEGER,
+                DP_LOSSES               INTEGER);'''
 
 setup_table_autorole_database = '''
                 CREATE TABLE IF NOT EXISTS autorole_data (
@@ -110,6 +115,12 @@ setup_table_permissions_database = '''
                     SERVER_ID           INTEGER     NOT NULL,
                     CHANNEL_ID          INTEGER     NOT NULL,
                     ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
+                    PRIMARY KEY         (SERVER_ID, CHANNEL_ID));
+
+                CREATE TABLE IF NOT EXISTS imagemod (
+                    SERVER_ID           INTEGER     NOT NULL,
+                    CHANNEL_ID          INTEGER     NOT NULL,
+                    ENABLED             BOOLEAN     NOT NULL    DEFAULT FALSE,
                     PRIMARY KEY         (SERVER_ID, CHANNEL_ID));'''
 
 setup_table_command_logs = '''
@@ -124,6 +135,20 @@ setup_table_command_logs = '''
                     channel_name TEXT,
                     channel_id TEXT,
                     timestamp TEXT);'''
+
+setup_table_imagemod_database = '''
+                CREATE TABLE IF NOT EXISTS keywords (
+                    ID          INTEGER     PRIMARY KEY AUTOINCREMENT,
+                    KEYWORD     TEXT        NOT NULL    UNIQUE,
+                    CATEGORY    TEXT);
+
+                CREATE TABLE IF NOT EXISTS log_channels (
+                    SERVER_ID   INTEGER     PRIMARY KEY,
+                    CHANNEL_ID  INTEGER     NOT NULL);
+
+                CREATE TABLE IF NOT EXISTS settings (
+                    KEY         TEXT        PRIMARY KEY,
+                    VALUE       TEXT        NOT NULL);'''
 
 async def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
     """
@@ -230,6 +255,67 @@ async def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:s
                 # Failed to create the command logs database
                 print("Failed to make aiosqlite command logs database:", error)
         
+        elif dbtype == 'imagemod':
+            try:
+                # Create a connection to the imagemod database
+                async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+                    await con.executescript(setup_table_imagemod_database)
+                    # Seed default keywords if the table is empty
+                    async with con.execute('SELECT COUNT(*) FROM keywords') as cursor:
+                        count = (await cursor.fetchone())[0]
+                    if count == 0:
+                        # Map keywords to categories based on the constant list sections
+                        category_map = {
+                            'sexual': [
+                                'nude', 'naked', 'nsfw', 'pornography', 'explicit', 'topless',
+                                'lingerie', 'underwear', 'bikini', 'bra', 'panties', 'thong',
+                                'breasts', 'breast', 'tits', 'boobs', 'nipple', 'nipples',
+                                'genitalia', 'penis', 'vagina', 'buttocks', 'butt', 'ass',
+                                'sex', 'sexual', 'intercourse', 'fucked', 'fucking', 'fuck',
+                                'blowjob', 'handjob', 'masturbat', 'orgasm', 'erotic',
+                                'porn', 'hentai', 'bondage', 'fetish', 'stripper', 'stripping',
+                            ],
+                            'violence': [
+                                'weapon', 'gun', 'rifle', 'pistol', 'shotgun', 'firearm',
+                                'knife', 'sword', 'machete', 'axe',
+                                'blood', 'bloody', 'bleeding', 'gore', 'gory',
+                                'violence', 'violent', 'murder', 'kill', 'dead body', 'corpse',
+                                'wound', 'injury', 'mutilat', 'dismember', 'decapitat',
+                            ],
+                            'drugs': [
+                                'drug', 'drugs', 'cocaine', 'heroin', 'meth', 'marijuana',
+                                'syringe', 'needle', 'pills', 'overdose',
+                            ],
+                            'hate': [
+                                'swastika', 'nazi', 'noose', 'lynching',
+                            ],
+                        }
+                        rows = []
+                        for category, keywords in category_map.items():
+                            for kw in keywords:
+                                rows.append((kw, category))
+                        await con.executemany(
+                            'INSERT OR IGNORE INTO keywords (KEYWORD, CATEGORY) VALUES (?, ?)',
+                            rows
+                        )
+                    # Seed default settings if not present
+                    default_settings = [
+                        ('captioning_model', IMAGEMOD_DEFAULT_CAPTIONING_MODEL),
+                        ('captioning_enabled', '1'),
+                        ('classification_model', IMAGEMOD_DEFAULT_CLASSIFICATION_MODEL),
+                        ('classification_enabled', '1'),
+                        ('classification_threshold', str(IMAGEMOD_CLASSIFICATION_THRESHOLD)),
+                    ]
+                    await con.executemany(
+                        'INSERT OR IGNORE INTO settings (KEY, VALUE) VALUES (?, ?)',
+                        default_settings
+                    )
+                    await con.commit()
+                print("aiosqlite imagemod database created")
+            except Exception as error:
+                # Failed to create the imagemod database
+                print("Failed to make aiosqlite imagemod database:", error)
+        
         else:
             # Invalid database type
             print("Database is True but dbtype is not one of the present options.")
@@ -240,7 +326,7 @@ async def checkForFile(filepath:str, filename:str, database:bool=False, dbtype:s
 
 
 def old_checkForFile(filepath:str, filename:str, database:bool=False, dbtype:str=None):
-    """
+    r"""
     Checks for the existence of a file or database and creates it if necessary.
     If 'database' is True, it creates a SQLite database based on the 'dbtype' if one does not exist.
     
