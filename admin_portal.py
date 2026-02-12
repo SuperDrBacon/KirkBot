@@ -238,10 +238,10 @@ def stats():
         
         # Get message activity over the last 30 days (or available data)
         cur.execute("""
-            SELECT DATE(timestamp) as date, COUNT(*) as count
+            SELECT DATE(DATE_TIME) as date, COUNT(*) as count
             FROM archive_data 
-            WHERE timestamp IS NOT NULL
-            GROUP BY DATE(timestamp)
+            WHERE DATE_TIME IS NOT NULL
+            GROUP BY DATE(DATE_TIME)
             ORDER BY date DESC
             LIMIT 30
         """)
