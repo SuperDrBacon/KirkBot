@@ -13,7 +13,7 @@ from cogs.utils.constants import (ARCHIVE_DATABASE, BOTID, MEME_WORD_COUNT,
                                   ORDER, PERMISSIONS_DATABASE, TEXT_WORD_COUNT,
                                   MSG_DEL_DELAY)
 
-textmodel = 'llama2-uncensored'
+textmodel = 'llama2-uncensored:7b'
 
 class MarkovChain:
     def __init__(self, order:int):
