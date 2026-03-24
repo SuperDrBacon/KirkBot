@@ -1,10 +1,14 @@
 import asyncio
 import datetime
+
 import aiosqlite
 import discord
-
 from discord.ext import commands
-from cogs.utils.constants import BOTVERSION, INVITELOG_DATABASE, MSG_DEL_DELAY, SECOND_LOOP_DELAY
+
+from cogs.utils.constants import (BOTVERSION, INVITELOG_DATABASE,
+                                  MSG_DEL_DELAY, PERMISSIONS_DATABASE,
+                                  SECOND_LOOP_DELAY)
+
 
 class Invitelog(commands.Cog):
     '''
@@ -55,11 +59,20 @@ class Invitelog(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        # Look up the configured invite log channel from the permissions database
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as pcon:
+            async with pcon.execute('SELECT channel_id FROM invitelog WHERE server_id = ? AND enabled = 1', (member.guild.id,)) as cursor:
+                row = await cursor.fetchone()
+
+        if not row:
+            return
+
+        log_channel = self.bot.get_channel(row[0])
+        if not log_channel:
+            return
+
         self.update_invites_task.cancel()
-        
-        log_channel_id = 1471548472107733162  # glowing invites channel
-        log_channel = self.bot.get_channel(log_channel_id)
-        
+
         embed = discord.Embed(title="New member joined", color=0x00ff00)
         embed.add_field(name="Member", value=f"{member.mention} (ID: {member.id})", inline=False)
         embed.add_field(name="Account created at", value=str(member.created_at), inline=False)

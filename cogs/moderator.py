@@ -33,9 +33,10 @@ class ModCommands(commands.Cog):
         - chatai
         - economy
         - imagemod
+        - invitelog
         '''
         embed = discord.Embed(title='Commands Module', description=f'To see how to use the Commands module use:\n`{COMMAND_PREFIX}help commands`\n\n\
-            Current modules:\n- chatai\n- economy\n- imagemod\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
+            Current modules:\n- chatai\n- economy\n- imagemod\n- invitelog\n\n', color=0x00ff00, timestamp=datetime.now(timezone.utc))
         embed.set_footer(text=BOTVERSION)
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
@@ -119,6 +120,36 @@ class ModCommands(commands.Cog):
         await ctx.reply(f'Image screening {action}d.', mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
 
+    @commands_base.command(name='invitelog', description='Set or disable the invite log channel for this server.')
+    @commands.has_permissions(administrator=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def commands_invitelog(self, ctx, action: str):
+        '''
+        Set or disable the invite log channel for this server.
+        When enabled, member join events will be logged to the current channel.
+        Use the following format for the command:
+        `commands invitelog <'enable' or 'disable'>`
+        '''
+        action = action.lower()
+        if action not in ["enable", "disable"]:
+            await ctx.reply("Invalid action. Use 'enable' or 'disable'.", mention_author=False, delete_after=MSG_DEL_DELAY)
+            await ctx.message.delete(delay=MSG_DEL_DELAY)
+            return
+
+        channel_permission = (action == "enable")
+        guild_id = ctx.guild.id
+        channel_id = ctx.channel.id
+
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
+            async with con.execute('INSERT OR REPLACE INTO invitelog (server_id, channel_id, enabled) VALUES (?, ?, ?)', (guild_id, channel_id, channel_permission)) as cursor:
+                await con.commit()
+
+        if channel_permission:
+            await ctx.reply(f'Invite log enabled. Join events will be sent to {ctx.channel.mention}.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        else:
+            await ctx.reply('Invite log disabled for this server.', mention_author=False, delete_after=MSG_DEL_DELAY)
+        await ctx.message.delete(delay=MSG_DEL_DELAY)
+
     @commands_base.command(name='show', description='Show the current command settings for this server.')
     @commands.has_permissions(manage_messages=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -180,6 +211,18 @@ class ModCommands(commands.Cog):
         else:
             embed.add_field(name='Image Screening', value='❌ Disabled', inline=False)
 
+        # Get InviteLog channel
+        async with aiosqlite.connect(PERMISSIONS_DATABASE) as con:
+            async with con.execute('SELECT enabled, channel_id FROM invitelog WHERE server_id = ?', (guild_id,)) as cursor:
+                invitelog_row = await cursor.fetchone()
+
+        if invitelog_row and invitelog_row[0]:
+            channel = ctx.guild.get_channel(invitelog_row[1])
+            channel_name = f"#{channel.name}" if channel else "Unknown channel"
+            embed.add_field(name='Invite Log Channel', value=f'✅ {channel_name}', inline=False)
+        else:
+            embed.add_field(name='Invite Log Channel', value='❌ Disabled', inline=False)
+
         await ctx.reply(embed=embed, mention_author=False, delete_after=MSG_DEL_DELAY)
         await ctx.message.delete(delay=MSG_DEL_DELAY)
     
@@ -231,12 +274,20 @@ class ModCommands(commands.Cog):
                 await ctx.reply("Invalid table name. Use only letters, numbers, and underscores.", mention_author=False, delete_after=MSG_DEL_DELAY)
                 return
 
-            # Create the table
-            await con.execute(f'''
-                CREATE TABLE IF NOT EXISTS {table_name} (
-                    SERVER_ID   INTEGER NOT NULL PRIMARY KEY,
-                    ENABLED     BOOLEAN NOT NULL DEFAULT FALSE)
-            ''')
+            # Create the table — invitelog needs an extra channel_id column
+            if table_name == 'invitelog':
+                await con.execute('''
+                    CREATE TABLE IF NOT EXISTS invitelog (
+                        server_id   INTEGER NOT NULL PRIMARY KEY,
+                        channel_id  INTEGER,
+                        enabled     BOOLEAN NOT NULL DEFAULT FALSE)
+                ''')
+            else:
+                await con.execute(f'''
+                    CREATE TABLE IF NOT EXISTS {table_name} (
+                        SERVER_ID   INTEGER NOT NULL PRIMARY KEY,
+                        ENABLED     BOOLEAN NOT NULL DEFAULT FALSE)
+                ''')
             await con.commit()
 
         await ctx.reply(f"✅ Permissions table `{table_name}` created (or already exists).", mention_author=False)
