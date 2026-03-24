@@ -282,6 +282,11 @@ class ModCommands(commands.Cog):
                         channel_id  INTEGER,
                         enabled     BOOLEAN NOT NULL DEFAULT FALSE)
                 ''')
+                # Add channel_id if the table already existed without it
+                async with con.execute('PRAGMA table_info(invitelog)') as cursor:
+                    columns = [row[1] for row in await cursor.fetchall()]
+                if 'channel_id' not in columns:
+                    await con.execute('ALTER TABLE invitelog ADD COLUMN channel_id INTEGER')
             else:
                 await con.execute(f'''
                     CREATE TABLE IF NOT EXISTS {table_name} (
