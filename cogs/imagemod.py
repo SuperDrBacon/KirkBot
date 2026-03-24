@@ -1,5 +1,6 @@
 import asyncio
 import io
+import re
 from datetime import timedelta
 
 import aiosqlite
@@ -554,7 +555,14 @@ class Imagemod(commands.Cog):
             image_bytes = await loop.run_in_executor(None, lambda: requests.get(url).content)
 
             from PIL import Image
-            image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+            img = Image.open(io.BytesIO(image_bytes))
+            # For animated formats (GIF, WebP), use the first frame
+            if hasattr(img, 'n_frames') and img.n_frames > 1:
+                img.seek(0)
+            # Palette-mode images (e.g. GIFs) may have transparency — go via RGBA first
+            if img.mode in ('P', 'PA'):
+                img = img.convert('RGBA')
+            image = img.convert('RGB')
 
             # Run both models concurrently
             caption_task = None
@@ -637,7 +645,13 @@ class Imagemod(commands.Cog):
         """Check if the description contains any flagged keywords for the guild."""
         description_lower = description.lower()
         keywords = await self.get_keyword_list(guild_id)
-        return [kw for kw in keywords if kw.lower() in description_lower]
+        flagged = []
+        for kw in keywords:
+            escaped_kw = re.escape(kw.lower()).replace(r'\ ', r'\s+')
+            pattern = rf'(?<!\w){escaped_kw}(?!\w)'
+            if re.search(pattern, description_lower):
+                flagged.append(kw)
+        return flagged
 
     # ─── Admin keyword management commands ───────────────────────────────
 
