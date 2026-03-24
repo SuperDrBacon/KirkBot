@@ -347,18 +347,44 @@ class Imagemod(commands.Cog):
 
     # ─── Automatic image screening on message ───────────────────────────
 
+    _IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'}
+
+    @staticmethod
+    def _is_image_att(att) -> bool:
+        if att.content_type and att.content_type.startswith('image/'):
+            return True
+        return any(att.filename.lower().endswith(ext) for ext in Imagemod._IMAGE_EXTS)
+
+    @staticmethod
+    def _embed_image_url(embed) -> str | None:
+        """Return the best screeable URL from an embed (gifv / image types)."""
+        if embed.type == 'gifv':
+            if embed.thumbnail and embed.thumbnail.url:
+                return embed.thumbnail.url
+        if embed.type == 'image' and embed.url:
+            return embed.url
+        if embed.image and embed.image.url:
+            return embed.image.url
+        return None
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         # Ignore bots and DMs
         if message.author.bot or message.guild is None:
             return
 
-        # Only process messages that have image attachments
-        image_attachments = [
-            att for att in message.attachments
-            if att.content_type and att.content_type.startswith('image/')
-        ]
-        if not image_attachments:
+        # Collect image URLs from attachments (including GIFs with missing content_type)
+        # and from embeds (Tenor/Giphy gifv links)
+        image_urls: list[tuple[str, str]] = []  # (screen_url, thumbnail_url)
+        for att in message.attachments:
+            if self._is_image_att(att):
+                image_urls.append((att.url, att.url))
+        for embed in message.embeds:
+            url = self._embed_image_url(embed)
+            if url:
+                image_urls.append((url, url))
+
+        if not image_urls:
             return
 
         # Check if image screening is enabled for this channel
@@ -374,9 +400,9 @@ class Imagemod(commands.Cog):
 
         threshold = await self.get_guild_threshold(guild_id)
 
-        # Screen every image attachment
-        for attachment in image_attachments:
-            result = await self.screen_image(attachment.url, guild_id, threshold)
+        # Screen every image/GIF
+        for screen_url, thumbnail_url in image_urls:
+            result = await self.screen_image(screen_url, guild_id, threshold)
             if result is None:
                 continue
 
@@ -410,7 +436,7 @@ class Imagemod(commands.Cog):
                     description='\n'.join(desc_parts),
                     color=discord.Color.red()
                 )
-                embed.set_thumbnail(url=attachment.url)
+                embed.set_thumbnail(url=thumbnail_url)
                 embed.set_footer(text=BOTVERSION)
 
                 view = ImageActionView(member=message.author, flagged_message=message)
@@ -434,30 +460,48 @@ class Imagemod(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def describe_image(self, ctx):
         '''
-        Describe an image using the local AI model.
-        Attach an image or reply to a message containing one.
+        Describe an image or GIF using the local AI model.
+        Attach an image/GIF, post a GIF link, or reply to a message containing one.
         '''
-        attachment = None
+        image_url = None
+        thumbnail_url = None
 
         # Check for attachment on the command message itself
-        if ctx.message.attachments:
-            for att in ctx.message.attachments:
-                if att.content_type and att.content_type.startswith('image/'):
-                    attachment = att
+        for att in ctx.message.attachments:
+            if self._is_image_att(att):
+                image_url = att.url
+                thumbnail_url = att.url
+                break
+
+        # Check embeds on the command message (e.g. Tenor GIF links)
+        if image_url is None:
+            for embed in ctx.message.embeds:
+                url = self._embed_image_url(embed)
+                if url:
+                    image_url = url
+                    thumbnail_url = url
                     break
 
-        # Check if replying to a message with an attachment
-        if attachment is None and ctx.message.reference:
+        # Check if replying to a message with an attachment or embed
+        if image_url is None and ctx.message.reference:
             resolved = ctx.message.reference.resolved
-            if resolved and resolved.attachments:
+            if resolved:
                 for att in resolved.attachments:
-                    if att.content_type and att.content_type.startswith('image/'):
-                        attachment = att
+                    if self._is_image_att(att):
+                        image_url = att.url
+                        thumbnail_url = att.url
                         break
+                if image_url is None:
+                    for embed in resolved.embeds:
+                        url = self._embed_image_url(embed)
+                        if url:
+                            image_url = url
+                            thumbnail_url = url
+                            break
 
-        if attachment is None:
+        if image_url is None:
             await ctx.reply(
-                'Attach an image or reply to a message with an image to describe it.',
+                'Attach an image or GIF, or reply to a message containing one.',
                 mention_author=False, delete_after=MSG_DEL_DELAY
             )
             return
@@ -465,7 +509,7 @@ class Imagemod(commands.Cog):
         async with ctx.typing():
             guild_id = ctx.guild.id
             threshold = await self.get_guild_threshold(guild_id)
-            result = await self.screen_image(attachment.url, guild_id, threshold)
+            result = await self.screen_image(image_url, guild_id, threshold)
 
         if result:
             desc_parts = []
@@ -486,7 +530,7 @@ class Imagemod(commands.Cog):
                 description='\n'.join(desc_parts) if desc_parts else 'No output',
                 color=discord.Color.blurple()
             )
-            embed.set_thumbnail(url=attachment.url)
+            embed.set_thumbnail(url=thumbnail_url)
             embed.set_footer(text=BOTVERSION)
             await ctx.reply(embed=embed, mention_author=False)
         else:
