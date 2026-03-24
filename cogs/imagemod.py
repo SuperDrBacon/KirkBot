@@ -342,8 +342,8 @@ class Imagemod(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Image screening module online')
-        # Pre-load both models in the background
-        asyncio.create_task(model_manager.ensure_all_loaded())
+        # Load both models now; run_in_executor keeps the event loop free
+        await model_manager.ensure_all_loaded()
 
     # ─── Automatic image screening on message ───────────────────────────
 
