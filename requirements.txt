@@ -2,7 +2,7 @@ aiosqlite==0.22.1
 beautifulsoup4==4.14.3
 discord.py==2.6.4
 Flask==3.1.2
-flask_socketio==5.6.0
+flask-socketio==5.6.1
 GitPython==3.1.46
 numpy==2.4.1
 ollama==0.6.1
@@ -11,5 +11,5 @@ python-mpv==1.0.8
 Requests==2.32.5
 selenium==4.40.0
 torch==2.10.0
-transformers==5.0.0
+transformers==5.1.0
 webdriver_manager==4.0.2

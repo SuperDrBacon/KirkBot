@@ -13,7 +13,7 @@ from cogs.utils.constants import (ARCHIVE_DATABASE, BOTID, MEME_WORD_COUNT,
                                   ORDER, PERMISSIONS_DATABASE, TEXT_WORD_COUNT,
                                   MSG_DEL_DELAY)
 
-textmodel = 'dpun'
+textmodel = 'gdisney/orca2-uncensored'
 
 class MarkovChain:
     def __init__(self, order:int):
@@ -159,7 +159,7 @@ class Ai(commands.Cog):
             reply = f'{ctx.content}'
             
             message_log = [
-                {"role": "system", "content": "Respond to this conversation with a short reply."},
+                {"role": "system", "content": "Skip the introduction and respond to this message."},
                 {"role": "user", "content": base},
                 {"role": "user", "content": reply}
             ]
@@ -180,7 +180,7 @@ class Ai(commands.Cog):
             '''
             messages = [message async for message in ctx.channel.history(limit=15, oldest_first=False)]
             messages.reverse()
-            message_log = [{"role": "system", "content": "Respond to this conversation with a short reply."}]
+            message_log = [{"role": "system", "content": "Skip the introduction and respond to this message."}]
             for message in messages:
                 if message.content and not re.search(r'(https?://\S+)', message.content):
                     message_log.append({
@@ -210,7 +210,7 @@ class Ai(commands.Cog):
             reply = f'{message}'
             
             message_log = [
-                {"role": "system", "content": "Respond to this conversation with a short reply."},
+                {"role": "system", "content": "Skip the introduction and respond to this message."},
                 {"role": "user", "content": base},
                 {"role": "user", "content": reply}
             ]
@@ -225,7 +225,7 @@ class Ai(commands.Cog):
                     await ctx.reply('I am sorry, I am unable to generate a response at this time. -God')
         else:
             message_log = [
-                {'role': 'system', 'content': 'Respond to this conversation with a short reply.'},
+                {'role': 'system', 'content': 'Skip the introduction and respond to this message.'},
                 {'role': 'user', 'content': message}
             ]
             response = ollama.chat(model=textmodel, messages=message_log)
