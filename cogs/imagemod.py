@@ -577,14 +577,18 @@ class Imagemod(commands.Cog):
             loop = asyncio.get_event_loop()
 
             _headers = {
-                'User-Agent': 'Mozilla/5.0 (compatible; KirkBot/1.0)',
-                'Accept': 'image/gif,image/webp,image/*,*/*;q=0.8',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',
             }
 
             def fetch_image(target_url: str) -> bytes:
-                resp = requests.get(target_url, headers=_headers, timeout=15, allow_redirects=True)
+                resp = requests.get(target_url, headers=_headers, stream=True, timeout=15)
                 resp.raise_for_status()
-                return resp.content
+                resp.raw.decode_content = True
+                buf = io.BytesIO()
+                for chunk in resp.iter_content(chunk_size=8192):
+                    buf.write(chunk)
+                buf.seek(0)
+                return buf.read()
 
             image_bytes = await loop.run_in_executor(None, fetch_image, url)
 
