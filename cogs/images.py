@@ -3,11 +3,11 @@ import os
 import random
 import shutil
 import textwrap
-import requests
-import discord
-
 from io import BytesIO
 from string import ascii_letters
+
+import discord
+import requests
 from bs4 import BeautifulSoup
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageSequence
@@ -58,7 +58,7 @@ class Images(commands.Cog):
             img_width = 1000
             reac_width, reac_height = reac_img.size
             sb_height = speech_bubble.size[1]
-            fonth = font.getsize(text_for_img)[1]
+            fonth = font.getbbox(text_for_img)[3] - font.getbbox(text_for_img)[1]
             new_scale = 1 + ((img_width-reac_width)/reac_width)
             new_reac_height = round(reac_height * new_scale)
             
@@ -69,7 +69,7 @@ class Images(commands.Cog):
             reacted_to_message = ctx.message.reference.resolved.content
             text_for_img = f'{reacted_to_user}: {reacted_to_message}'
             
-            avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(ascii_letters)
+            avg_char_width = sum(font.getbbox(char)[2] - font.getbbox(char)[0] for char in ascii_letters) / len(ascii_letters)
             max_char_count = int((img_width * 0.95) / avg_char_width)
             lines = textwrap.wrap(text_for_img, width=max_char_count)
             
@@ -79,7 +79,7 @@ class Images(commands.Cog):
             
             text_img = Image.new('RGBA', (img_width, text_img_height), (255, 255, 255, 255))
             for line in lines:
-                linew = font.getsize(line)[0]
+                linew = font.getbbox(line)[2] - font.getbbox(line)[0]
                 draw = ImageDraw.Draw(text_img)
                 draw.text(((img_width/2)-(linew/2), text_y_start-(fonth/2)), line, (0, 0, 0, 255), font=font)
                 text_y_start += fonth
@@ -178,9 +178,10 @@ class Images(commands.Cog):
                 font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 30)
             else:
                 font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 60)
-            fontw, fonth = font.getsize(caption)
+            cbbox = font.getbbox(caption)
+            fontw, fonth = cbbox[2] - cbbox[0], cbbox[3] - cbbox[1]
             
-            avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(ascii_letters)
+            avg_char_width = sum(font.getbbox(char)[2] - font.getbbox(char)[0] for char in ascii_letters) / len(ascii_letters)
             max_char_count = int((reac_width * 0.97) / avg_char_width)
             lines = textwrap.wrap(text=caption, width=max_char_count)
             
@@ -189,7 +190,8 @@ class Images(commands.Cog):
             y_text = (img_text_height/2)-(fonth/2) - y_offset
             text_img = Image.new('RGBA', (reac_width, img_text_height), (255, 255, 255))
             for line in lines:
-                linew, lineh = font.getsize(line)
+                lbbox = font.getbbox(line)
+                linew, lineh = lbbox[2] - lbbox[0], lbbox[3] - lbbox[1]
                 draw = ImageDraw.Draw(text_img)
                 draw.text(((reac_width/2)-(linew/2), y_text), line, (0, 0, 0), font=font)
                 y_text += lineh
@@ -205,9 +207,10 @@ class Images(commands.Cog):
             font = ImageFont.truetype(IMAGEPATH+'impact.ttf', 60)
             reac_width, reac_height = reac_gif.size
             
-            fontw, fonth = font.getsize(caption)
+            cbbox = font.getbbox(caption)
+            fontw, fonth = cbbox[2] - cbbox[0], cbbox[3] - cbbox[1]
             
-            avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(ascii_letters)
+            avg_char_width = sum(font.getbbox(char)[2] - font.getbbox(char)[0] for char in ascii_letters) / len(ascii_letters)
             max_char_count = int((reac_width * 0.97) / avg_char_width)
             lines = textwrap.wrap(text=caption, width=max_char_count)
             
@@ -216,7 +219,8 @@ class Images(commands.Cog):
             y_text = (img_text_height/2)-(fonth/2) - y_offset
             text_img = Image.new('RGBA', (reac_width, img_text_height), (255, 255, 255))
             for line in lines:
-                linew, lineh = font.getsize(line)
+                lbbox = font.getbbox(line)
+                linew, lineh = lbbox[2] - lbbox[0], lbbox[3] - lbbox[1]
                 draw = ImageDraw.Draw(text_img)
                 draw.text(((reac_width/2)-(linew/2), y_text), line, (0, 0, 0), font=font)
                 y_text += lineh
