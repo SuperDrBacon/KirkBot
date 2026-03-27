@@ -558,8 +558,7 @@ class Imagemod(commands.Cog):
 
     # ─── Internal helpers ────────────────────────────────────────────────
 
-    async def screen_image(self, url: str, guild_id: int,
-                           threshold: float = 0.5) -> dict | None:
+    async def screen_image(self, url: str, guild_id: int, threshold: float = 0.5) -> dict | None:
         """
         Download an image and run it through both models.
         Both models always run if loaded; the on/off gate is in permissions_data.
@@ -578,18 +577,18 @@ class Imagemod(commands.Cog):
             loop = asyncio.get_event_loop()
             image_bytes = await loop.run_in_executor(None, lambda: requests.get(url).content)
 
-            from PIL import Image
-            img = Image.open(io.BytesIO(image_bytes))
-            # For animated formats (GIF, WebP), seek to first frame and copy it
-            # out as a standalone image before converting — PIL requires this to
-            # fully materialise individual frames from a multi-frame sequence.
-            if hasattr(img, 'n_frames') and img.n_frames > 1:
-                img.seek(0)
-                img = img.copy()
-            # Palette-mode images (e.g. GIFs) may have transparency — go via RGBA first
-            if img.mode in ('P', 'PA'):
-                img = img.convert('RGBA')
-            image = img.convert('RGB')
+            def open_as_rgb(data: bytes):
+                from PIL import Image
+                img = Image.open(io.BytesIO(data))
+                # Seek to first frame for animated/multi-frame formats (GIF, WebP).
+                # Immediately convert to RGBA from palette mode — this is the most
+                # reliable path because PIL resolves the palette + transparency index
+                # correctly during conversion, making the frame fully materialised.
+                if getattr(img, 'n_frames', 1) > 1:
+                    img.seek(0)
+                return img.convert('RGBA').convert('RGB')
+
+            image = await loop.run_in_executor(None, open_as_rgb, image_bytes)
 
             # Run both models concurrently
             caption_task = None
@@ -626,7 +625,8 @@ class Imagemod(commands.Cog):
                 'flagged_keywords': flagged_keywords,
                 'labels': labels,
             }
-        except Exception:
+        except Exception as e:
+            print(f'[screen_image] Error processing {url}: {type(e).__name__}: {e}')
             return None
 
     async def run_captioning(self, image, loop, guild_id: int) -> dict:
