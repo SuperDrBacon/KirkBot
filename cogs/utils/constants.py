@@ -54,29 +54,50 @@ IMAGEMOD_DEFAULT_CAPTIONING_MODEL = 'Salesforce/blip-image-captioning-large'
 IMAGEMOD_DEFAULT_CLASSIFICATION_MODEL = 'Falconsai/nsfw_image_detection'
 IMAGEMOD_CLASSIFICATION_THRESHOLD = 0.5  # Confidence threshold for classification models
 # Default keywords seeded into the imagemod database per-server on first use
+# DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS = {
+#     'sexual': [
+#         'nude', 'naked', 'nsfw', 'pornography', 'explicit', 'topless',
+#         'lingerie', 'underwear', 'bikini', 'bra', 'panties', 'thong',
+#         'breasts', 'breast', 'tits', 'boobs', 'nipple', 'nipples',
+#         'genitalia', 'penis', 'vagina', 'buttocks', 'butt', 'ass',
+#         'sex', 'sexual', 'intercourse', 'fucked', 'fucking', 'fuck',
+#         'blowjob', 'handjob', 'masturbate', 'orgasm', 'erotic',
+#         'porn', 'hentai', 'bondage', 'fetish', 'stripper', 'stripping',
+#     ],
+#     'violence': [
+#         'weapon', 'gun', 'rifle', 'pistol', 'shotgun', 'firearm',
+#         'knife', 'sword', 'machete', 'axe',
+#         'blood', 'bloody', 'bleeding', 'gore', 'gory',
+#         'violence', 'violent', 'murder', 'kill', 'dead body', 'corpse',
+#         'wound', 'injury', 'mutilate', 'dismember', 'decapitate',
+#     ],
+#     'drugs': [
+#         'drug', 'drugs', 'cocaine', 'heroin', 'meth', 'marijuana',
+#         'syringe', 'needle', 'pills', 'overdose',
+#     ],
+#     'hate': [
+#         'swastika', 'nazi', 'noose', 'lynching',
+#     ],
+# }
 DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS = {
     'sexual': [
         'nude', 'naked', 'nsfw', 'pornography', 'explicit', 'topless',
-        'lingerie', 'underwear', 'bikini', 'bra', 'panties', 'thong',
+        'thong',
         'breasts', 'breast', 'tits', 'boobs', 'nipple', 'nipples',
-        'genitalia', 'penis', 'vagina', 'buttocks', 'butt', 'ass',
+        'genitalia', 'penis', 'vagina', 'buttocks', 'butt',
         'sex', 'sexual', 'intercourse', 'fucked', 'fucking', 'fuck',
-        'blowjob', 'handjob', 'masturbat', 'orgasm', 'erotic',
+        'blowjob', 'handjob', 'masturbate', 'orgasm', 'erotic',
         'porn', 'hentai', 'bondage', 'fetish', 'stripper', 'stripping',
     ],
-    'violence': [
-        'weapon', 'gun', 'rifle', 'pistol', 'shotgun', 'firearm',
-        'knife', 'sword', 'machete', 'axe',
-        'blood', 'bloody', 'bleeding', 'gore', 'gory',
-        'violence', 'violent', 'murder', 'kill', 'dead body', 'corpse',
-        'wound', 'injury', 'mutilat', 'dismember', 'decapitat',
+    'violence': ['bleeding', 'gore', 'gory',
+        'murder', 'kill', 'dead body', 'corpse',
+        'wound', 'injury', 'mutilate', 'dismember', 'decapitate',
     ],
     'drugs': [
         'drug', 'drugs', 'cocaine', 'heroin', 'meth', 'marijuana',
         'syringe', 'needle', 'pills', 'overdose',
     ],
     'hate': [
-        'swastika', 'nazi', 'noose', 'lynching',
     ],
 }
 

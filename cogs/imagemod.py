@@ -24,7 +24,7 @@ class ImageActionView(discord.ui.View):
         self.member = member
         self.flagged_message = flagged_message
 
-    async def _check_perms(self, interaction: discord.Interaction, perm: str) -> bool:
+    async def check_perms(self, interaction: discord.Interaction, perm: str) -> bool:
         """Check that the moderator has the required permission."""
         if not getattr(interaction.user.guild_permissions, perm, False):
             await interaction.response.send_message(
@@ -33,14 +33,14 @@ class ImageActionView(discord.ui.View):
             return False
         return True
 
-    async def _disable_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def disable_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Disable a single button and update the message."""
         button.disabled = True
         await interaction.message.edit(view=self)
 
     async def do_mute(self, interaction: discord.Interaction, button: discord.ui.Button, minutes: int):
         """Apply a timeout to the member."""
-        if not await self._check_perms(interaction, 'moderate_members'):
+        if not await self.check_perms(interaction, 'moderate_members'):
             return
 
         try:
@@ -52,7 +52,7 @@ class ImageActionView(discord.ui.View):
                 f'🔇 **{self.member.display_name}** has been muted for **{minutes} minute{"s" if minutes != 1 else ""}**.',
                 ephemeral=True
             )
-            await self._disable_button(interaction, button)
+            await self.disable_button(interaction, button)
         except discord.Forbidden:
             await interaction.response.send_message(
                 'I don\'t have permission to mute that member. Check my role hierarchy.',
@@ -75,7 +75,7 @@ class ImageActionView(discord.ui.View):
 
     @discord.ui.button(label='Delete Image', style=discord.ButtonStyle.danger, emoji='🗑️')
     async def delete_image(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not await self._check_perms(interaction, 'manage_messages'):
+        if not await self.check_perms(interaction, 'manage_messages'):
             return
 
         try:
@@ -84,10 +84,10 @@ class ImageActionView(discord.ui.View):
                 f'🗑️ Flagged message by **{self.member.display_name}** has been deleted.',
                 ephemeral=True
             )
-            await self._disable_button(interaction, button)
+            await self.disable_button(interaction, button)
         except discord.NotFound:
             await interaction.response.send_message('Message was already deleted.', ephemeral=True)
-            await self._disable_button(interaction, button)
+            await self.disable_button(interaction, button)
         except discord.Forbidden:
             await interaction.response.send_message(
                 'I don\'t have permission to delete that message.',
@@ -124,9 +124,7 @@ class ModelManager:
         """Read global model names from the imagemod database (SERVER_ID=0)."""
         settings: dict[str, str] = {}
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
-            async with con.execute(
-                'SELECT KEY, VALUE FROM settings WHERE SERVER_ID = 0'
-            ) as cur:
+            async with con.execute('SELECT KEY, VALUE FROM settings WHERE SERVER_ID = 0') as cur:
                 async for row in cur:
                     settings[row[0]] = row[1]
         self.captioning_model_name = settings.get('captioning_model')
@@ -148,9 +146,7 @@ class ModelManager:
         self.captioning_loading = True
         try:
             loop = asyncio.get_event_loop()
-            processor, model = await loop.run_in_executor(
-                None, self.load_captioning_sync, self.captioning_model_name
-            )
+            processor, model = await loop.run_in_executor(None, self.load_captioning_sync, self.captioning_model_name)
             self.captioning_processor = processor
             self.captioning_model = model
             self.captioning_ready = True
@@ -183,9 +179,7 @@ class ModelManager:
         self.classification_loading = True
         try:
             loop = asyncio.get_event_loop()
-            pipe = await loop.run_in_executor(
-                None, self.load_classification_sync, self.classification_model_name
-            )
+            pipe = await loop.run_in_executor(None, self.load_classification_sync, self.classification_model_name)
             self.classification_pipeline = pipe
             self.classification_ready = True
             print(f'Classification model loaded: {self.classification_model_name}')
@@ -347,16 +341,16 @@ class Imagemod(commands.Cog):
 
     # ─── Automatic image screening on message ───────────────────────────
 
-    _IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'}
+    IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'}
 
     @staticmethod
-    def _is_image_att(att) -> bool:
+    def is_image_att(att) -> bool:
         if att.content_type and att.content_type.startswith('image/'):
             return True
-        return any(att.filename.lower().endswith(ext) for ext in Imagemod._IMAGE_EXTS)
+        return any(att.filename.lower().endswith(ext) for ext in Imagemod.IMAGE_EXTS)
 
     @staticmethod
-    def _embed_image_url(embed) -> str | None:
+    def embed_image_url(embed) -> str | None:
         """Return the best screeable URL from an embed (gifv / image types)."""
         if embed.type == 'gifv':
             if embed.thumbnail and embed.thumbnail.url:
@@ -377,10 +371,10 @@ class Imagemod(commands.Cog):
         # and from embeds (Tenor/Giphy gifv links)
         image_urls: list[tuple[str, str]] = []  # (screen_url, thumbnail_url)
         for att in message.attachments:
-            if self._is_image_att(att):
+            if self.is_image_att(att):
                 image_urls.append((att.url, att.url))
         for embed in message.embeds:
-            url = self._embed_image_url(embed)
+            url = self.embed_image_url(embed)
             if url:
                 image_urls.append((url, url))
 
@@ -468,7 +462,7 @@ class Imagemod(commands.Cog):
 
         # Check for attachment on the command message itself
         for att in ctx.message.attachments:
-            if self._is_image_att(att):
+            if self.is_image_att(att):
                 image_url = att.url
                 thumbnail_url = att.url
                 break
@@ -476,7 +470,7 @@ class Imagemod(commands.Cog):
         # Check embeds on the command message (e.g. Tenor GIF links)
         if image_url is None:
             for embed in ctx.message.embeds:
-                url = self._embed_image_url(embed)
+                url = self.embed_image_url(embed)
                 if url:
                     image_url = url
                     thumbnail_url = url
@@ -487,13 +481,13 @@ class Imagemod(commands.Cog):
             resolved = ctx.message.reference.resolved
             if resolved:
                 for att in resolved.attachments:
-                    if self._is_image_att(att):
+                    if self.is_image_att(att):
                         image_url = att.url
                         thumbnail_url = att.url
                         break
                 if image_url is None:
                     for embed in resolved.embeds:
-                        url = self._embed_image_url(embed)
+                        url = self.embed_image_url(embed)
                         if url:
                             image_url = url
                             thumbnail_url = url
