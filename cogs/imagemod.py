@@ -226,30 +226,27 @@ class Imagemod(commands.Cog):
 
     # ─── Per-guild keyword DB helpers ────────────────────────────────────
 
-    async def seed_keywords(self, guild_id: int):
-        """Seed the default keywords for a guild if it has none."""
-        rows = []
-        for category, keywords in DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS.items():
-            for kw in keywords:
-                rows.append((guild_id, kw, category))
-        async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
-            await con.executemany(
-                'INSERT OR IGNORE INTO keywords (SERVER_ID, KEYWORD, CATEGORY) VALUES (?, ?, ?)',
-                rows
-            )
-            await con.commit()
-
-    async def load_keywords(self, guild_id: int) -> list[tuple[str, str | None]]:
-        """Load flagged keywords for a guild from the DB and refresh cache. Seeds defaults if empty."""
+    async def get_keywords(self, guild_id: int, force: bool = False) -> list[tuple[str, str | None]]:
+        """Return cached keywords for a guild. Loads from DB (and seeds defaults if empty) on first access or when force=True."""
+        if not force and guild_id in self.keywords_cache:
+            return self.keywords_cache[guild_id]
         async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
             async with con.execute(
                 'SELECT KEYWORD, CATEGORY FROM keywords WHERE SERVER_ID = ? ORDER BY CATEGORY, KEYWORD',
                 (guild_id,)
             ) as cursor:
                 rows = await cursor.fetchall()
-        if not rows:
-            await self.seed_keywords(guild_id)
-            async with aiosqlite.connect(IMAGEMOD_DATABASE) as con:
+            if not rows:
+                seed_rows = [
+                    (guild_id, kw, category)
+                    for category, keywords in DEFAULT_IMAGEMOD_FLAGGED_KEYWORDS.items()
+                    for kw in keywords
+                ]
+                await con.executemany(
+                    'INSERT OR IGNORE INTO keywords (SERVER_ID, KEYWORD, CATEGORY) VALUES (?, ?, ?)',
+                    seed_rows
+                )
+                await con.commit()
                 async with con.execute(
                     'SELECT KEYWORD, CATEGORY FROM keywords WHERE SERVER_ID = ? ORDER BY CATEGORY, KEYWORD',
                     (guild_id,)
@@ -257,17 +254,6 @@ class Imagemod(commands.Cog):
                     rows = await cursor.fetchall()
         self.keywords_cache[guild_id] = rows
         return rows
-
-    async def get_keywords(self, guild_id: int) -> list[tuple[str, str | None]]:
-        """Return cached keywords for a guild, loading from DB if not cached."""
-        if guild_id not in self.keywords_cache:
-            await self.load_keywords(guild_id)
-        return self.keywords_cache[guild_id]
-
-    async def get_keyword_list(self, guild_id: int) -> list[str]:
-        """Return just the keyword strings for a guild."""
-        keywords = await self.get_keywords(guild_id)
-        return [kw for kw, _ in keywords]
 
     # ─── Per-guild settings DB helpers ───────────────────────────────────
 
@@ -561,7 +547,7 @@ class Imagemod(commands.Cog):
         embed.add_field(name='🏷️ Classification Model', value=cls_state, inline=False)
 
         # Keywords
-        keywords = await self.get_keyword_list(guild_id)
+        keywords = [kw for kw, _ in await self.get_keywords(guild_id)]
         kw_display = ', '.join(keywords[:50]) or 'None'
         if len(keywords) > 50:
             kw_display += f' ... and {len(keywords) - 50} more'
@@ -682,7 +668,7 @@ class Imagemod(commands.Cog):
     async def check_flagged(self, description: str, guild_id: int) -> list[str]:
         """Check if the description contains any flagged keywords for the guild."""
         description_lower = description.lower()
-        keywords = await self.get_keyword_list(guild_id)
+        keywords = [kw for kw, _ in await self.get_keywords(guild_id)]
         flagged = []
         for kw in keywords:
             escaped_kw = re.escape(kw.lower()).replace(r'\ ', r'\s+')
@@ -737,7 +723,7 @@ class Imagemod(commands.Cog):
             await con.commit()
 
         # Refresh cache
-        await self.load_keywords(guild_id)
+        await self.get_keywords(guild_id, force=True)
 
         parts = []
         if added:
@@ -787,7 +773,7 @@ class Imagemod(commands.Cog):
             await con.commit()
 
         # Refresh cache
-        await self.load_keywords(guild_id)
+        await self.get_keywords(guild_id, force=True)
 
         parts = []
         if removed:
@@ -809,7 +795,7 @@ class Imagemod(commands.Cog):
         List all flagged keywords, optionally filtered by category.
         Usage: keyword list [category]
         '''
-        keywords = await self.load_keywords(ctx.guild.id)
+        keywords = await self.get_keywords(ctx.guild.id, force=True)
 
         if category:
             keywords = [(kw, cat) for kw, cat in keywords if cat and cat.lower() == category.lower()]
@@ -859,7 +845,7 @@ class Imagemod(commands.Cog):
             await con.commit()
 
         # Refresh cache
-        await self.load_keywords(guild_id)
+        await self.get_keywords(guild_id, force=True)
 
         embed = discord.Embed(
             title='Keywords Cleared',
