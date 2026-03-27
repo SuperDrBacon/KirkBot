@@ -591,12 +591,12 @@ class Imagemod(commands.Cog):
             def open_as_rgb(data: bytes):
                 from PIL import Image
                 img = Image.open(io.BytesIO(data))
-                # Seek to first frame for animated/multi-frame formats (GIF, WebP).
-                # Immediately convert to RGBA from palette mode — this is the most
-                # reliable path because PIL resolves the palette + transparency index
-                # correctly during conversion, making the frame fully materialised.
-                if getattr(img, 'n_frames', 1) > 1:
-                    img.seek(0)
+                # Force frame 0 to fully decode before converting.
+                # Accessing n_frames on animated GIFs scans all frames and can
+                # leave PIL's internal state past frame 0 — so we skip that
+                # entirely. PIL opens at frame 0 by default; img.load() forces
+                # the decode so that convert() always gets valid pixel data.
+                img.load()
                 return img.convert('RGBA').convert('RGB')
 
             image = await loop.run_in_executor(None, open_as_rgb, image_bytes)
