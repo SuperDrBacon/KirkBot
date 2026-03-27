@@ -580,9 +580,12 @@ class Imagemod(commands.Cog):
 
             from PIL import Image
             img = Image.open(io.BytesIO(image_bytes))
-            # For animated formats (GIF, WebP), use the first frame
+            # For animated formats (GIF, WebP), seek to first frame and copy it
+            # out as a standalone image before converting — PIL requires this to
+            # fully materialise individual frames from a multi-frame sequence.
             if hasattr(img, 'n_frames') and img.n_frames > 1:
                 img.seek(0)
+                img = img.copy()
             # Palette-mode images (e.g. GIFs) may have transparency — go via RGBA first
             if img.mode in ('P', 'PA'):
                 img = img.convert('RGBA')
