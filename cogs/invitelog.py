@@ -33,7 +33,11 @@ class Invitelog(commands.Cog):
                 # Loop through each server
                 for server in self.bot.guilds:
                     # Get the current invites for the server
-                    invites = await server.invites()
+                    try:
+                        invites = await server.invites()
+                    except discord.HTTPException as e:
+                        print(f'update_invites: failed to fetch invites for {server.name}: {e}')
+                        continue
                     
                     # Update the database with the new invite information
                     for invite in invites:
@@ -349,13 +353,21 @@ class Invitelog(commands.Cog):
         if self.update_invites_task and self.update_invites_task.done():
             loop = asyncio.get_event_loop()
             self.update_invites_task = loop.create_task(self.update_invites_loop())
-            await self.update_invites()
+            try:
+                await self.update_invites()
+            except discord.HTTPException as e:
+                print(f'on_resumed: Discord API error while refreshing invites: {e}')
     
     async def update_invites_loop(self):
         while True:
             await asyncio.sleep(SECOND_LOOP_DELAY)
             # print ('update_invites_loop')
-            await self.update_invites()
+            try:
+                await self.update_invites()
+            except discord.HTTPException as e:
+                print(f'update_invites_loop: Discord API error, skipping cycle: {e}')
+            except Exception as e:
+                print(f'update_invites_loop: unexpected error: {e}')
 
 async def setup(bot):
     await bot.add_cog(Invitelog(bot))
