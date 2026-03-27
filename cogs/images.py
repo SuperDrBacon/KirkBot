@@ -111,7 +111,8 @@ class Images(commands.Cog):
         Caption the previous image or gif posted in the chat.
         '''
         byteio = BytesIO()
-        messages1 = await ctx.channel.history(limit=50, oldest_first=False)
+        # messages1 = await ctx.channel.history(limit=50, oldest_first=False)
+        messages1 = [message async for message in ctx.channel.history(limit=50, oldest_first=False)]
         messages = messages1.flatten()
         if os.path.exists(IMAGEPATH+'dl temp.png'):
             os.remove(IMAGEPATH+'dl temp.png')
