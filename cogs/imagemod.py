@@ -575,7 +575,18 @@ class Imagemod(commands.Cog):
 
         try:
             loop = asyncio.get_event_loop()
-            image_bytes = await loop.run_in_executor(None, lambda: requests.get(url).content)
+
+            _headers = {
+                'User-Agent': 'Mozilla/5.0 (compatible; KirkBot/1.0)',
+                'Accept': 'image/gif,image/webp,image/*,*/*;q=0.8',
+            }
+
+            def fetch_image(target_url: str) -> bytes:
+                resp = requests.get(target_url, headers=_headers, timeout=15, allow_redirects=True)
+                resp.raise_for_status()
+                return resp.content
+
+            image_bytes = await loop.run_in_executor(None, fetch_image, url)
 
             def open_as_rgb(data: bytes):
                 from PIL import Image
