@@ -44,7 +44,7 @@ ADMIN_PORTAL_WS_URL = "http://localhost:5005/api/new_message"
 STATUS_LOOP_DELAY = 10
 
 #! Markov ai constants
-ORDER = 4
+ORDER = 3
 TEXT_WORD_COUNT = ORDER * 15 
 MEME_WORD_COUNT = ORDER * 5
 

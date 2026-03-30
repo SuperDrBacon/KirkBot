@@ -10,8 +10,8 @@ import ollama
 from discord.ext import commands
 
 from cogs.utils.constants import (ARCHIVE_DATABASE, BOTID, MEME_WORD_COUNT,
-                                  ORDER, PERMISSIONS_DATABASE, TEXT_WORD_COUNT,
-                                  MSG_DEL_DELAY)
+                                  MSG_DEL_DELAY, ORDER, PERMISSIONS_DATABASE,
+                                  TEXT_WORD_COUNT)
 
 textmodel = 'llama2-uncensored:7b'
 
@@ -40,7 +40,7 @@ class MarkovChain:
             total_weight = sum(self.word_weights[value] for value in values)
             probabilities = [self.word_weights[value] / total_weight for value in values]
             next_word = random.choices(values, probabilities)[0]
-            self.word_weights[next_word] -= 1
+            self.word_weights[next_word] = max(1, self.word_weights[next_word] - 1)
             return next_word
         else:
             return None
